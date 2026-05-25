@@ -115,6 +115,27 @@ func (h *DocumentoHandler) ListByReplica(c *gin.Context) {
 	c.JSON(http.StatusOK, docs)
 }
 
+// Search busca documentos por texto OCR o número de documento
+func (h *DocumentoHandler) Search(c *gin.Context) {
+	query := c.Query("q")
+	if query == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Parámetro 'q' requerido"})
+		return
+	}
+
+	docs, err := h.service.SearchByOCR(c.Request.Context(), query)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"query": query,
+		"count": len(docs),
+		"results": docs,
+	})
+}
+
 // isAllowedMimeType valida tipos MIME permitidos
 func isAllowedMimeType(mime string) bool {
 	allowed := []string{
