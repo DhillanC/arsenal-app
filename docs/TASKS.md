@@ -13,32 +13,38 @@
 ### Configuración
 - [ ] Configurar Viper (.env, flags)
 - [ ] Logger estructurado (zap/logrus)
-- [ ] Healthcheck endpoint
+- [x] Healthcheck endpoint
 
 ### Base de Datos
-- [ ] Schema SQL inicial (migración 001)
-- [ ] Conexión SQLite con WAL mode
-- [ ] Runner de migraciones
+- [x] Schema SQL inicial (migración 001)
+- [x] Conexión SQLite con WAL mode
+- [x] Runner de migraciones
 
 ### Dominio (Núcleo Hexagonal)
-- [ ] Entidad Replica
-- [ ] Entidad Actividad
-- [ ] Entidad Documento
-- [ ] Entidad Mantenimiento
-- [ ] Puertos (interfaces repository)
-- [ ] Puertos (interfaces service)
+- [x] Entidad Replica
+- [x] Entidad Actividad
+- [x] Entidad Documento
+- [x] Entidad Mantenimiento
+- [x] Puertos (interfaces repository)
+- [x] Puertos (interfaces service)
 
 ### Repositorio SQLite
-- [ ] Implementar ReplicaRepository
-- [ ] Implementar ActividadRepository
-- [ ] Implementar DocumentoRepository
+- [x] Implementar ReplicaRepository
+- [x] Implementar ActividadRepository
+- [x] Implementar DocumentoRepository
+
+### Servicios (Aplicación)
+- [x] ReplicaService
+- [x] ActividadService
+- [x] DocumentoService
 
 ### API REST
-- [ ] Setup Gin router
-- [ ] Middleware (logging, CORS, recovery)
-- [ ] Handlers réplicas (CRUD)
-- [ ] Handlers actividades
+- [x] Setup Gin router
+- [x] Middleware (logging, CORS, recovery)
+- [x] Handlers réplicas (CRUD)
+- [x] Handlers actividades
 - [ ] Handlers documentos
+- [x] Entry point main.go
 
 ### Tests
 - [ ] Tests unitarios dominio
@@ -117,6 +123,6 @@
 ## Estado General
 
 **Fase actual:** 1 - Foundation
-**Progreso:** 5/25 tareas completadas (20%)
+**Progreso:** 15/25 tareas completadas (60%)
 
 *Última actualización: 2026-05-25*
