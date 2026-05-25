@@ -4,10 +4,10 @@ import (
 	"log"
 	"os"
 
-	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/services"
-	"github.com/digital-consultory-solutions/arsenal-app/internal/infrastructure/persistence/sqlite"
-	"github.com/digital-consultory-solutions/arsenal-app/internal/infrastructure/storage/local"
-	"github.com/digital-consultory-solutions/arsenal-app/internal/infrastructure/web"
+	"github.com/DhillanC/arsenal-app/internal/domain/services"
+	"github.com/DhillanC/arsenal-app/internal/infrastructure/persistence/sqlite"
+	"github.com/DhillanC/arsenal-app/internal/infrastructure/storage/local"
+	"github.com/DhillanC/arsenal-app/internal/infrastructure/web"
 )
 
 func main() {

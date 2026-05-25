@@ -2,7 +2,7 @@ package ports
 
 import (
 	"context"
-	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/models"
+	"github.com/DhillanC/arsenal-app/internal/domain/models"
 )
 
 // ReplicaRepository define las operaciones de persistencia para réplicas

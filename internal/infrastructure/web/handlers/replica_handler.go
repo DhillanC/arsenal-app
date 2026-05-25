@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/models"
-	inbound "github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/inbound"
+	"github.com/DhillanC/arsenal-app/internal/domain/models"
+	inbound "github.com/DhillanC/arsenal-app/internal/domain/ports/inbound"
 	"github.com/gin-gonic/gin"
 )
 

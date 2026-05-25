@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/digital-consultory-solutions/arsenal-app/internal/infrastructure/storage/local"
+	"github.com/DhillanC/arsenal-app/internal/infrastructure/storage/local"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

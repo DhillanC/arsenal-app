@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/models"
-	inbound "github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/inbound"
-	outbound "github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/outbound"
+	"github.com/DhillanC/arsenal-app/internal/domain/models"
+	inbound "github.com/DhillanC/arsenal-app/internal/domain/ports/inbound"
+	outbound "github.com/DhillanC/arsenal-app/internal/domain/ports/outbound"
 )
 
 // ActividadService implementa inbound.ActividadService

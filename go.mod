@@ -1,4 +1,4 @@
-module github.com/digital-consultory-solutions/arsenal-app
+module github.com/DhillanC/arsenal-app
 
 go 1.21
 

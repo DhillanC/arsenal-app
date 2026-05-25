@@ -2,7 +2,7 @@ package ports
 
 import (
 	"context"
-	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/models"
+	"github.com/DhillanC/arsenal-app/internal/domain/models"
 )
 
 // ReplicaService define los casos de uso para réplicas

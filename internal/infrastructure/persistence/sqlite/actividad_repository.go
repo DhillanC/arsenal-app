@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/models"
-	outbound "github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/outbound"
+	"github.com/DhillanC/arsenal-app/internal/domain/models"
+	outbound "github.com/DhillanC/arsenal-app/internal/domain/ports/outbound"
 )
 
 // ActividadRepository implementa outbound.ActividadRepository

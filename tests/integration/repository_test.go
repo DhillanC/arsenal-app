@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/models"
-	"github.com/digital-consultory-solutions/arsenal-app/internal/infrastructure/persistence/sqlite"
+	"github.com/DhillanC/arsenal-app/internal/domain/models"
+	"github.com/DhillanC/arsenal-app/internal/infrastructure/persistence/sqlite"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

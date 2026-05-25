@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	inbound "github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/inbound"
-	"github.com/digital-consultory-solutions/arsenal-app/internal/infrastructure/web/handlers"
+	inbound "github.com/DhillanC/arsenal-app/internal/domain/ports/inbound"
+	"github.com/DhillanC/arsenal-app/internal/infrastructure/web/handlers"
 	"github.com/gin-gonic/gin"
 )
 
