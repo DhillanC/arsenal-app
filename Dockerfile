@@ -1,36 +1,55 @@
-FROM golang:1.21-alpine AS builder
+# Build stage
+FROM golang:1.26-alpine AS builder
 
 WORKDIR /app
 
-# Instalar dependencias de build
-RUN apk add --no-cache gcc musl-dev sqlite-dev
+# Instalar dependencias de build (CGO para SQLite)
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    sqlite-dev
 
-# Copiar go.mod y go.sum
+# Copiar solo go.mod y go.sum primero (cache layer)
 COPY go.mod go.sum ./
 RUN go mod download
 
 # Copiar código fuente
 COPY . .
 
-# Build
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o bin/api cmd/api/main.go
+# Build con optimizaciones
+# -ldflags="-w -s" reduce tamaño del binario
+# -trimpath remueve paths absolutos
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
+    go build -trimpath -ldflags="-w -s" \
+    -o bin/api cmd/api/main.go
 
-# Imagen final
-FROM alpine:latest
+# Runtime stage
+FROM alpine:3.19
 
-RUN apk --no-cache add ca-certificates sqlite-libs
-WORKDIR /root/
+# Crear usuario no-root para seguridad
+RUN adduser -D -u 1000 arsenal && \
+    apk add --no-cache ca-certificates sqlite-libs
 
-# Crear directorios para datos
-RUN mkdir -p /data /uploads
+WORKDIR /app
 
-# Copiar binario
-COPY --from=builder /app/bin/api .
+# Crear directorios con permisos correctos
+RUN mkdir -p /data /uploads && \
+    chown -R arsenal:arsenal /app /data /uploads
 
-# Puerto
+# Copiar binario desde builder
+COPY --from=builder /app/bin/api /app/api
+
+# Cambiar a usuario no-root
+USER arsenal
+
+# Puerto expuesto
 EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:8080/health || exit 1
 
 # Volumes para persistencia
 VOLUME ["/data", "/uploads"]
 
-CMD ["./api"]
+ENTRYPOINT ["/app/api"]
