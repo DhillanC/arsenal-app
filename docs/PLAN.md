@@ -211,33 +211,46 @@ CREATE TABLE replica_sesion (
 - [x] Tests de integración
 - [x] Docker + Docker Compose
 
-### Fase 2 - Seguridad + Core Features (En Progreso)
+### Fase 2 - Seguridad + Core Ops ✅ (Completada)
 - [x] Análisis de amenazas STRIDE
-- [x] Diagramas de flujo con trust boundaries
+- [x] 11 fixes de seguridad y operación aplicados
+- [x] Graceful shutdown
+- [x] Health check con DB ping
+- [x] Path traversal defense
+- [x] Docker compose target: builder eliminado
+- [x] CORS configurable
+
+### Fase 3 - Gestión de Documentos
+- [ ] Subida de archivos (multipart)
+- [ ] OCR con Tesseract
+- [ ] Búsqueda full-text por contenido OCR
+- [ ] Timeline de actividades
+
+### Fase 4 - Frontend Web
+- [ ] HTMX + Tailwind frontend
+- [ ] Vistas: lista de réplicas, detalle, formularios
+- [ ] Dashboard con estadísticas
+- [ ] PWA manifest + service worker
+
+### Fase 5 - Autenticación y Seguridad API
 - [ ] JWT Authentication
 - [ ] Rate limiting
 - [ ] Audit logging
-- [ ] Subida de documentos (multipart)
-- [ ] OCR con Tesseract
-- [ ] Timeline de actividades
 
-### Fase 3 - Mantenimiento + DIAN
+### Fase 6 - Mantenimiento + DIAN
 - [ ] Calendario de mantenimiento
 - [ ] Recordatorios (cron jobs locales)
 - [ ] Campos específicos importación DIAN
 - [ ] Búsqueda por número manifiesto/serial
 
-### Fase 4 - UI/UX + PWA
-- [ ] HTMX + Tailwind frontend
-- [ ] PWA manifest + service worker
-- [ ] Dashboard con estadísticas
-- [ ] Costo total de propiedad (TCO)
-
-### Fase 5 - Polish + Deploy
+### Fase 7 - Polish + Deploy
 - [ ] Backup automático
 - [ ] Export JSON/CSV
 - [ ] PM2 config
 - [ ] Documentación deploy Mac mini
+- [ ] README completo
+- [ ] GitHub Actions CI/CD
+- [ ] Release v1.0.0
 
 ## Wireframes / UI Ideas
 

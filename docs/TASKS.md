@@ -57,40 +57,100 @@
 
 ---
 
-## Fase 2: Core Features ⭐
+## Fase 2: Core Ops + Seguridad ✅
 
-### Seguridad (En Progreso)
+### Seguridad (Completado)
 - [x] Análisis de amenazas (Threat Modeling) - STRIDE completado
 - [x] Diagramas de flujo de datos con trust boundaries
-- [x] Identificación de activos críticos (PHI, documentos DIAN)
-- [ ] Controles de seguridad (auth, autorización, sanitización)
-  - [ ] JWT Authentication
-  - [ ] Rate limiting (100 req/min)
-  - [ ] Audit logging (quién, qué, cuándo)
+- [x] 11 fixes de seguridad aplicados:
+  - [x] APP_PORT env var honored
+  - [x] Soft-delete leak fixed
+  - [x] time.Parse error handling
+  - [x] Migrations embebidas (go:embed)
+  - [x] Graceful shutdown
+  - [x] SQLite busy_timeout + MaxOpenConns(1)
+  - [x] Health check con DB ping
+  - [x] Gin ReleaseMode en production
+  - [x] Path traversal defense
+  - [x] Docker target: builder eliminado
+  - [x] CORS configurable
+- [ ] Controles pendientes (post-auth):
   - [ ] File hash verification (SHA-256)
-  - [ ] Path traversal protection
   - [ ] Max upload size limit (10MB)
 - [ ] Backup y recuperación de datos
 - [ ] Encriptación de datos sensibles en reposo
 
-### Documentos
-- [ ] Subida de archivos (multipart)
-- [ ] Storage local con organización por réplica
-- [ ] OCR con Tesseract (gosseract)
-- [ ] Metadatos extraídos en DB
-
 ### Actividades
-- [ ] Timeline cronológico
+- [x] Timeline cronológico (API lista por réplica)
 - [ ] Filtros por tipo
 - [ ] Búsqueda básica
 
 ### Validación
-- [ ] Validación de campos (go-playground)
-- [ ] Sanitización de inputs
+- [x] Validación de campos (go-playground validator via Gin binding)
+- [x] Sanitización de inputs (path traversal defense)
 
 ---
 
-## Fase 3: Mantenimiento & DIAN 🔧
+## Fase 3: Gestión de Documentos 📄
+
+### Subida de Archivos
+- [ ] Handler multipart para documentos
+- [ ] Validación MIME type
+- [ ] Límite de tamaño (10MB)
+- [ ] Organización por réplica en filesystem
+
+### OCR
+- [ ] Integración Tesseract (gosseract)
+- [ ] Extracción de texto en upload
+- [ ] Almacenar OCR en DB
+
+### Búsqueda
+- [ ] Búsqueda full-text por contenido OCR
+- [ ] Filtros por tipo de documento
+- [ ] Timeline con documentos adjuntos
+
+---
+
+## Fase 4: Frontend Web 🎨
+
+### HTMX + Tailwind
+- [ ] Setup HTMX + Tailwind
+- [ ] Templates HTML base
+- [ ] Página lista réplicas
+- [ ] Página ficha réplica
+- [ ] Formularios
+
+### Dashboard
+- [ ] Estadísticas generales
+- [ ] Gráficos de uso
+- [ ] Costo total de propiedad
+
+### PWA
+- [ ] Manifest.json
+- [ ] Service Worker
+- [ ] Offline indicators
+
+---
+
+## Fase 5: Autenticación y Seguridad API 🔐
+
+### JWT Authentication
+- [ ] Login/registro de usuarios
+- [ ] Middleware de auth
+- [ ] Password hashing (bcrypt)
+
+### Rate Limiting
+- [ ] Límite por IP (100 req/min)
+- [ ] Límite por usuario autenticado
+
+### Audit Logging
+- [ ] Quién hizo qué y cuándo
+- [ ] Immutable audit store
+- [ ] Queries de auditoría
+
+---
+
+## Fase 6: Mantenimiento & DIAN 🔧
 
 ### Mantenimiento Programado
 - [ ] CRUD tareas de mantenimiento
@@ -104,28 +164,7 @@
 
 ---
 
-## Fase 4: UI/UX 🎨
-
-### Frontend
-- [ ] Setup HTMX + Tailwind
-- [ ] Templates HTML base
-- [ ] Página lista réplicas
-- [ ] Página ficha réplica
-- [ ] Formularios
-
-### PWA
-- [ ] Manifest.json
-- [ ] Service Worker
-- [ ] Offline indicators
-
----
-
-## Fase 5: Polish ✨
-
-### Dashboard
-- [ ] Estadísticas generales
-- [ ] Gráficos de uso
-- [ ] Costo total de propiedad
+## Fase 7: Polish ✨
 
 ### Exportar
 - [ ] Backup JSON
@@ -135,12 +174,14 @@
 - [ ] Documentación deploy Mac mini
 - [ ] PM2 config
 - [ ] Tailscale access
+- [ ] GitHub Actions CI/CD
+- [ ] Release v1.0.0
 
 ---
 
 ## Estado General
 
-**Fase actual:** 2 - Core Features (Security)
+**Fase actual:** 3 - Gestión de Documentos
 **Progreso:** 18/35 tareas completadas (51%)
 
 *Última actualización: 2026-05-25*
