@@ -92,6 +92,9 @@ func (h *DocumentoHandler) Upload(c *gin.Context) {
 		return
 	}
 
+	// Procesar OCR en background (no bloquear response)
+	go h.processOCR(doc)
+
 	c.JSON(http.StatusCreated, doc)
 }
 
@@ -130,6 +133,12 @@ func isAllowedMimeType(mime string) bool {
 		}
 	}
 	return false
+}
+
+// processOCR ejecuta OCR en background (placeholder)
+func (h *DocumentoHandler) processOCR(doc *models.Documento) {
+	// TODO: Implementar OCR processing
+	// Esto requiere acceso al archivo guardado y el servicio OCR
 }
 
 // isAllowedExtension valida extensiones permitidas
