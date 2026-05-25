@@ -19,7 +19,8 @@ COPY . .
 # Build con optimizaciones
 # -ldflags="-w -s" reduce tamaño del binario
 # -trimpath remueve paths absolutos
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
+# NOTA: No especificar GOARCH para permitir build nativo en ARM64 (Apple Silicon)
+RUN CGO_ENABLED=1 GOOS=linux \
     go build -trimpath -ldflags="-w -s" \
     -o bin/api cmd/api/main.go
 
@@ -38,6 +39,9 @@ RUN mkdir -p /data /uploads && \
 
 # Copiar binario desde builder
 COPY --from=builder /app/bin/api /app/api
+
+# Copiar migraciones necesarias para el runtime
+COPY --from=builder --chown=arsenal:arsenal /app/internal/infrastructure/persistence/sqlite/migrations /app/internal/infrastructure/persistence/sqlite/migrations
 
 # Cambiar a usuario no-root
 USER arsenal
