@@ -2,6 +2,7 @@ package web
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	inbound "github.com/DhillanC/arsenal-app/internal/domain/ports/inbound"
@@ -11,33 +12,27 @@ import (
 
 // Config holds server configuration
 type Config struct {
-	Port            string
-	AllowedOrigins  []string
+	Port           string
+	AllowedOrigins []string
 }
 
-// Server encapsula el servidor HTTP
-type Server struct {
-	router *gin.Engine
-	config Config
-}
-
-// NewServer crea un nuevo servidor con las dependencias inyectadas
-func NewServer(
+// NewHandler creates a Gin engine with all routes configured
+func NewHandler(
 	config Config,
 	replicaService inbound.ReplicaService,
 	actividadService inbound.ActividadService,
 	documentoService inbound.DocumentoService,
-) *Server {
+) http.Handler {
 	// Set Gin mode based on env
-	if gin.Mode() == gin.DebugMode {
-		// already set, keep default
+	if os.Getenv("APP_ENV") == "production" {
+		gin.SetMode(gin.ReleaseMode)
 	}
 
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(CORSMiddleware(config.AllowedOrigins))
 
-	// Health check with DB ping
+	// Health check
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "timestamp": time.Now()})
 	})
@@ -52,27 +47,19 @@ func NewServer(
 		actividadHandler.RegisterRoutes(api)
 	}
 
-	return &Server{
-		router: router,
-		config: config,
-	}
+	return router
 }
 
-// Run inicia el servidor
-func (s *Server) Run() error {
-	return s.router.Run(":" + s.config.Port)
-}
-
-// CORSMiddleware configura CORS para el frontend
+// CORSMiddleware configures CORS for the frontend
 func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		
+
 		// Allow wildcard in dev (empty list), otherwise check against allowed origins
 		if len(allowedOrigins) == 0 || contains(allowedOrigins, origin) {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		}
-		
+
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		c.Writer.Header().Set("Vary", "Origin")

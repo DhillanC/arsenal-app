@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/DhillanC/arsenal-app/internal/domain/services"
 	"github.com/DhillanC/arsenal-app/internal/infrastructure/persistence/sqlite"
@@ -45,12 +50,36 @@ func main() {
 	config := web.Config{
 		Port: appPort,
 	}
-	server := web.NewServer(config, replicaService, actividadService, documentoService)
+	handler := web.NewHandler(config, replicaService, actividadService, documentoService)
 	
-	log.Printf("🚀 Arsenal App iniciado en http://localhost:%s", appPort)
-	if err := server.Run(); err != nil {
-		log.Fatalf("Error iniciando servidor: %v", err)
+	srv := &http.Server{
+		Addr:    ":" + appPort,
+		Handler: handler,
 	}
+
+	// Graceful shutdown
+	go func() {
+		log.Printf("🚀 Arsenal App iniciado en http://localhost:%s", appPort)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Error iniciando servidor: %v", err)
+		}
+	}()
+
+	// Esperar señal de terminación
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Apagado solicitado, drenando conexiones...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Error en graceful shutdown: %v", err)
+	}
+
+	log.Println("Servidor detenido limpiamente")
 }
 
 func getEnv(key, defaultValue string) string {
