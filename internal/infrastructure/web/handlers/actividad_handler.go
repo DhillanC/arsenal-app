@@ -76,15 +76,15 @@ func (h *ActividadHandler) Create(c *gin.Context) {
 		return
 	}
 
-	fechaAdq, err := time.Parse("2006-01-02", req.FechaAdquisicion)
+	fechaAdq, err := time.Parse("2006-01-02", req.Fecha)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "fecha_adquisicion inválida, formato esperado: YYYY-MM-DD"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "fecha inválida, formato esperado: YYYY-MM-DD"})
 		return
 	}
 
 	actividad := &models.Actividad{
 		ReplicaID:        replicaID,
-		Fecha:            fecha,
+		Fecha:            fechaAdq,
 		Tipo:             req.Tipo,
 		Descripcion:      req.Descripcion,
 		ProveedorTecnico: req.ProveedorTecnico,

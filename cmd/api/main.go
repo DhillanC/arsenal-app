@@ -14,7 +14,6 @@ func main() {
 	// Configuración
 	dbPath := getEnv("DB_PATH", "./data/arsenal.db")
 	appPort := getEnv("APP_PORT", "8080")
-	migrationsDir := "./internal/infrastructure/persistence/sqlite/migrations"
 
 	// Inicializar base de datos
 	db, err := sqlite.NewDB(dbPath)
@@ -23,8 +22,8 @@ func main() {
 	}
 	defer db.Close()
 
-	// Ejecutar migraciones
-	if err := db.RunMigrations(migrationsDir); err != nil {
+	// Ejecutar migraciones embebidas
+	if err := db.RunMigrations(); err != nil {
 		log.Fatalf("Error en migraciones: %v", err)
 	}
 
