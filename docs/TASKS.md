@@ -52,6 +52,7 @@
 ### Tests
 - [x] Tests unitarios dominio
 - [x] Tests integración repositorio
+- [x] Tests integración storage
 - [ ] Tests E2E API
 
 ---
@@ -63,8 +64,12 @@
 - [x] Diagramas de flujo de datos con trust boundaries
 - [x] Identificación de activos críticos (PHI, documentos DIAN)
 - [ ] Controles de seguridad (auth, autorización, sanitización)
-- [ ] Rate limiting y protección contra abuso
-- [ ] Logging de auditoría (quién hizo qué y cuándo)
+  - [ ] JWT Authentication
+  - [ ] Rate limiting (100 req/min)
+  - [ ] Audit logging (quién, qué, cuándo)
+  - [ ] File hash verification (SHA-256)
+  - [ ] Path traversal protection
+  - [ ] Max upload size limit (10MB)
 - [ ] Backup y recuperación de datos
 - [ ] Encriptación de datos sensibles en reposo
 
@@ -135,7 +140,7 @@
 
 ## Estado General
 
-**Fase actual:** 1 - Foundation
-**Progreso:** 15/25 tareas completadas (60%)
+**Fase actual:** 2 - Core Features (Security)
+**Progreso:** 18/35 tareas completadas (51%)
 
 *Última actualización: 2026-05-25*

@@ -4,19 +4,60 @@
 
 Aplicación web/móvil (PWA) para gestión integral de réplicas airsoft. Inventario personal, trazabilidad legal (DIAN), mantenimiento técnico, registro de uso y documentación.
 
-## Stack Técnico
+## Stack Técnico Actual
 
 | Capa | Tecnología | Justificación |
 |------|-----------|---------------|
-| **Frontend** | Next.js 14 (App Router) | SSR, PWA nativo, API routes integrados |
-| **Estilos** | Tailwind CSS + shadcn/ui | Desarrollo rápido, componentes accesibles |
-| **Backend** | Next.js API Routes + tRPC | Type-safe end-to-end, menos boilerplate |
-| **Base de Datos** | SQLite | Ligero, zero-config, perfecto para uso personal/local |
-| **ORM** | Drizzle ORM | Type-safe queries, migraciones SQL-first |
-| **Auth** | NextAuth.js (Credentials) | Auth simple sin dependencias externas |
-| **Storage** | Local filesystem + sharp | Fotos optimizadas, PDFs, videos |
-| **OCR** | Tesseract.js (cliente) | Extrae texto de facturas y documentos DIAN |
-| **Deploy** | Mac mini local + PM2 | Zero cost, acceso vía Tailscale/ngrok |
+| **Backend** | Go 1.26+ | Performance, tipado fuerte, excelente para APIs |
+| **Web Framework** | Gin | Ligero, middleware ecosystem maduro |
+| **Base de Datos** | SQLite | Zero-config, portable, perfecto para single-user |
+| **Migraciones** | golang-migrate | Estándar de la industria |
+| **OCR** | gosseract (wrapper de Tesseract) | Extrae texto de documentos DIAN |
+| **Storage** | fs (stdlib) + filepath | Filesystem local, simple |
+| **Auth** | JWT (golang-jwt) | Stateless, perfecto para PWA |
+| **Config** | Viper | .env, flags, defaults |
+| **Testing** | testify | Unit + integration testing |
+| **Frontend** | HTMX + Alpine.js | Minimal JS, server-rendered, PWA-capable |
+| **Estilos** | Tailwind CSS | Utility-first, bundle pequeño |
+| **Deploy** | Docker + Docker Compose | Portabilidad, reproducibilidad |
+| **Network** | Tailscale | Acceso remoto seguro sin exponer puertos |
+
+## Arquitectura
+
+**Hexagonal (Ports & Adapters):**
+- 🟥 **Dominio:** Entities + Ports (interfaces)
+- 🟨 **Aplicación:** Services + Commands/Queries
+- 🟦 **Infraestructura:** Repositories + Web + Storage + OCR
+
+## Estructura del Proyecto
+
+```
+arsenal-app/
+├── cmd/api/                      # Entry point (main.go)
+├── internal/
+│   ├── domain/                   # Núcleo hexagonal
+│   │   ├── models/               # Entidades (Replica, Actividad, Documento)
+│   │   ├── ports/
+│   │   │   ├── inbound/        # Service interfaces
+│   │   │   └── outbound/       # Repository interfaces
+│   │   └── services/             # Lógica de negocio
+│   ├── application/              # Casos de uso
+│   │   ├── commands/             # Operaciones de escritura
+│   │   ├── queries/              # Operaciones de lectura
+│   │   └── handlers/             # Orquestadores
+│   └── infrastructure/           # Adaptadores
+│       ├── persistence/sqlite/   # Base de datos
+│       ├── storage/local/        # Filesystem
+│       ├── ocr/                  # Tesseract
+│       └── web/                  # HTTP server (Gin)
+├── pkg/                          # Librerías compartidas
+├── scripts/                      # Utilidades
+├── tests/                        # Tests
+└── docs/                         # Documentación
+    ├── PLAN.md                   # Este archivo
+    ├── TASKS.md                  # Tareas por fase
+    └── SECURITY.md               # Análisis de seguridad
+```
 
 ## Estructura del Proyecto
 
@@ -161,36 +202,42 @@ CREATE TABLE replica_sesion (
 
 ## Features por Fase
 
-### Fase 1 - MVP (Semanas 1-2)
-- [ ] Setup proyecto Next.js + SQLite + Drizzle
-- [ ] CRUD de réplicas (lista, crear, editar, ficha)
-- [ ] Subida de documentos básica (facturas, fotos)
-- [ ] Registro de actividades simple (fecha, tipo, descripción)
-- [ ] Timeline de actividades por réplica
+### Fase 1 - Foundation ✅ (Completada)
+- [x] Setup proyecto Go + SQLite + migraciones
+- [x] Arquitectura hexagonal (domain, application, infrastructure)
+- [x] CRUD de réplicas (lista, crear, editar, ficha)
+- [x] CRUD de actividades
+- [x] Storage local para documentos
+- [x] Tests de integración
+- [x] Docker + Docker Compose
 
-### Fase 2 - Documentación DIAN (Semana 3)
-- [ ] OCR de facturas y manifiestos
-- [ ] Campos específicos para importaciones
-- [ ] Búsqueda por número de manifiesto/serial
-- [ ] Alertas de vencimiento (si aplica)
+### Fase 2 - Seguridad + Core Features (En Progreso)
+- [x] Análisis de amenazas STRIDE
+- [x] Diagramas de flujo con trust boundaries
+- [ ] JWT Authentication
+- [ ] Rate limiting
+- [ ] Audit logging
+- [ ] Subida de documentos (multipart)
+- [ ] OCR con Tesseract
+- [ ] Timeline de actividades
 
-### Fase 3 - Mantenimiento (Semana 4)
+### Fase 3 - Mantenimiento + DIAN
 - [ ] Calendario de mantenimiento
 - [ ] Recordatorios (cron jobs locales)
-- [ ] Checklist post-juego
-- [ ] Historial de piezas cambiadas
+- [ ] Campos específicos importación DIAN
+- [ ] Búsqueda por número manifiesto/serial
 
-### Fase 4 - Uso y Estadísticas (Semana 5)
-- [ ] Log de sesiones de campo
-- [ ] Estadísticas de uso por réplica
+### Fase 4 - UI/UX + PWA
+- [ ] HTMX + Tailwind frontend
+- [ ] PWA manifest + service worker
+- [ ] Dashboard con estadísticas
 - [ ] Costo total de propiedad (TCO)
-- [ ] Dashboard con gráficos
 
-### Fase 5 - PWA y Mobile (Semana 6)
-- [ ] Service Worker
-- [ ] Instalable en iOS/Android
-- [ ] Cámara nativa para fotos
-- [ ] Offline-first (sync cuando hay conexión)
+### Fase 5 - Polish + Deploy
+- [ ] Backup automático
+- [ ] Export JSON/CSV
+- [ ] PM2 config
+- [ ] Documentación deploy Mac mini
 
 ## Wireframes / UI Ideas
 
@@ -237,25 +284,35 @@ CREATE TABLE replica_sesion (
 
 ## Decisiones de Arquitectura (ADRs)
 
-### ADR-001: SQLite sobre PostgreSQL
-**Contexto:** App personal, un solo usuario, Mac mini como servidor.
-**Decisión:** SQLite por simplicidad, zero-config, y portabilidad.
-**Consecuencias:** No escala a multi-usuario fácilmente. Backup es copiar un archivo.
+### ADR-001: Arquitectura Hexagonal sobre MVC
+**Contexto:** Necesitamos testabilidad, independencia de frameworks, y claridad de dependencias.
+**Decisión:** Arquitectura Hexagonal (Ports & Adapters). Dominio puro en el centro, infraestructura desacoplable.
+**Consecuencias:** Más archivos/boilerplate inicial, pero máxima flexibilidad para cambiar DB, web framework, o storage.
 
-### ADR-002: Next.js full-stack sobre separación frontend/backend
-**Contexto:** Desarrollo rápido, un solo desarrollador, deploy simple.
-**Decisión:** Next.js con API routes + tRPC. Un solo proceso.
-**Consecuencias:** Acoplamiento frontend/backend. Migrar a separación requiere refactor.
+### ADR-002: Go sobre Python/Node.js
+**Contexto:** App personal, un solo dev, prioridad en performance y type safety.
+**Decisión:** Go por compilación a binario único, deployment trivial, y excelente tooling.
+**Consecuencias:** Menos ecosystem frontend (usamos HTMX), más verbose que Python, pero más robusto.
 
-### ADR-003: Filesystem local sobre S3/Cloud
+### ADR-003: SQLite sobre PostgreSQL
+**Contexto:** Single-user app, Mac mini server, zero-config deseado.
+**Decisión:** SQLite con WAL mode. Backup es copiar archivo.
+**Consecuencias:** No escala a multi-user concurrente. Para multi-user futuro, migrar a PostgreSQL.
+
+### ADR-004: HTMX + Alpine.js sobre React/Vue
+**Contexto:** Queremos PWA con mínimo JavaScript, server-rendered, y sin build step complejo.
+**Decisión:** HTMX para interacciones AJAX, Alpine.js para reactividad ligera.
+**Consecuencias:** Menos "app-like", más "web-like". Bundle pequeño, SEO-friendly.
+
+### ADR-005: Filesystem Local sobre Cloud Storage
 **Contexto:** Privacidad de documentos DIAN, costo cero, control total.
-**Decisión:** Almacenamiento local en ~/Documents/arsenal-uploads/.
-**Consecuencias:** Sin CDN. Backup manual o rsync.
+**Decisión:** ~/arsenal-uploads/ con estructura por réplica.
+**Consecuencias:** Backup manual (rsync a GitHub/otro repo). Sin CDN.
 
-### ADR-004: PWA sobre app nativa
-**Contexto:** Un solo desarrollador, multiplataforma, sin App Store.
-**Decisión:** PWA con Next.js. Instalable desde navegador.
-**Consecuencias:** Acceso limitado a APIs nativas (cámara funciona, notificaciones push complicadas en iOS).
+### ADR-006: Docker sobre PM2 directo
+**Contexto:** Necesitamos reproducibilidad y portabilidad del deploy.
+**Decisión:** Docker + Docker Compose para desarrollo y producción.
+**Consecuencias:** Overhead mínimo, pero máxima consistencia entre ambientes.
 
 ## Roadmap Extendido (Post-MVP)
 
