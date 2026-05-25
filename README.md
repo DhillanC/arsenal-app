@@ -13,6 +13,7 @@ App de gestión de réplicas airsoft - Inventario, mantenimiento, documentación
 - SQLite (base de datos)
 - HTMX + Alpine.js (frontend)
 - Tailwind CSS (estilos)
+- Docker + Docker Compose (deploy)
 
 ## Estado
 
@@ -230,6 +231,26 @@ erDiagram
         int sesion_id FK
         int bb_disparadas
     }
+```
+
+## Docker
+
+### Desarrollo local
+```bash
+# Levantar con Docker Compose
+make docker-up
+
+# Ver logs
+make docker-logs
+
+# Bajar
+make docker-down
+```
+
+### Build manual
+```bash
+docker build -t arsenal-app .
+docker run -p 8080:8080 -v $(pwd)/data:/data -v $(pwd)/uploads:/uploads arsenal-app
 ```
 
 ---

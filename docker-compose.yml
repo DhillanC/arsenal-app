@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: arsenal-app
+    ports:
+      - "8080:8080"
+    environment:
+      - APP_ENV=development
+      - APP_PORT=8080
+      - DB_PATH=/data/arsenal.db
+      - UPLOAD_PATH=/uploads
+      - OCR_ENABLED=true
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+    volumes:
+      - ./data:/data
+      - ./uploads:/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # (Opcional) Servicio de OCR con Tesseract
+  # Descomentar si se quiere OCR como servicio separado
+  # ocr:
+  #   image: tesseractshadow/tesseract4re
+  #   container_name: arsenal-ocr
+  #   volumes:
+  #     - ./uploads:/uploads:ro
+  #   environment:
+  #     - TESSDATA_PREFIX=/usr/share/tesseract-ocr/4.00/tessdata
+
+volumes:
+  data:
+  uploads:
