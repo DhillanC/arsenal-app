@@ -45,6 +45,11 @@ func NewHandler(
 
 		actividadHandler := handlers.NewActividadHandler(actividadService)
 		actividadHandler.RegisterRoutes(api)
+
+		// Documentos handler
+		documentoHandler := handlers.NewDocumentoHandler(documentoService)
+		api.GET("/replicas/:id/documentos", documentoHandler.ListByReplica)
+		api.POST("/replicas/:id/documentos", documentoHandler.Upload)
 	}
 
 	return router
