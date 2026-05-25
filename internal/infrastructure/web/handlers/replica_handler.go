@@ -1,4 +1,4 @@
-package web
+package handlers
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/models"
-	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/inbound"
+	inbound "github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/inbound"
 	"github.com/gin-gonic/gin"
 )
 

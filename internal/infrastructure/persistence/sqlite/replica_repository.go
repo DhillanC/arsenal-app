@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/models"
-	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/outbound"
+	outbound "github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/outbound"
 )
 
 // ReplicaRepository implementa outbound.ReplicaRepository

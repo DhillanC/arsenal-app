@@ -6,6 +6,7 @@ import (
 
 	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/services"
 	"github.com/digital-consultory-solutions/arsenal-app/internal/infrastructure/persistence/sqlite"
+	"github.com/digital-consultory-solutions/arsenal-app/internal/infrastructure/storage/local"
 	"github.com/digital-consultory-solutions/arsenal-app/internal/infrastructure/web"
 )
 
@@ -34,7 +35,11 @@ func main() {
 	// Servicios (capa de aplicación)
 	replicaService := services.NewReplicaService(replicaRepo)
 	actividadService := services.NewActividadService(actividadRepo)
-	documentoService := services.NewDocumentoService(documentoRepo, nil) // TODO: storage
+	
+	// Storage
+	uploadPath := getEnv("UPLOAD_PATH", "./uploads")
+	storage := local.NewStorage(uploadPath)
+	documentoService := services.NewDocumentoService(documentoRepo, storage)
 
 	// Servidor HTTP
 	server := web.NewServer(replicaService, actividadService, documentoService)

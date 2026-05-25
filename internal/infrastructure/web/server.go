@@ -2,10 +2,10 @@ package web
 
 import (
 	"net/http"
-	"strconv"
 	"time"
 
-	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/inbound"
+	inbound "github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/inbound"
+	"github.com/digital-consultory-solutions/arsenal-app/internal/infrastructure/web/handlers"
 	"github.com/gin-gonic/gin"
 )
 
@@ -36,11 +36,11 @@ func NewServer(
 	api := router.Group("/api/v1")
 	{
 		// Réplicas
-		replicaHandler := NewReplicaHandler(replicaService)
+		replicaHandler := handlers.NewReplicaHandler(replicaService)
 		replicaHandler.RegisterRoutes(api)
 
 		// Actividades
-		actividadHandler := NewActividadHandler(actividadService)
+		actividadHandler := handlers.NewActividadHandler(actividadService)
 		actividadHandler.RegisterRoutes(api)
 	}
 

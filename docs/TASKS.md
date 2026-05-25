@@ -46,14 +46,27 @@
 - [ ] Handlers documentos
 - [x] Entry point main.go
 
+### Storage
+- [x] Storage local (filesystem)
+
 ### Tests
-- [ ] Tests unitarios dominio
-- [ ] Tests integración repositorio
+- [x] Tests unitarios dominio
+- [x] Tests integración repositorio
 - [ ] Tests E2E API
 
 ---
 
 ## Fase 2: Core Features ⭐
+
+### Seguridad (Nuevo)
+- [ ] Análisis de amenazas (Threat Modeling)
+- [ ] Diagramas de flujo de datos con trust boundaries
+- [ ] Identificación de activos críticos (PHI, documentos DIAN)
+- [ ] Controles de seguridad (auth, autorización, sanitización)
+- [ ] Rate limiting y protección contra abuso
+- [ ] Logging de auditoría (quién hizo qué y cuándo)
+- [ ] Backup y recuperación de datos
+- [ ] Encriptación de datos sensibles en reposo
 
 ### Documentos
 - [ ] Subida de archivos (multipart)

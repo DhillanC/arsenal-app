@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/models"
-	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/inbound"
-	"github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/outbound"
+	inbound "github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/inbound"
+	outbound "github.com/digital-consultory-solutions/arsenal-app/internal/domain/ports/outbound"
 )
 
 // ReplicaService implementa inbound.ReplicaService
