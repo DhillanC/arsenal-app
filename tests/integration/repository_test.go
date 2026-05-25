@@ -3,7 +3,6 @@ package sqlite_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -17,14 +16,7 @@ func setupTestDB(t *testing.T) *sqlite.DB {
 	db, err := sqlite.NewDB(":memory:")
 	require.NoError(t, err)
 	
-	// Usar ruta absoluta desde el proyecto
-	migrationsDir := "../../internal/infrastructure/persistence/sqlite/migrations"
-	if _, err := os.Stat(migrationsDir); os.IsNotExist(err) {
-		// Fallback para cuando se ejecuta desde diferentes directorios
-		migrationsDir = "internal/infrastructure/persistence/sqlite/migrations"
-	}
-	
-	err = db.RunMigrations(migrationsDir)
+	err = db.RunMigrations()
 	require.NoError(t, err)
 	
 	return db

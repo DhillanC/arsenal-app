@@ -3,6 +3,7 @@ package local_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/DhillanC/arsenal-app/internal/infrastructure/storage/local"
@@ -57,5 +58,38 @@ func TestStorage(t *testing.T) {
 		assert.NotEqual(t, path1, path2)
 		assert.FileExists(t, path1)
 		assert.FileExists(t, path2)
+	})
+
+	t.Run("Path traversal blocked", func(t *testing.T) {
+		content := []byte("evil")
+		// filepath.Base("../../../etc/passwd") devuelve "passwd"
+		// filepath.Base limpia los "../" así que no detectamos por strings.Contains
+		// Pero el filepath.Rel check debería detectar que está fuera de basePath
+		_, err := storage.Save(content, "../../../etc/passwd", 1)
+		// Nota: filepath.Base hace que esto pase, pero el filepath.Rel check debería fallar
+		// Si no falla, es un bug que necesitamos arreglar
+		if err == nil {
+			// Si no hay error, verificar que al menos no escapó del tempDir
+			outsidePath := filepath.Join(tempDir, "..", "..", "..", "etc", "passwd")
+			_, statErr := os.Stat(outsidePath)
+			assert.True(t, os.IsNotExist(statErr), "El archivo no debería existir fuera del tempDir")
+		} else {
+			assert.Contains(t, err.Error(), "path traversal")
+		}
+	})
+
+	t.Run("Path traversal with Base escape blocked", func(t *testing.T) {
+		content := []byte("evil2")
+		// filepath.Base limpia "../../" pero debería quedar "passwd"
+		// El regex rechazaría "passwd" sin extensión? No, es válido
+		// Pero el path final debería estar dentro de tempDir/1/2026-01/
+		path, err := storage.Save(content, "../../passwd", 1)
+		require.NoError(t, err)
+
+		// Verificar que está dentro del directorio esperado
+		assert.True(t, strings.HasPrefix(path, tempDir))
+		// No debería haber creado "etc/passwd"
+		_, err = os.Stat(filepath.Join(tempDir, "etc", "passwd"))
+		assert.True(t, os.IsNotExist(err))
 	})
 }
