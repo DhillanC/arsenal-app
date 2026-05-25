@@ -71,7 +71,11 @@ func (h *ReplicaHandler) Create(c *gin.Context) {
 		return
 	}
 
-	fechaAdq, _ := time.Parse("2006-01-02", req.FechaAdquisicion)
+	fechaAdq, err := time.Parse("2006-01-02", req.FechaAdquisicion)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "fecha_adquisicion inválida, formato esperado: YYYY-MM-DD"})
+		return
+	}
 
 	replica := &models.Replica{
 		Nombre:            req.Nombre,
@@ -151,7 +155,11 @@ func (h *ReplicaHandler) Update(c *gin.Context) {
 		return
 	}
 
-	fechaAdq, _ := time.Parse("2006-01-02", req.FechaAdquisicion)
+	fechaAdq, err := time.Parse("2006-01-02", req.FechaAdquisicion)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "fecha_adquisicion inválida, formato esperado: YYYY-MM-DD"})
+		return
+	}
 
 	replica := &models.Replica{
 		ID:                id,

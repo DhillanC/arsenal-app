@@ -75,13 +75,15 @@ func (r *ReplicaRepository) GetByID(ctx context.Context, id int) (*models.Replic
 	return &replica, nil
 }
 
-// List devuelve todas las réplicas
+// List devuelve todas las réplicas activas (no archivadas)
 func (r *ReplicaRepository) List(ctx context.Context) ([]models.Replica, error) {
 	query := `
 		SELECT id, nombre, marca, modelo, tipo, numero_serie, fecha_adquisicion,
 			proveedor, costo_adquisicion, estado, fps, joules, peso_gramos,
 			longitud_mm, hop_up, capacidad_cargador, notas, created_at, updated_at
-		FROM replicas ORDER BY created_at DESC
+		FROM replicas 
+		WHERE estado != 'archivado'
+		ORDER BY created_at DESC
 	`
 
 	rows, err := r.db.QueryContext(ctx, query)

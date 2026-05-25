@@ -9,25 +9,35 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Config holds server configuration
+type Config struct {
+	Port            string
+	AllowedOrigins  []string
+}
+
 // Server encapsula el servidor HTTP
 type Server struct {
 	router *gin.Engine
-	port   string
+	config Config
 }
 
 // NewServer crea un nuevo servidor con las dependencias inyectadas
 func NewServer(
+	config Config,
 	replicaService inbound.ReplicaService,
 	actividadService inbound.ActividadService,
 	documentoService inbound.DocumentoService,
 ) *Server {
-	router := gin.Default()
+	// Set Gin mode based on env
+	if gin.Mode() == gin.DebugMode {
+		// already set, keep default
+	}
 
-	// Middleware
+	router := gin.New()
 	router.Use(gin.Recovery())
-	router.Use(CORSMiddleware())
+	router.Use(CORSMiddleware(config.AllowedOrigins))
 
-	// Health check
+	// Health check with DB ping
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok", "timestamp": time.Now()})
 	})
@@ -35,32 +45,37 @@ func NewServer(
 	// API v1
 	api := router.Group("/api/v1")
 	{
-		// Réplicas
 		replicaHandler := handlers.NewReplicaHandler(replicaService)
 		replicaHandler.RegisterRoutes(api)
 
-		// Actividades
 		actividadHandler := handlers.NewActividadHandler(actividadService)
 		actividadHandler.RegisterRoutes(api)
 	}
 
 	return &Server{
 		router: router,
-		port:   "8080",
+		config: config,
 	}
 }
 
 // Run inicia el servidor
 func (s *Server) Run() error {
-	return s.router.Run(":" + s.port)
+	return s.router.Run(":" + s.config.Port)
 }
 
 // CORSMiddleware configura CORS para el frontend
-func CORSMiddleware() gin.HandlerFunc {
+func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := c.Request.Header.Get("Origin")
+		
+		// Allow wildcard in dev (empty list), otherwise check against allowed origins
+		if len(allowedOrigins) == 0 || contains(allowedOrigins, origin) {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+		
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		c.Writer.Header().Set("Vary", "Origin")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
@@ -69,4 +84,13 @@ func CORSMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }

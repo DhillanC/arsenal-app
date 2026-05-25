@@ -13,6 +13,7 @@ import (
 func main() {
 	// Configuración
 	dbPath := getEnv("DB_PATH", "./data/arsenal.db")
+	appPort := getEnv("APP_PORT", "8080")
 	migrationsDir := "./internal/infrastructure/persistence/sqlite/migrations"
 
 	// Inicializar base de datos
@@ -42,9 +43,12 @@ func main() {
 	documentoService := services.NewDocumentoService(documentoRepo, storage)
 
 	// Servidor HTTP
-	server := web.NewServer(replicaService, actividadService, documentoService)
+	config := web.Config{
+		Port: appPort,
+	}
+	server := web.NewServer(config, replicaService, actividadService, documentoService)
 	
-	log.Println("🚀 Arsenal App iniciado en http://localhost:8080")
+	log.Printf("🚀 Arsenal App iniciado en http://localhost:%s", appPort)
 	if err := server.Run(); err != nil {
 		log.Fatalf("Error iniciando servidor: %v", err)
 	}
