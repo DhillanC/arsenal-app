@@ -58,10 +58,10 @@
 
 ## Fase 2: Core Features ⭐
 
-### Seguridad (Nuevo)
-- [ ] Análisis de amenazas (Threat Modeling)
-- [ ] Diagramas de flujo de datos con trust boundaries
-- [ ] Identificación de activos críticos (PHI, documentos DIAN)
+### Seguridad (En Progreso)
+- [x] Análisis de amenazas (Threat Modeling) - STRIDE completado
+- [x] Diagramas de flujo de datos con trust boundaries
+- [x] Identificación de activos críticos (PHI, documentos DIAN)
 - [ ] Controles de seguridad (auth, autorización, sanitización)
 - [ ] Rate limiting y protección contra abuso
 - [ ] Logging de auditoría (quién hizo qué y cuándo)
