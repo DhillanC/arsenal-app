@@ -14,6 +14,7 @@ type ReplicaService interface {
 	List(ctx context.Context) ([]models.Replica, error)
 	Update(ctx context.Context, replica *models.Replica) error
 	Delete(ctx context.Context, id int) error
+	Search(ctx context.Context, query string) ([]models.Replica, error)
 }
 
 // ActividadService define los casos de uso para actividades

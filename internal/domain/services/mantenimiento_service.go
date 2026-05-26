@@ -28,13 +28,18 @@ func (s *MantenimientoService) Create(ctx context.Context, m *models.Mantenimien
 	if m.ReplicaID == 0 {
 		return fmt.Errorf("replica_id es requerido")
 	}
-	
-	// Calcular próxima fecha si hay frecuencia y última fecha
+	// BB-count scheduling no está implementado: el contador de BBs disparadas
+	// no se registra en ninguna parte del sistema, por lo que aceptar un valor
+	// sin lógica que lo consuma sería silent-ignore. Rechazamos explícitamente.
+	if m.FrecuenciaBB > 0 && m.FrecuenciaDias == 0 {
+		return fmt.Errorf("frecuencia_bb no implementado: usar frecuencia_dias")
+	}
+
 	if m.FrecuenciaDias > 0 && m.UltimaFecha != nil {
 		next := m.UltimaFecha.AddDate(0, 0, m.FrecuenciaDias)
 		m.ProximaFecha = &next
 	}
-	
+
 	return s.repo.Create(ctx, m)
 }
 
@@ -61,13 +66,15 @@ func (s *MantenimientoService) Update(ctx context.Context, m *models.Mantenimien
 	if m.ID == 0 {
 		return fmt.Errorf("id es requerido")
 	}
-	
-	// Recalcular próxima fecha si cambió la frecuencia o última fecha
+	if m.FrecuenciaBB > 0 && m.FrecuenciaDias == 0 {
+		return fmt.Errorf("frecuencia_bb no implementado: usar frecuencia_dias")
+	}
+
 	if m.FrecuenciaDias > 0 && m.UltimaFecha != nil {
 		next := m.UltimaFecha.AddDate(0, 0, m.FrecuenciaDias)
 		m.ProximaFecha = &next
 	}
-	
+
 	return s.repo.Update(ctx, m)
 }
 
