@@ -308,14 +308,14 @@ CREATE TABLE replica_sesion (
 - [ ] Dashboard con estadísticas
 - [ ] PWA manifest + service worker
 
-### Fase 6 - Autenticación y Seguridad API 🔐
-**Reordenada:** antes era Fase 5, ahora penúltima (para futuro multi-user).
+### Fase 5 - Autenticación y Seguridad API 🔐
+**Orden final:** penúltima, antes del Polish (para futuro multi-user).
 - [ ] JWT Authentication
 - [ ] Rate limiting
 - [ ] Audit logging
 
-### Fase 5 - Mantenimiento + DIAN 🔧
-**Reordenada:** antes era Fase 6, ahora prioridad funcional sobre auth.
+### Fase 6 - Mantenimiento + DIAN 🔧
+**Orden final:** última fase funcional, antes del Polish.
 - [ ] Calendario de mantenimiento
 - [ ] Recordatorios (cron jobs locales)
 - [ ] Campos específicos importación DIAN
