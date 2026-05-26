@@ -138,22 +138,26 @@ flowchart LR
 
 ## 4. Controles de Seguridad Implementados
 
-### ✅ Ya implementados (Fase 1)
+### ✅ Ya implementados (Fase 1-2)
 - [x] SQLite con foreign keys y constraints
 - [x] Soft delete (no borrado físico)
 - [x] CORS middleware
 - [x] Input validation básica en servicios
 - [x] .gitignore para data/ y uploads/
+- [x] Path traversal protection (sanitize + filepath.Rel check)
+- [x] Max upload size limit (10MB en multipart)
+- [x] Health check con DB ping
+- [x] Graceful shutdown con signal handling
+- [x] SQLite busy_timeout + connection limits
 
-### 🔄 Pendientes Fase 2
+### 🔄 Pendientes Fase 3-5
 - [ ] JWT Authentication
 - [ ] Rate limiting
 - [ ] Audit logging
 - [ ] File hash verification
-- [ ] Path traversal protection
-- [ ] Max upload size limit
+- [ ] OCR timeout controls
 
-### 📋 Futuros (Fase 3+)
+### 📋 Futuros (Fase 5-6)
 - [ ] Encriptación de documentos sensibles
 - [ ] Backup automático encriptado
 - [ ] 2FA opcional
