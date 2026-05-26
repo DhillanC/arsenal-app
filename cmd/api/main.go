@@ -53,9 +53,10 @@ func run() error {
 	documentoService := services.NewDocumentoService(documentoRepo, storage)
 
 	config := web.Config{
-		Port:           appPort,
-		AllowedOrigins: allowedOrigins,
-		DB:             db.Conn,
+		Port:            appPort,
+		AllowedOrigins:  allowedOrigins,
+		DB:              db.Conn,
+		EnableTemplates: true,
 	}
 	handler := web.NewHandler(config, replicaService, actividadService, documentoService)
 

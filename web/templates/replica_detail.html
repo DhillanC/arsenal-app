@@ -1,0 +1,188 @@
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center space-x-2 text-sm text-muted-foreground">
+        <a href="/replicas" class="hover:text-gold-primary">Réplicas</a>
+        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        <span>{{.Replica.Nombre}}</span>
+    </nav>
+
+    <!-- Header -->
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold gradient-text">{{.Replica.Nombre}}</h1>
+            <p class="text-muted-foreground mt-1">{{.Replica.Marca}} {{.Replica.Modelo}}</p>
+        </div>
+        <div class="flex space-x-2">
+            <a href="/replicas/{{.Replica.ID}}/editar" class="btn-secondary inline-flex items-center space-x-2">
+                <i data-lucide="edit" class="w-4 h-4"></i>
+                <span>Editar</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Info Card -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Left: Image & Basic Info -->
+        <div class="card lg:col-span-1">
+            <div class="aspect-square bg-gradient-to-br from-gold-primary/10 to-gold-medium/5 rounded-lg flex items-center justify-center mb-4">
+                <i data-lucide="box" class="w-24 h-24 text-gold-primary/30"></i>
+            </div>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Estado</span>
+                    <span class="px-2 py-1 rounded-full text-xs font-medium
+                        {{if eq .Replica.Estado "activo"}}bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400
+                        {{else if eq .Replica.Estado "reparacion"}}bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400
+                        {{else}}bg-gray-100 text-gray-700{{end}}">
+                        {{.Replica.Estado}}
+                    </span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Serial</span>
+                    <span>{{.Replica.NumeroSerie}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Tipo</span>
+                    <span>{{.Replica.Tipo}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">FPS</span>
+                    <span>{{.Replica.FPS}}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-muted-foreground">Joules</span>
+                    <span>{{.Replica.Joules}}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Tabs -->
+        <div class="lg:col-span-2">
+            <!-- Tab Navigation -->
+            <div class="border-b border-gold-primary/20 mb-6">
+                <nav class="flex space-x-8">
+                    <button onclick="showTab('timeline')" class="tab-btn active" data-tab="timeline">
+                        <i data-lucide="clock" class="w-4 h-4 inline mr-2"></i>Timeline
+                    </button>
+                    <button onclick="showTab('documentos')" class="tab-btn" data-tab="documentos">
+                        <i data-lucide="file-text" class="w-4 h-4 inline mr-2"></i>Documentos
+                    </button>
+                    <button onclick="showTab('mantenimiento')" class="tab-btn" data-tab="mantenimiento">
+                        <i data-lucide="wrench" class="w-4 h-4 inline mr-2"></i>Mantenimiento
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content: Timeline -->
+            <div id="tab-timeline" class="tab-content active">
+                <div class="space-y-4">
+                    {{range .Timeline}}
+                    <div class="flex space-x-4">
+                        <div class="flex flex-col items-center">
+                            <div class="w-3 h-3 rounded-full bg-gold-primary"></div>
+                            <div class="w-0.5 flex-1 bg-gold-primary/20"></div>
+                        </div>
+                        <div class="card flex-1">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <span class="text-sm font-medium text-gold-primary">{{.Fecha.Format "2006-01-02"}}</span>
+                                    <h4 class="font-semibold">{{.Tipo}}</h4>
+                                </div>
+                                {{if .Costo}}
+                                <span class="font-medium">${{printf "%.0f" .Costo}}</span>
+                                {{end}}
+                            </div>
+                            <p class="text-sm text-muted-foreground">{{.Descripcion}}</p>
+                            {{if .Documentos}}
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                {{range .Documentos}}
+                                <a href="/uploads/{{.RutaArchivo}}" target="_blank" class="inline-flex items-center space-x-1 text-sm px-2 py-1 rounded bg-gold-primary/10 hover:bg-gold-primary/20">
+                                    <i data-lucide="paperclip" class="w-3 h-3"></i>
+                                    <span>{{.NombreArchivo}}</span>
+                                </a>
+                                {{end}}
+                            </div>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{else}}
+                    <div class="text-center py-8 text-muted-foreground">
+                        <i data-lucide="clock" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                        <p>No hay actividades registradas</p>
+                        <button class="btn-primary mt-3" onclick="document.getElementById('nueva-actividad-modal').classList.remove('hidden')">
+                            Agregar actividad
+                        </button>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+
+            <!-- Tab Content: Documentos -->
+            <div id="tab-documentos" class="tab-content hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold">Documentos</h3>
+                    <button class="btn-primary inline-flex items-center space-x-2">
+                        <i data-lucide="upload" class="w-4 h-4"></i>
+                        <span>Subir</span>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {{range .Documentos}}
+                    <div class="card">
+                        <div class="flex items-start space-x-3">
+                            <i data-lucide="file" class="w-8 h-8 text-gold-primary"></i>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-medium truncate">{{.NombreArchivo}}</p>
+                                <p class="text-sm text-muted-foreground">{{.Tipo}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {{else}}
+                    <div class="col-span-full text-center py-8 text-muted-foreground">
+                        <p>No hay documentos</p>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+
+            <!-- Tab Content: Mantenimiento -->
+            <div id="tab-mantenimiento" class="tab-content hidden">
+                <div class="text-center py-8 text-muted-foreground">
+                    <i data-lucide="wrench" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                    <p>Próximamente: Calendario de mantenimiento</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.add('hidden');
+        tab.classList.remove('active');
+    });
+    // Remove active from buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    // Show selected tab
+    document.getElementById('tab-' + tabName).classList.remove('hidden');
+    document.getElementById('tab-' + tabName).classList.add('active');
+    // Activate button
+    document.querySelector('[data-tab="' + tabName + '"]').classList.add('active');
+}
+</script>
+
+<style>
+.tab-btn {
+    @apply px-4 py-2 text-sm font-medium text-muted-foreground border-b-2 border-transparent;
+    @apply hover:text-gold-primary transition-colors;
+}
+.tab-btn.active {
+    @apply text-gold-primary border-gold-primary;
+}
+</style>
+{{end}}

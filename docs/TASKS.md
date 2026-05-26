@@ -111,24 +111,33 @@
 
 ---
 
-## Fase 4: Frontend Web 🎨
+## Fase 4: Frontend Web ✅ (Completada)
 
 ### HTMX + Tailwind
-- [ ] Setup HTMX + Tailwind
-- [ ] Templates HTML base
-- [ ] Página lista réplicas
-- [ ] Página ficha réplica
-- [ ] Formularios
+- [x] Setup HTMX + Tailwind
+- [x] Templates HTML base (base.html, layouts con tema DCS)
+- [x] Página lista réplicas (replica_list.html)
+- [x] Página ficha réplica (replica_detail.html con tabs)
+- [x] Formularios (replica_form.html)
+- [x] Vista de error (error.html)
 
 ### Dashboard
-- [ ] Estadísticas generales
-- [ ] Gráficos de uso
-- [ ] Costo total de propiedad
+- [x] Estadísticas generales (conteos, valores)
+- [x] Gráficos de uso (por tipo, por estado)
+- [x] Costo total de propiedad
+- [x] Actividad reciente
+
+### Tema DCS Web
+- [x] Paleta: Gold #b88834, Gold Medium #ca9250, Gold Light #fdf3aa
+- [x] Dark mode: Near-black #131110, Teal accent #5DC8D2
+- [x] Light mode: Cream #f9f6f0
+- [x] Toggle con localStorage (key: theme)
+- [x] CSS variables y transiciones
 
 ### PWA
-- [ ] Manifest.json
-- [ ] Service Worker
-- [ ] Offline indicators
+- [x] Manifest.json (con iconos y colores)
+- [x] Service Worker (placeholder)
+- [x] Meta tags para mobile
 
 ---
 

@@ -12,12 +12,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// HTMLConfig configura las vistas HTML
+func setupTemplates(router *gin.Engine) {
+	router.LoadHTMLGlob("web/templates/*")
+}
+
 // Config holds server configuration
 type Config struct {
 	Port           string
 	AllowedOrigins []string
 	// DB se usa para el health-check; si es nil, /health no verifica DB.
 	DB *sql.DB
+	// EnableTemplates carga templates HTML para frontend
+	EnableTemplates bool
 }
 
 // NewHandler creates a Gin engine with all routes configured
@@ -34,6 +41,11 @@ func NewHandler(
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(CORSMiddleware(config.AllowedOrigins))
+
+	// Setup HTML templates (solo si se solicita explícitamente)
+	if config.EnableTemplates {
+		setupTemplates(router)
+	}
 
 	// Health-check con verificación de DB.
 	// Si la DB no responde a Ping en 2s, devuelve 503 — load balancer puede sacarnos del pool.
@@ -75,6 +87,12 @@ func NewHandler(
 		}
 		api.GET("/documentos/filter", documentoHandler.ListByReplicaAndType)
 		api.GET("/documentos/search", documentoHandler.Search)
+	}
+
+	// HTML Frontend routes
+	if config.EnableTemplates {
+		htmlHandler := handlers.NewHTMLHandler(replicaService, actividadService, documentoService)
+		htmlHandler.RegisterHTMLRoutes(router)
 	}
 
 	return router
