@@ -290,6 +290,19 @@ CREATE TABLE replica_sesion (
 - [ ] Timeline de actividades (pendiente de UI)
 
 ### Fase 4 - Frontend Web 🎨 (En Progreso)
+
+**Estilo basado en DCS Web:**
+- **Paleta de colores:**
+  - Gold Primary: `#b88834` (hsl(38 56% 46%))
+  - Gold Medium: `#ca9250` (hsl(33 54% 55%))
+  - Gold Light: `#fdf3aa` (hsl(53 95% 83%))
+  - Near-black (dark bg): `#131110` (hsl(20 9% 7%))
+  - Cream (light bg): `#f9f6f0` (hsl(45 33% 96%))
+  - Teal accent (dark mode): `#5DC8D2` (hsl(188 60% 55%))
+- **Dark/Light mode:** Toggle con `localStorage` (key: `theme`), clase `.dark` en `:root`
+- **CSS variables:** Transiciones suaves, gradient text, grid pattern background
+
+**Features:**
 - [ ] HTMX + Tailwind frontend
 - [ ] Vistas: lista de réplicas, detalle, formularios
 - [ ] Dashboard con estadísticas
