@@ -52,6 +52,16 @@ func (s *DocumentoService) ListByReplica(ctx context.Context, replicaID int) ([]
 	return s.repo.ListByReplica(ctx, replicaID)
 }
 
+// ListByReplicaAndType lista documentos de una réplica filtrados por tipo
+func (s *DocumentoService) ListByReplicaAndType(ctx context.Context, replicaID int, tipo string) ([]models.Documento, error) {
+	return s.repo.ListByReplicaAndType(ctx, replicaID, tipo)
+}
+
+// ListByActividad lista documentos asociados a una actividad
+func (s *DocumentoService) ListByActividad(ctx context.Context, actividadID int) ([]models.Documento, error) {
+	return s.repo.ListByActividad(ctx, actividadID)
+}
+
 // Update actualiza un documento
 func (s *DocumentoService) Update(ctx context.Context, documento *models.Documento) error {
 	if documento.ID == 0 {

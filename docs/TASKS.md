@@ -91,12 +91,12 @@
 
 ---
 
-## Fase 3: Gestión de Documentos 📄
+## Fase 3: Gestión de Documentos ✅ (Completada)
 
 ### Subida de Archivos
 - [x] Handler multipart para documentos
 - [x] Validación MIME type
-- [x] Límite de tamaño (10MB)
+- [x] Límite de tamaño (10MB) - http.MaxBytesReader para cap real
 - [x] Organización por réplica en filesystem
 
 ### OCR
@@ -104,10 +104,10 @@
 - [x] Extracción de texto en upload
 - [x] Almacenar OCR en DB
 
-### Búsqueda
+### Búsqueda y Filtros
 - [x] Búsqueda full-text por contenido OCR
-- [ ] Filtros por tipo de documento
-- [ ] Timeline con documentos adjuntos
+- [x] Filtros por tipo de documento (`GET /documentos/filter?replica_id=X&tipo=Y`)
+- [x] Timeline con documentos adjuntos (`GET /replicas/:id/actividades/timeline`)
 
 ---
 

@@ -11,13 +11,18 @@ import (
 )
 
 // ActividadHandler maneja las peticiones HTTP para actividades
+// y el timeline combinado con documentos
 type ActividadHandler struct {
-	service inbound.ActividadService
+	service        inbound.ActividadService
+	documentoService inbound.DocumentoService
 }
 
 // NewActividadHandler crea un nuevo handler
-func NewActividadHandler(service inbound.ActividadService) *ActividadHandler {
-	return &ActividadHandler{service: service}
+func NewActividadHandler(service inbound.ActividadService, documentoService inbound.DocumentoService) *ActividadHandler {
+	return &ActividadHandler{
+		service:        service,
+		documentoService: documentoService,
+	}
 }
 
 // RegisterRoutes registra las rutas de actividades
@@ -26,6 +31,7 @@ func (h *ActividadHandler) RegisterRoutes(router *gin.RouterGroup) {
 	{
 		actividades.GET("", h.ListByReplica)
 		actividades.POST("", h.Create)
+		actividades.GET("/timeline", h.Timeline)
 	}
 
 	// Rutas independientes para operaciones por ID de actividad
@@ -183,4 +189,67 @@ func (h *ActividadHandler) Delete(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "actividad eliminada"})
+}
+
+// TimelineItem representa un item en el timeline (actividad + documentos)
+type TimelineItem struct {
+	ID               int                      `json:"id"`
+	Fecha            time.Time                `json:"fecha"`
+	Tipo             string                   `json:"tipo"`
+	Descripcion      string                   `json:"descripcion"`
+	ProveedorTecnico string                   `json:"proveedor_tecnico,omitempty"`
+	Costo            float64                  `json:"costo,omitempty"`
+	KilometrajeBB    int                      `json:"kilometraje_bb,omitempty"`
+	Ubicacion        string                   `json:"ubicacion,omitempty"`
+	Documentos       []models.Documento       `json:"documentos"`
+}
+
+// Timeline devuelve el timeline cronológico de una réplica
+// con actividades y sus documentos asociados
+func (h *ActividadHandler) Timeline(c *gin.Context) {
+	ctx := c.Request.Context()
+	replicaID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id de réplica inválido"})
+		return
+	}
+
+	// Obtener actividades
+	actividades, err := h.service.ListByReplica(ctx, replicaID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Construir timeline con documentos
+	timeline := make([]TimelineItem, 0, len(actividades))
+	for _, act := range actividades {
+		item := TimelineItem{
+			ID:               act.ID,
+			Fecha:            act.Fecha,
+			Tipo:             act.Tipo,
+			Descripcion:      act.Descripcion,
+			ProveedorTecnico: act.ProveedorTecnico,
+			Costo:            act.Costo,
+			KilometrajeBB:    act.KilometrajeBB,
+			Ubicacion:        act.Ubicacion,
+			Documentos:       []models.Documento{},
+		}
+
+		// Obtener documentos de la actividad
+		docs, err := h.documentoService.ListByActividad(ctx, act.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		item.Documentos = docs
+
+		timeline = append(timeline, item)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"replica_id": replicaID,
+		"count":      len(timeline),
+		"timeline":   timeline,
+	})
 }

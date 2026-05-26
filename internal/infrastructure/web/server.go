@@ -63,13 +63,17 @@ func NewHandler(
 		replicaHandler := handlers.NewReplicaHandler(replicaService)
 		replicaHandler.RegisterRoutes(api)
 
-		actividadHandler := handlers.NewActividadHandler(actividadService)
+		actividadHandler := handlers.NewActividadHandler(actividadService, documentoService)
 		actividadHandler.RegisterRoutes(api)
 
 		// Documentos handler
 		documentoHandler := handlers.NewDocumentoHandler(documentoService)
-		api.GET("/replicas/:id/documentos", documentoHandler.ListByReplica)
-		api.POST("/replicas/:id/documentos", documentoHandler.Upload)
+		documentoRoutes := api.Group("/replicas/:id/documentos")
+		{
+			documentoRoutes.GET("", documentoHandler.ListByReplica)
+			documentoRoutes.POST("", documentoHandler.Upload)
+		}
+		api.GET("/documentos/filter", documentoHandler.ListByReplicaAndType)
 		api.GET("/documentos/search", documentoHandler.Search)
 	}
 

@@ -33,6 +33,8 @@ func (h *DocumentoHandler) RegisterRoutes(router *gin.RouterGroup) {
 	{
 		docs.POST("", h.Upload)
 		docs.GET("", h.ListByReplica)
+		docs.GET("/filter", h.ListByReplicaAndType)
+		docs.GET("/search", h.Search)
 	}
 }
 
@@ -120,6 +122,34 @@ func (h *DocumentoHandler) ListByReplica(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, docs)
+}
+
+// ListByReplicaAndType lista documentos filtrados por tipo
+func (h *DocumentoHandler) ListByReplicaAndType(c *gin.Context) {
+	replicaID, err := strconv.Atoi(c.Query("replica_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "replica_id requerido"})
+		return
+	}
+
+	tipo := c.Query("tipo")
+	if tipo == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "tipo requerido"})
+		return
+	}
+
+	docs, err := h.service.ListByReplicaAndType(c.Request.Context(), replicaID, tipo)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"replica_id": replicaID,
+		"tipo":       tipo,
+		"count":      len(docs),
+		"results":    docs,
+	})
 }
 
 // Search busca documentos por texto OCR o número de documento

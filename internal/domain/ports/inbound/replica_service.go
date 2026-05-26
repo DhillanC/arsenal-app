@@ -28,6 +28,8 @@ type DocumentoService interface {
 	Create(ctx context.Context, documento *models.Documento, file []byte) error
 	GetByID(ctx context.Context, id int) (*models.Documento, error)
 	ListByReplica(ctx context.Context, replicaID int) ([]models.Documento, error)
+	ListByReplicaAndType(ctx context.Context, replicaID int, tipo string) ([]models.Documento, error)
+	ListByActividad(ctx context.Context, actividadID int) ([]models.Documento, error)
 	Update(ctx context.Context, documento *models.Documento) error
 	Delete(ctx context.Context, id int) error
 	SearchByOCR(ctx context.Context, query string) ([]models.Documento, error)
