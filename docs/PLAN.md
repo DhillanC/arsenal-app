@@ -29,6 +29,65 @@ Aplicación web/móvil (PWA) para gestión integral de réplicas airsoft. Invent
 - 🟨 **Aplicación:** Services + Commands/Queries
 - 🟦 **Infraestructura:** Repositories + Web + Storage + OCR
 
+### Diagrama de Arquitectura
+
+```mermaid
+flowchart TD
+    subgraph Core["🔴 Core - Dominio"]
+        direction TB
+        subgraph Models["Models"]
+            R["Replica"]
+            A["Actividad"]
+            D["Documento"]
+        end
+    end
+    
+    subgraph Inbound["🟡 Inbound Ports"]
+        RS["ReplicaService"]
+        AS["ActividadService"]
+        DS["DocumentoService"]
+    end
+    
+    subgraph Outbound["🟡 Outbound Ports"]
+        RR["ReplicaRepository"]
+        AR["ActividadRepository"]
+        DR["DocumentoRepository"]
+        ST["Storage"]
+    end
+    
+    subgraph Infra["🔵 Infraestructura"]
+        HTTP["Gin HTTP Handler"]
+        DB[(SQLite)]
+        FS["Local Filesystem"]
+        OCR["Tesseract OCR"]
+    end
+    
+    subgraph Client["👤 Cliente"]
+        Browser["Navegador / HTMX"]
+    end
+
+    Browser -->|HTTP| HTTP
+    
+    HTTP -->|usa| RS
+    HTTP -->|usa| AS
+    HTTP -->|usa| DS
+    
+    RS -->|maneja| R
+    AS -->|maneja| A
+    DS -->|maneja| D
+    
+    R -->|persiste en| RR
+    A -->|persiste en| AR
+    D -->|persiste en| DR
+    D -->|almacena en| ST
+    
+    RR -->|implementa| DB
+    AR -->|implementa| DB
+    DR -->|implementa| DB
+    ST -->|usa| FS
+    DS -->|usa| OCR
+```
+
 ## Estructura del Proyecto
 
 ```
@@ -220,13 +279,13 @@ CREATE TABLE replica_sesion (
 - [x] Docker compose target: builder eliminado
 - [x] CORS configurable
 
-### Fase 3 - Gestión de Documentos
-- [ ] Subida de archivos (multipart)
-- [ ] OCR con Tesseract
-- [ ] Búsqueda full-text por contenido OCR
-- [ ] Timeline de actividades
+### Fase 3 - Gestión de Documentos ✅ (Completada)
+- [x] Subida de archivos (multipart)
+- [x] OCR con Tesseract
+- [x] Búsqueda full-text por contenido OCR
+- [ ] Timeline de actividades (pendiente de UI)
 
-### Fase 4 - Frontend Web
+### Fase 4 - Frontend Web 🎨 (En Progreso)
 - [ ] HTMX + Tailwind frontend
 - [ ] Vistas: lista de réplicas, detalle, formularios
 - [ ] Dashboard con estadísticas
