@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -16,67 +17,70 @@ import (
 )
 
 func main() {
-	// Configuración
 	dbPath := getEnv("DB_PATH", "./data/arsenal.db")
 	appPort := getEnv("APP_PORT", "8080")
+	uploadPath := getEnv("UPLOAD_PATH", "./uploads")
+	allowedOrigins := parseOrigins(os.Getenv("CORS_ALLOWED_ORIGINS"))
 
-	// Inicializar base de datos
 	db, err := sqlite.NewDB(dbPath)
 	if err != nil {
 		log.Fatalf("Error inicializando DB: %v", err)
 	}
 	defer db.Close()
 
-	// Ejecutar migraciones embebidas
 	if err := db.RunMigrations(); err != nil {
 		log.Fatalf("Error en migraciones: %v", err)
 	}
 
-	// Repositorios
 	replicaRepo := sqlite.NewReplicaRepository(db.Conn)
 	actividadRepo := sqlite.NewActividadRepository(db.Conn)
 	documentoRepo := sqlite.NewDocumentoRepository(db.Conn)
 
-	// Servicios (capa de aplicación)
 	replicaService := services.NewReplicaService(replicaRepo)
 	actividadService := services.NewActividadService(actividadRepo)
-	
-	// Storage
-	uploadPath := getEnv("UPLOAD_PATH", "./uploads")
+
 	storage := local.NewStorage(uploadPath)
 	documentoService := services.NewDocumentoService(documentoRepo, storage)
 
-	// Servidor HTTP
 	config := web.Config{
-		Port: appPort,
+		Port:           appPort,
+		AllowedOrigins: allowedOrigins,
+		DB:             db.Conn,
 	}
 	handler := web.NewHandler(config, replicaService, actividadService, documentoService)
-	
+
+	// Timeouts protegen contra Slowloris / clientes lentos.
+	// IdleTimeout cierra keep-alives ociosos para liberar FDs bajo carga.
 	srv := &http.Server{
-		Addr:    ":" + appPort,
-		Handler: handler,
+		Addr:              ":" + appPort,
+		Handler:           handler,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
-	// Graceful shutdown
 	go func() {
-		log.Printf("🚀 Arsenal App iniciado en http://localhost:%s", appPort)
+		log.Printf("Arsenal App iniciado en http://localhost:%s (CORS=%v)", appPort, allowedOrigins)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Error iniciando servidor: %v", err)
 		}
 	}()
 
-	// Esperar señal de terminación
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	// Esperar señal de terminación con context cancelado al recibirla.
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	<-ctx.Done()
 
 	log.Println("Apagado solicitado, drenando conexiones...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("Error en graceful shutdown: %v", err)
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		// No usar Fatalf — saltea los defers (db.Close). Loguear y salir limpio.
+		log.Printf("Error en graceful shutdown: %v", err)
+		os.Exit(1)
 	}
 
 	log.Println("Servidor detenido limpiamente")
@@ -87,4 +91,20 @@ func getEnv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+// parseOrigins convierte "https://a.com,https://b.com" en []string{"https://a.com","https://b.com"}.
+// Strings vacíos se descartan para evitar agregar un "" como Origin permitido por accidente.
+func parseOrigins(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+	parts := strings.Split(raw, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if trimmed := strings.TrimSpace(p); trimmed != "" {
+			out = append(out, trimmed)
+		}
+	}
+	return out
 }
