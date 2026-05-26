@@ -43,7 +43,7 @@
 - [x] Middleware (logging, CORS, recovery)
 - [x] Handlers réplicas (CRUD)
 - [x] Handlers actividades
-- [ ] Handlers documentos
+- [x] Handlers documentos (upload + list + search)
 - [x] Entry point main.go
 
 ### Storage
@@ -94,18 +94,18 @@
 ## Fase 3: Gestión de Documentos 📄
 
 ### Subida de Archivos
-- [ ] Handler multipart para documentos
-- [ ] Validación MIME type
-- [ ] Límite de tamaño (10MB)
-- [ ] Organización por réplica en filesystem
+- [x] Handler multipart para documentos
+- [x] Validación MIME type
+- [x] Límite de tamaño (10MB)
+- [x] Organización por réplica en filesystem
 
 ### OCR
-- [ ] Integración Tesseract (gosseract)
-- [ ] Extracción de texto en upload
-- [ ] Almacenar OCR en DB
+- [x] Integración Tesseract (gosseract)
+- [x] Extracción de texto en upload
+- [x] Almacenar OCR en DB
 
 ### Búsqueda
-- [ ] Búsqueda full-text por contenido OCR
+- [x] Búsqueda full-text por contenido OCR
 - [ ] Filtros por tipo de documento
 - [ ] Timeline con documentos adjuntos
 
