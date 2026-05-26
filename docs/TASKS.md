@@ -141,8 +141,23 @@
 
 ---
 
+## Fase 5: Mantenimiento & DIAN 🔧 ✅ (Completada)
+
+### Mantenimiento Programado
+- [x] CRUD tareas de mantenimiento (`/api/v1/replicas/:id/mantenimiento`)
+- [x] Cálculo de próximas fechas (automático al completar)
+- [x] Endpoint mantenimientos próximos (`/api/v1/mantenimiento/proximos?dias=N`)
+- [x] Marcar como completado con recálculo de fecha
+
+### DIAN - Trazabilidad
+- [x] Búsqueda por número de serie (`/api/v1/replicas/search?q=...`)
+- [x] Campo numero_serie en réplicas (ya existía)
+- [x] Documentos tipo manifiesto_dian y declaracion_dian (ya existían)
+
+---
+
 ## Fase 6: Autenticación y Seguridad API 🔐
-**Reordenada:** antes era Fase 5, ahora penúltima.
+**Penúltima fase** - para futuro multi-user
 
 ### JWT Authentication
 - [ ] Login/registro de usuarios
@@ -157,21 +172,6 @@
 - [ ] Quién hizo qué y cuándo
 - [ ] Immutable audit store
 - [ ] Queries de auditoría
-
----
-
-## Fase 5: Mantenimiento & DIAN 🔧
-**Reordenada:** antes era Fase 6, ahora prioridad funcional.
-
-### Mantenimiento Programado
-- [ ] CRUD tareas de mantenimiento
-- [ ] Cálculo de próximas fechas
-- [ ] Alertas/recordatorios
-
-### DIAN
-- [ ] Campos específicos importación
-- [ ] Búsqueda por número manifiesto
-- [ ] Trazabilidad completa
 
 ---
 

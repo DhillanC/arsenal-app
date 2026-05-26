@@ -2,6 +2,8 @@ package ports
 
 import (
 	"context"
+	"time"
+
 	"github.com/DhillanC/arsenal-app/internal/domain/models"
 )
 
@@ -33,4 +35,15 @@ type DocumentoService interface {
 	Update(ctx context.Context, documento *models.Documento) error
 	Delete(ctx context.Context, id int) error
 	SearchByOCR(ctx context.Context, query string) ([]models.Documento, error)
+}
+
+// MantenimientoService define los casos de uso para mantenimiento programado
+type MantenimientoService interface {
+	Create(ctx context.Context, mantenimiento *models.Mantenimiento) error
+	GetByID(ctx context.Context, id int) (*models.Mantenimiento, error)
+	ListByReplica(ctx context.Context, replicaID int) ([]models.Mantenimiento, error)
+	ListProximos(ctx context.Context, dias int) ([]models.Mantenimiento, error)
+	Update(ctx context.Context, mantenimiento *models.Mantenimiento) error
+	Delete(ctx context.Context, id int) error
+	MarcarCompletado(ctx context.Context, id int, fechaCompletado *time.Time) error
 }

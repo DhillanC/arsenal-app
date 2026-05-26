@@ -1,0 +1,144 @@
+/* Arsenal App — DCS theme custom classes.
+   Tailwind utilities + the Tailwind config in base.html cover most styling.
+   This file defines only the named component classes the templates reference. */
+
+:root {
+  --gold-primary: #b88834;
+  --gold-medium:  #ca9250;
+  --gold-light:   #fdf3aa;
+  --gold-dark:    #6b4010;
+  --cream:        #f9f6f0;
+  --near-black:   #131110;
+  --teal:         #167485;
+  --teal-light:   #5DC8D2;
+  --muted-fg:     #6b6258;
+}
+
+html.dark {
+  --muted-fg: #a39d92;
+}
+
+/* Logo gradient */
+.gradient-text {
+  background: linear-gradient(90deg, var(--gold-primary), var(--gold-medium), var(--teal-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Nav links in the top bar */
+.nav-link {
+  position: relative;
+  color: inherit;
+  font-weight: 500;
+  padding: 0.25rem 0;
+  transition: color 150ms ease;
+}
+.nav-link:hover { color: var(--gold-primary); }
+.nav-link.active { color: var(--gold-primary); }
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -4px;
+  height: 2px;
+  background: var(--gold-primary);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 150ms ease;
+}
+.nav-link:hover::after,
+.nav-link.active::after { transform: scaleX(1); }
+
+/* Theme toggle button */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(184,136,52,0.3);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+.theme-toggle:hover { background: rgba(184,136,52,0.1); }
+.theme-toggle:active { transform: scale(0.96); }
+
+/* Sun shown in light mode, moon shown in dark mode */
+.theme-toggle .sun  { display: block; }
+.theme-toggle .moon { display: none;  }
+html.dark .theme-toggle .sun  { display: none;  }
+html.dark .theme-toggle .moon { display: block; }
+
+/* Generic card */
+.card {
+  background: white;
+  border: 1px solid rgba(184,136,52,0.2);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+html.dark .card {
+  background: #1c1916;
+  border-color: rgba(184,136,52,0.3);
+}
+
+/* Buttons */
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+  text-decoration: none;
+}
+.btn-primary {
+  background: var(--gold-primary);
+  color: var(--near-black);
+}
+.btn-primary:hover  { background: var(--gold-medium); }
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-secondary {
+  background: transparent;
+  color: inherit;
+  border-color: rgba(184,136,52,0.4);
+}
+.btn-secondary:hover  { background: rgba(184,136,52,0.1); }
+.btn-secondary:active { transform: scale(0.98); }
+
+/* Tabs (replica detail) */
+.tab-btn {
+  padding: 0.5rem 1rem;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted-fg);
+  cursor: pointer;
+  font-weight: 500;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+.tab-btn:hover     { color: inherit; }
+.tab-btn.active    { color: var(--gold-primary); border-bottom-color: var(--gold-primary); }
+.tab-content       { display: none; }
+.tab-content.active{ display: block; }
+
+/* Muted foreground (used in footer and metadata text) */
+.text-muted-foreground { color: var(--muted-fg); }
+
+/* Optional decorative background grid — referenced in commit msg, not in templates,
+   but cheap to include. Apply by adding .grid-pattern to a container. */
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(184,136,52,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184,136,52,0.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+}

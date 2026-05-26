@@ -8,6 +8,8 @@ import (
 	"time"
 
 	inbound "github.com/DhillanC/arsenal-app/internal/domain/ports/inbound"
+	"github.com/DhillanC/arsenal-app/internal/domain/services"
+	"github.com/DhillanC/arsenal-app/internal/infrastructure/persistence/sqlite"
 	"github.com/DhillanC/arsenal-app/internal/infrastructure/web/handlers"
 	"github.com/gin-gonic/gin"
 )
@@ -88,6 +90,12 @@ func NewHandler(
 		api.GET("/documentos/filter", documentoHandler.ListByReplicaAndType)
 		api.GET("/documentos/search", documentoHandler.Search)
 	}
+
+	// Mantenimiento service and handler
+	mantenimientoRepo := sqlite.NewMantenimientoRepository(config.DB)
+	mantenimientoService := services.NewMantenimientoService(mantenimientoRepo)
+	mantenimientoHandler := handlers.NewMantenimientoHandler(mantenimientoService)
+	mantenimientoHandler.RegisterRoutes(api)
 
 	// HTML Frontend routes
 	if config.EnableTemplates {
