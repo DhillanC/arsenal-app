@@ -14,7 +14,7 @@ import (
 	outbound "github.com/DhillanC/arsenal-app/internal/domain/ports/outbound"
 )
 
-// validFilenameRegex permite solo caracteres seguros
+// validFilenameRegex permite solo caracteres seguros para nombres ya saneados.
 var validFilenameRegex = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
 
 // Storage implementa outbound.Storage usando filesystem local
@@ -27,51 +27,83 @@ func NewStorage(basePath string) outbound.Storage {
 	return &Storage{basePath: basePath}
 }
 
-// Save guarda un archivo en el filesystem con protección contra path traversal
-func (s *Storage) Save(file []byte, filename string, replicaID int) (string, error) {
-	// Sanitizar filename: solo nombre base, no paths
-	filename = filepath.Base(filename)
+// sanitizeFilename rechaza intentos de path traversal en lugar de neutralizarlos.
+//
+// Política: si el input contiene cualquier separador de path, segmentos "..", o
+// el byte nulo, devolvemos error. La detección debe ocurrir ANTES de filepath.Base
+// — de lo contrario Base ya recortó la evidencia y el log de seguridad no ve el
+// intento.
+//
+// Tras la validación, exigimos que el nombre coincida con el whitelist regex
+// (solo letras, dígitos, ".", "_", "-").
+func sanitizeFilename(name string) (string, error) {
+	if name == "" {
+		return "", fmt.Errorf("nombre de archivo vacío")
+	}
+	if strings.ContainsAny(name, "/\\\x00") {
+		return "", fmt.Errorf("path traversal detectado: separadores de path no permitidos")
+	}
+	if name == "." || name == ".." || strings.Contains(name, "..") {
+		return "", fmt.Errorf("path traversal detectado: segmentos relativos no permitidos")
+	}
+	// filepath.Base es defensa en profundidad — a esta altura el nombre ya
+	// no debería contener nada extraño, pero confirmamos.
+	cleaned := filepath.Base(name)
+	if cleaned != name {
+		return "", fmt.Errorf("nombre de archivo inválido")
+	}
+	if !validFilenameRegex.MatchString(cleaned) {
+		return "", fmt.Errorf("nombre de archivo inválido: solo letras, números, '.', '_', '-'")
+	}
+	return cleaned, nil
+}
 
-	// filepath.Base("../../../etc/passwd") devuelve "passwd", que pasaría el regex
-	// Pero strings.Contains con "/" detecta el intento de path traversal
-	if strings.Contains(filename, "/") || strings.Contains(filename, string(os.PathSeparator)) || !validFilenameRegex.MatchString(filename) {
-		return "", fmt.Errorf("nombre de archivo inválido: solo letras, números, puntos, guiones y guiones bajos")
+// Save guarda un archivo en el filesystem.
+// El filename se valida estrictamente: cualquier intento de path traversal
+// devuelve error en lugar de saneamiento silencioso.
+func (s *Storage) Save(file []byte, filename string, replicaID int) (string, error) {
+	safe, err := sanitizeFilename(filename)
+	if err != nil {
+		return "", err
 	}
 
-	// Crear estructura de directorios: uploads/replica_id/YYYY-MM/
 	yearMonth := time.Now().Format("2006-01")
 	dir := filepath.Join(s.basePath, strconv.Itoa(replicaID), yearMonth)
-
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", fmt.Errorf("crear directorio: %w", err)
 	}
 
-	// Defensa en profundidad: verificar que el path final está dentro de basePath
-	path := filepath.Join(dir, filename)
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return "", fmt.Errorf("resolver path absoluto: %w", err)
-	}
+	path := filepath.Join(dir, safe)
+
+	// Defensa en profundidad: confirmar contención del path resuelto bajo basePath.
 	absBase, err := filepath.Abs(s.basePath)
 	if err != nil {
 		return "", fmt.Errorf("resolver base path: %w", err)
 	}
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return "", fmt.Errorf("resolver path: %w", err)
+	}
 	rel, err := filepath.Rel(absBase, absPath)
-	if err != nil || rel == ".." || rel[:3] == ".."+string(filepath.Separator) {
-		return "", fmt.Errorf("path traversal detectado")
+	// strings.HasPrefix es seguro contra rel cortos (no panic como rel[:3]).
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("path traversal detectado: contención fallida")
 	}
 
-	// Generar nombre único si ya existe (sufijo aleatorio, no timestamp)
+	// Si el archivo existe, usar sufijo único aleatorio. No usar time.Now() en
+	// segundos — colisiona en uploads simultáneos.
 	if _, err := os.Stat(path); err == nil {
-		ext := filepath.Ext(filename)
-		name := filename[:len(filename)-len(ext)]
-		suffix := make([]byte, 4)
-		rand.Read(suffix)
-		filename = fmt.Sprintf("%s_%s%s", name, hex.EncodeToString(suffix), ext)
-		path = filepath.Join(dir, filename)
+		ext := filepath.Ext(safe)
+		base := strings.TrimSuffix(safe, ext)
+		suffix, err := randomHex(6)
+		if err != nil {
+			return "", fmt.Errorf("generar sufijo único: %w", err)
+		}
+		safe = fmt.Sprintf("%s_%s%s", base, suffix, ext)
+		path = filepath.Join(dir, safe)
 	}
 
-	if err := os.WriteFile(path, file, 0644); err != nil {
+	if err := os.WriteFile(path, file, 0o644); err != nil {
 		return "", fmt.Errorf("escribir archivo: %w", err)
 	}
 
@@ -86,4 +118,12 @@ func (s *Storage) Get(path string) ([]byte, error) {
 // Delete elimina un archivo del filesystem
 func (s *Storage) Delete(path string) error {
 	return os.Remove(path)
+}
+
+func randomHex(n int) (string, error) {
+	b := make([]byte, n)
+	if _, err := rand.Read(b); err != nil {
+		return "", fmt.Errorf("crypto/rand: %w", err)
+	}
+	return hex.EncodeToString(b), nil
 }
