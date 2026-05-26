@@ -12,6 +12,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// maxUploadBytes es el cap real del request body para subidas.
+// ParseMultipartForm(N) sin MaxBytesReader es solo umbral de memoria — el body
+// completo puede ser arbitrariamente grande y Gin lo spilea a disco.
+const maxUploadBytes = 10 << 20
+
 // DocumentoHandler maneja las peticiones HTTP para documentos
 type DocumentoHandler struct {
 	service inbound.DocumentoService
@@ -39,9 +44,11 @@ func (h *DocumentoHandler) Upload(c *gin.Context) {
 		return
 	}
 
-	// Parse multipart form (max 10MB)
-	if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Error parseando formulario: " + err.Error()})
+	// MaxBytesReader corta el body en el límite — sin esto, ParseMultipartForm
+	// solo limita memoria y permite uploads arbitrariamente grandes spilados a disco.
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxUploadBytes)
+	if err := c.Request.ParseMultipartForm(maxUploadBytes); err != nil {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"error": "Archivo demasiado grande o formulario inválido (máx 10MB)"})
 		return
 	}
 

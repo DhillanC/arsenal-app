@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -17,6 +18,15 @@ import (
 )
 
 func main() {
+	if err := run(); err != nil {
+		log.Printf("fatal: %v", err)
+		os.Exit(1)
+	}
+}
+
+// run contiene toda la lógica de arranque. Devolver error en vez de log.Fatalf
+// garantiza que los `defer` (notablemente db.Close) corran en todos los paths.
+func run() error {
 	dbPath := getEnv("DB_PATH", "./data/arsenal.db")
 	appPort := getEnv("APP_PORT", "8080")
 	uploadPath := getEnv("UPLOAD_PATH", "./uploads")
@@ -24,12 +34,12 @@ func main() {
 
 	db, err := sqlite.NewDB(dbPath)
 	if err != nil {
-		log.Fatalf("Error inicializando DB: %v", err)
+		return fmt.Errorf("inicializando DB: %w", err)
 	}
 	defer db.Close()
 
 	if err := db.RunMigrations(); err != nil {
-		log.Fatalf("Error en migraciones: %v", err)
+		return fmt.Errorf("migraciones: %w", err)
 	}
 
 	replicaRepo := sqlite.NewReplicaRepository(db.Conn)
@@ -60,30 +70,33 @@ func main() {
 		IdleTimeout:       120 * time.Second,
 	}
 
+	serverErr := make(chan error, 1)
 	go func() {
 		log.Printf("Arsenal App iniciado en http://localhost:%s (CORS=%v)", appPort, allowedOrigins)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Error iniciando servidor: %v", err)
+			serverErr <- err
 		}
 	}()
 
-	// Esperar señal de terminación con context cancelado al recibirla.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	<-ctx.Done()
 
-	log.Println("Apagado solicitado, drenando conexiones...")
+	select {
+	case <-ctx.Done():
+		log.Println("Apagado solicitado, drenando conexiones...")
+	case err := <-serverErr:
+		return fmt.Errorf("servidor: %w", err)
+	}
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(shutdownCtx); err != nil {
-		// No usar Fatalf — saltea los defers (db.Close). Loguear y salir limpio.
-		log.Printf("Error en graceful shutdown: %v", err)
-		os.Exit(1)
+		return fmt.Errorf("graceful shutdown: %w", err)
 	}
 
 	log.Println("Servidor detenido limpiamente")
+	return nil
 }
 
 func getEnv(key, defaultValue string) string {
