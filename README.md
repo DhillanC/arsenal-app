@@ -6,6 +6,58 @@ App de gestión de réplicas airsoft - Inventario, mantenimiento, documentación
 **Stack:** Go 1.26 + SQLite + Gin + HTMX + Tailwind CSS  
 **Deploy:** Docker + Docker Compose  
 
+## Arquitectura Hexagonal
+
+```mermaid
+flowchart TD
+    subgraph External["Capa Externa"]
+        HTTP["HTTP / Gin"]
+        DB[(SQLite)]
+        FS["File Storage"]
+        OCR["Tesseract OCR"]
+    end
+
+    subgraph Core["Core - Dominio"]
+        subgraph Inbound["Inbound Ports"]
+            RS["ReplicaService"]
+            AS["ActividadService"]
+            DS["DocumentoService"]
+        end
+        
+        subgraph Models["Models"]
+            R["Replica"]
+            A["Actividad"]
+            D["Documento"]
+        end
+        
+        subgraph Outbound["Outbound Ports"]
+            RR["ReplicaRepository"]
+            AR["ActividadRepository"]
+            DR["DocumentoRepository"]
+            ST["Storage"]
+        end
+    end
+
+    HTTP --> RS
+    HTTP --> AS
+    HTTP --> DS
+    
+    RS --> R
+    AS --> A
+    DS --> D
+    
+    R --> RR
+    A --> AR
+    D --> DR
+    D --> ST
+    
+    RR --> DB
+    AR --> DB
+    DR --> DB
+    ST --> FS
+    DS --> OCR
+```
+
 ## Desarrollo
 
 - **Rama principal:** `development`
@@ -28,8 +80,27 @@ make test
 
 ## Estado
 
-🚧 **Fase 2:** Core Features + Security Analysis  
-📊 **Progreso:** 18/35 tareas (51%)
+✅ **Fase 1:** Foundation  
+✅ **Fase 2:** Core Ops + Seguridad  
+✅ **Fase 3:** Gestión de Documentos  
+🚧 **Fase 4:** Frontend Web (activa)  
+📊 **Progreso:** 27/35 tareas (77%)
+
+### Fases completadas
+- [x] Foundation: Hexagonal, CRUD, Docker, Tests
+- [x] Core Ops: 11 fixes seguridad, graceful shutdown, health checks
+- [x] Documentos: Multipart upload, OCR Tesseract, búsqueda full-text
+
+### En progreso
+- [ ] Frontend HTMX + Tailwind
+- [ ] Dashboard con estadísticas
+- [ ] PWA manifest
+
+### Pendiente
+- [ ] JWT Authentication
+- [ ] Rate limiting
+- [ ] Calendario mantenimiento
+- [ ] CI/CD GitHub Actions
 
 ---
 
