@@ -289,7 +289,7 @@ CREATE TABLE replica_sesion (
 - [x] Búsqueda full-text por contenido OCR
 - [ ] Timeline de actividades (pendiente de UI)
 
-### Fase 4 - Frontend Web 🎨 (En Progreso)
+### Fase 4 - Frontend Web ✅ (Completada)
 
 **Estilo basado en DCS Web:**
 - **Paleta de colores:**
@@ -308,12 +308,14 @@ CREATE TABLE replica_sesion (
 - [ ] Dashboard con estadísticas
 - [ ] PWA manifest + service worker
 
-### Fase 5 - Autenticación y Seguridad API
+### Fase 6 - Autenticación y Seguridad API 🔐
+**Reordenada:** antes era Fase 5, ahora penúltima (para futuro multi-user).
 - [ ] JWT Authentication
 - [ ] Rate limiting
 - [ ] Audit logging
 
-### Fase 6 - Mantenimiento + DIAN
+### Fase 5 - Mantenimiento + DIAN 🔧
+**Reordenada:** antes era Fase 6, ahora prioridad funcional sobre auth.
 - [ ] Calendario de mantenimiento
 - [ ] Recordatorios (cron jobs locales)
 - [ ] Campos específicos importación DIAN

@@ -141,7 +141,8 @@
 
 ---
 
-## Fase 5: Autenticación y Seguridad API 🔐
+## Fase 6: Autenticación y Seguridad API 🔐
+**Reordenada:** antes era Fase 5, ahora penúltima.
 
 ### JWT Authentication
 - [ ] Login/registro de usuarios
@@ -159,7 +160,8 @@
 
 ---
 
-## Fase 6: Mantenimiento & DIAN 🔧
+## Fase 5: Mantenimiento & DIAN 🔧
+**Reordenada:** antes era Fase 6, ahora prioridad funcional.
 
 ### Mantenimiento Programado
 - [ ] CRUD tareas de mantenimiento
