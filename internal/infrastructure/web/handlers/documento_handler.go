@@ -86,23 +86,20 @@ func (h *DocumentoHandler) Upload(c *gin.Context) {
 	// Crear documento
 	now := time.Now()
 	doc := &models.Documento{
-		ReplicaID:     &replicaID,
-		Tipo:          c.PostForm("tipo"),
-		NombreArchivo: header.Filename,
-		MimeType:      mimeType,
-		TamanoBytes:   int64(header.Size),
+		ReplicaID:       &replicaID,
+		Tipo:            c.PostForm("tipo"),
+		NombreArchivo:   header.Filename,
+		MimeType:        mimeType,
+		TamanoBytes:     int64(header.Size),
 		FechaDocumento:  &now,
 		NumeroDocumento: c.PostForm("numero_documento"),
-		Notas:         c.PostForm("notas"),
+		Notas:           c.PostForm("notas"),
 	}
 
 	if err := h.service.Create(c.Request.Context(), doc, fileBytes); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	// Procesar OCR en background (no bloquear response)
-	go h.processOCR(doc)
 
 	c.JSON(http.StatusCreated, doc)
 }
@@ -167,8 +164,8 @@ func (h *DocumentoHandler) Search(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"query": query,
-		"count": len(docs),
+		"query":   query,
+		"count":   len(docs),
 		"results": docs,
 	})
 }
@@ -191,12 +188,6 @@ func isAllowedMimeType(mime string) bool {
 		}
 	}
 	return false
-}
-
-// processOCR ejecuta OCR en background (placeholder)
-func (h *DocumentoHandler) processOCR(doc *models.Documento) {
-	// TODO: Implementar OCR processing
-	// Esto requiere acceso al archivo guardado y el servicio OCR
 }
 
 // isAllowedExtension valida extensiones permitidas

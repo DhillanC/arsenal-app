@@ -1,12 +1,18 @@
 package ocr
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"image"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 )
+
+const defaultOCRTimeout = 30 * time.Second
 
 // OCRClient encapsula el cliente de Tesseract
 type OCRClient struct {
@@ -39,7 +45,7 @@ func (o *OCRClient) ExtractText(filePath string) (string, error) {
 	}
 }
 
-// extractFromImage extrae texto de una imagen (placeholder)
+// extractFromImage extrae texto de una imagen usando el binario local de Tesseract.
 func (o *OCRClient) extractFromImage(filePath string) (string, error) {
 	// Verificar que el archivo existe
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
@@ -59,8 +65,35 @@ func (o *OCRClient) extractFromImage(filePath string) (string, error) {
 		return "", fmt.Errorf("decodificar imagen: %w", err)
 	}
 
-	// Placeholder: en producción usaría gosseract
-	return fmt.Sprintf("[OCR Placeholder - imagen %s válida]", format), nil
+	bin, err := resolveTesseract()
+	if err != nil {
+		return "", err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), defaultOCRTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, bin, filePath, "stdout")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	out, err := cmd.Output()
+	if ctx.Err() == context.DeadlineExceeded {
+		return "", fmt.Errorf("tesseract timeout después de %s", defaultOCRTimeout)
+	}
+	if err != nil {
+		msg := strings.TrimSpace(stderr.String())
+		if msg == "" {
+			msg = err.Error()
+		}
+		return "", fmt.Errorf("tesseract OCR falló: %s", msg)
+	}
+
+	text := strings.TrimSpace(string(out))
+	if text == "" {
+		return "", fmt.Errorf("tesseract no extrajo texto de imagen %s", format)
+	}
+	return text, nil
 }
 
 // Close libera recursos del cliente OCR
@@ -70,9 +103,20 @@ func (o *OCRClient) Close() error {
 
 // IsAvailable verifica si Tesseract está instalado
 func IsAvailable() bool {
-	_, err := os.Stat("/usr/bin/tesseract")
-	if err != nil {
-		_, err = os.Stat("/opt/homebrew/bin/tesseract")
-	}
+	_, err := resolveTesseract()
 	return err == nil
+}
+
+func resolveTesseract() (string, error) {
+	if path, err := exec.LookPath("tesseract"); err == nil {
+		return path, nil
+	}
+
+	for _, path := range []string{"/opt/homebrew/bin/tesseract", "/usr/local/bin/tesseract", "/usr/bin/tesseract"} {
+		if _, err := os.Stat(path); err == nil {
+			return path, nil
+		}
+	}
+
+	return "", fmt.Errorf("tesseract no está instalado")
 }

@@ -12,8 +12,8 @@ flowchart LR
     subgraph DMZ["🛡️ DMZ Trust Boundary"]
         direction TB
         APIServer[API Server<br/>Gin HTTP]
-        Auth[Auth Middleware<br/>JWT Validation]
-        RateLimit[Rate Limiter]
+        Auth[Auth Middleware<br/>JWT Validation planned]
+        RateLimit[Rate Limiter planned]
         CORS[CORS Middleware]
     end
 
@@ -66,7 +66,7 @@ flowchart LR
 | Datos de réplicas (seriales) | Identificación | 🟡 Media | SQLite |
 | Registro de actividades | Operativa | 🟢 Baja | SQLite |
 | Fotos/videos | Personal | 🟡 Media | Local Storage |
-| Credenciales JWT | Auth | 🔴 Alta | Memoria |
+| Credenciales JWT | Auth planeado | 🔴 Alta | Memoria |
 
 ## 3. Vectores de Amenaza (STRIDE)
 
@@ -154,14 +154,14 @@ flowchart LR
 - [x] **SQLite hardening**: `_busy_timeout=5000`, `SetMaxOpenConns(1)` para WAL mode, skip `MkdirAll` en `:memory:`
 - [x] **Tests de integración**: HTTP handler tests (health 200/503, CORS allow/block/preflight, upload 413)
 
-### 🔄 Pendientes Fase 3-5
+### 🔄 Pendientes Fase 6
 - [ ] JWT Authentication
 - [ ] Rate limiting
 - [ ] Audit logging
 - [ ] File hash verification
 - [ ] OCR timeout controls
 
-### 📋 Futuros (Fase 5-6)
+### 📋 Futuros (Fase 7+)
 - [ ] Encriptación de documentos sensibles
 - [ ] Backup automático encriptado
 - [ ] 2FA opcional

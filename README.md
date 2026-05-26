@@ -3,7 +3,7 @@
 App de gestión de réplicas airsoft - Inventario, mantenimiento, documentación DIAN y registro de uso.
 
 **Arquitectura:** Hexagonal (Ports & Adapters)  
-**Stack:** Go 1.26 + SQLite + Gin + HTMX + Tailwind CSS  
+**Stack:** Go 1.21+ + SQLite + Gin + HTMX + Tailwind CSS
 **Deploy:** Docker + Docker Compose  
 
 ## Arquitectura Hexagonal
@@ -80,26 +80,25 @@ make test
 
 ## Estado
 
-✅ **Fase 1:** Foundation  
-✅ **Fase 2:** Core Ops + Seguridad  
-✅ **Fase 3:** Gestión de Documentos  
-🚧 **Fase 4:** Frontend Web (activa)  
-📊 **Progreso:** 27/35 tareas (77%)
+- ✅ **Fase 1:** Foundation
+- ✅ **Fase 2:** Core Ops + Seguridad
+- ✅ **Fase 3:** Gestión de Documentos
+- ✅ **Fase 4:** Frontend Web
+- ✅ **Fase 5:** Mantenimiento + DIAN
+- 🚧 **Fase 6:** Auth / Seguridad API (pendiente)
 
 ### Fases completadas
 - [x] Foundation: Hexagonal, CRUD, Docker, Tests
 - [x] Core Ops: 11 fixes seguridad, graceful shutdown, health checks
-- [x] Documentos: Multipart upload, OCR Tesseract, búsqueda full-text
-
-### En progreso
-- [ ] Frontend HTMX + Tailwind
-- [ ] Dashboard con estadísticas
-- [ ] PWA manifest
+- [x] Documentos: Multipart upload, OCR Tesseract para imágenes, búsqueda full-text
+- [x] Frontend: HTMX + Tailwind, dashboard, tema claro/oscuro DCS, PWA básica
+- [x] Mantenimiento + DIAN: tareas programadas, próximos mantenimientos, búsqueda por serial
 
 ### Pendiente
 - [ ] JWT Authentication
 - [ ] Rate limiting
-- [ ] Calendario mantenimiento
+- [ ] Audit logging
+- [ ] Backup JSON / Export CSV
 - [ ] CI/CD GitHub Actions
 
 ---

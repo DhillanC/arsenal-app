@@ -11,8 +11,8 @@
 - [x] go.mod con dependencias
 
 ### Configuración
-- [ ] Configurar Viper (.env, flags)
-- [ ] Logger estructurado (zap/logrus)
+- [x] Configuración por variables de entorno (`APP_PORT`, `DB_PATH`, `UPLOAD_PATH`, `CORS_ALLOWED_ORIGINS`)
+- [ ] Logger estructurado (`log/slog`)
 - [x] Healthcheck endpoint
 
 ### Base de Datos
@@ -74,9 +74,9 @@
   - [x] Path traversal defense
   - [x] Docker target: builder eliminado
   - [x] CORS configurable
-- [ ] Controles pendientes (post-auth):
+  - [x] Max upload size limit (10MB) con `http.MaxBytesReader`
+- [ ] Controles pendientes:
   - [ ] File hash verification (SHA-256)
-  - [ ] Max upload size limit (10MB)
 - [ ] Backup y recuperación de datos
 - [ ] Encriptación de datos sensibles en reposo
 
@@ -100,9 +100,10 @@
 - [x] Organización por réplica en filesystem
 
 ### OCR
-- [x] Integración Tesseract (gosseract)
-- [x] Extracción de texto en upload
+- [x] Integración Tesseract vía binario local
+- [x] Extracción de texto en upload para imágenes
 - [x] Almacenar OCR en DB
+- [ ] OCR de PDF mediante conversión previa a imagen
 
 ### Búsqueda y Filtros
 - [x] Búsqueda full-text por contenido OCR
@@ -183,7 +184,7 @@
 
 ### Deploy
 - [ ] Documentación deploy Mac mini
-- [ ] PM2 config
+- [ ] Configuración de servicio para Mac mini
 - [ ] Tailscale access
 - [ ] GitHub Actions CI/CD
 - [ ] Release v1.0.0
@@ -192,7 +193,8 @@
 
 ## Estado General
 
-**Fase actual:** 3 - Gestión de Documentos
-**Progreso:** 18/35 tareas completadas (51%)
+**Fase actual:** 6 - Autenticación y Seguridad API
+**Última fase completada:** 5 - Mantenimiento & DIAN
+**Siguiente paso recomendado:** implementar JWT Authentication o corregir primero controles transversales de seguridad pendientes.
 
-*Última actualización: 2026-05-25*
+*Última actualización: 2026-05-26*
