@@ -272,12 +272,16 @@ CREATE TABLE replica_sesion (
 
 ### Fase 2 - Seguridad + Core Ops ✅ (Completada)
 - [x] Análisis de amenazas STRIDE
-- [x] 11 fixes de seguridad y operación aplicados
-- [x] Graceful shutdown
-- [x] Health check con DB ping
-- [x] Path traversal defense
+- [x] 11+ fixes de seguridad y operación aplicados
+- [x] **Graceful shutdown** con signal.NotifyContext + serverErr channel
+- [x] **Health check** con DB PingContext(2s) → 503 si DB caída
+- [x] **Path traversal defense**: sanitize antes de filepath.Base, rechaza ../, abs paths, NUL
+- [x] **Real upload cap**: http.MaxBytesReader(10MB) + 413 response (no solo memoria)
+- [x] **Patrón run() error**: sin log.Fatalf, defer db.Close() siempre corre
+- [x] SQLite busy_timeout=5000, SetMaxOpenConns(1) para WAL
 - [x] Docker compose target: builder eliminado
-- [x] CORS configurable
+- [x] CORS configurable via env
+- [x] Tests de integración HTTP (health, CORS, 413, 400)
 
 ### Fase 3 - Gestión de Documentos ✅ (Completada)
 - [x] Subida de archivos (multipart)
