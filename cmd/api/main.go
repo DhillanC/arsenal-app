@@ -57,6 +57,7 @@ func run() error {
 		AllowedOrigins:  allowedOrigins,
 		DB:              db.Conn,
 		EnableTemplates: true,
+		UploadPath:      uploadPath,
 	}
 	handler := web.NewHandler(config, replicaService, actividadService, documentoService)
 

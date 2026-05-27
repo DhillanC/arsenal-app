@@ -1,0 +1,49 @@
+{{define "document_list.html"}}
+{{template "layout_start" .}}
+<div class="space-y-6">
+    <div>
+        <h1 class="text-3xl font-bold gradient-text">Documentos</h1>
+        <p class="text-muted-foreground">Facturas, manifiestos, fotos y manuales por réplica</p>
+    </div>
+
+    <div class="card">
+        <form class="grid grid-cols-1 md:grid-cols-3 gap-4"
+              hx-get="/api/v1/documentos/search"
+              hx-target="#document-search-results"
+              hx-trigger="submit">
+            <div class="md:col-span-2">
+                <label class="text-sm font-medium" for="q">Buscar por OCR o número</label>
+                <input id="q" name="q" type="search" class="w-full mt-1" required>
+            </div>
+            <div class="flex items-end">
+                <button class="btn-primary w-full" type="submit">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                    <span>Buscar</span>
+                </button>
+            </div>
+        </form>
+        <pre id="document-search-results" class="mt-4 text-sm whitespace-pre-wrap text-muted-foreground"></pre>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {{range .Replicas}}
+        <a href="/replicas/{{.ID}}" class="card hover:bg-gold-primary/5 transition-colors">
+            <div class="flex items-start gap-3">
+                <i data-lucide="box" class="w-6 h-6 text-gold-primary mt-1"></i>
+                <div>
+                    <h2 class="font-semibold">{{.Nombre}}</h2>
+                    <p class="text-sm text-muted-foreground">{{.Marca}} {{.Modelo}}</p>
+                    <p class="text-sm text-gold-primary mt-2">Ver y subir documentos</p>
+                </div>
+            </div>
+        </a>
+        {{else}}
+        <div class="col-span-full text-center py-12 text-muted-foreground">
+            <i data-lucide="file-text" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+            <p>No hay réplicas registradas</p>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{template "layout_end" .}}
+{{end}}

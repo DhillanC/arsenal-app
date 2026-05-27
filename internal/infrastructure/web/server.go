@@ -3,8 +3,10 @@ package web
 import (
 	"context"
 	"database/sql"
+	"html/template"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	inbound "github.com/DhillanC/arsenal-app/internal/domain/ports/inbound"
@@ -16,6 +18,9 @@ import (
 
 // HTMLConfig configura las vistas HTML
 func setupTemplates(router *gin.Engine) {
+	router.SetFuncMap(template.FuncMap{
+		"documentURL": documentURL,
+	})
 	router.LoadHTMLGlob("web/templates/*")
 }
 
@@ -27,6 +32,8 @@ type Config struct {
 	DB *sql.DB
 	// EnableTemplates carga templates HTML para frontend
 	EnableTemplates bool
+	// UploadPath expone los documentos cargados para el frontend HTML.
+	UploadPath string
 }
 
 // NewHandler creates a Gin engine with all routes configured
@@ -99,7 +106,7 @@ func NewHandler(
 
 	// HTML Frontend routes
 	if config.EnableTemplates {
-		htmlHandler := handlers.NewHTMLHandler(replicaService, actividadService, documentoService)
+		htmlHandler := handlers.NewHTMLHandler(replicaService, actividadService, documentoService, mantenimientoService, config.UploadPath)
 		htmlHandler.RegisterHTMLRoutes(router)
 	}
 
@@ -139,4 +146,20 @@ func contains(slice []string, item string) bool {
 		}
 	}
 	return false
+}
+
+func documentURL(path string) string {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return "#"
+	}
+	if strings.HasPrefix(path, "/uploads/") {
+		return path
+	}
+	if idx := strings.Index(path, "/uploads/"); idx >= 0 {
+		return path[idx:]
+	}
+	path = strings.TrimPrefix(path, "./")
+	path = strings.TrimPrefix(path, "uploads/")
+	return "/uploads/" + strings.TrimLeft(path, "/")
 }

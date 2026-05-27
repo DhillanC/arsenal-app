@@ -121,6 +121,20 @@
 - [x] Página ficha réplica (replica_detail.html con tabs)
 - [x] Formularios (replica_form.html)
 - [x] Vista de error (error.html)
+- [x] Corregir estructura de templates para evitar definiciones duplicadas de `content`
+- [x] Crear vista `/documentos` (`document_list.html`)
+- [x] Conectar subida de documentos desde la ficha de réplica
+- [x] Adaptar formularios HTMX para handlers que también aceptan form data
+- [x] Corregir URLs de documentos servidos bajo `/uploads`
+
+### Gaps Frontend Encontrados
+- [x] `/documentos` apuntaba a un template inexistente
+- [x] Dashboard apuntaba a `/mantenimiento` sin ruta HTML
+- [x] Tab de mantenimiento en ficha de réplica estaba en placeholder
+- [x] Botón “Subir” en documentos no ejecutaba upload
+- [x] Formularios HTMX enviaban form data contra handlers que esperaban JSON
+- [ ] Mejorar render de resultados de búsqueda de documentos (actualmente respuesta API cruda)
+- [ ] Agregar tests de render HTML para rutas principales
 
 ### Dashboard
 - [x] Estadísticas generales (conteos, valores)
@@ -149,6 +163,9 @@
 - [x] Cálculo de próximas fechas (automático al completar)
 - [x] Endpoint mantenimientos próximos (`/api/v1/mantenimiento/proximos?dias=N`)
 - [x] Marcar como completado con recálculo de fecha
+- [x] Vista HTML `/mantenimiento` para próximos mantenimientos
+- [x] Listado y creación de tareas desde ficha de réplica
+- [x] Acción de completar mantenimiento desde UI
 
 ### DIAN - Trazabilidad
 - [x] Búsqueda por número de serie (`/api/v1/replicas/search?q=...`)
@@ -182,6 +199,14 @@
 - [ ] Backup JSON
 - [ ] Export CSV
 
+### Pendientes Técnicos Detectados
+- [ ] Borrar archivo físico al eliminar documento (`DocumentoService.Delete`)
+- [ ] Implementar OCR de PDF con conversión previa a imagen
+- [ ] Implementar recordatorios locales de mantenimiento
+- [ ] Implementar UI/servicios para piezas y upgrades
+- [ ] Implementar UI/servicios para sesiones de campo
+- [ ] Decidir alcance de cifrado en reposo vs permisos + backup seguro
+
 ### Deploy
 - [ ] Documentación deploy Mac mini
 - [ ] Configuración de servicio para Mac mini
@@ -195,6 +220,6 @@
 
 **Fase actual:** 6 - Autenticación y Seguridad API
 **Última fase completada:** 5 - Mantenimiento & DIAN
-**Siguiente paso recomendado:** implementar JWT Authentication o corregir primero controles transversales de seguridad pendientes.
+**Siguiente paso recomendado:** mejorar tests HTML y luego avanzar a JWT Authentication o controles transversales de seguridad pendientes.
 
-*Última actualización: 2026-05-26*
+*Última actualización: 2026-05-27*

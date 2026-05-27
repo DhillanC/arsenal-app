@@ -1,4 +1,5 @@
-{{define "content"}}
+{{define "replica_form.html"}}
+{{template "layout_start" .}}
 <div class="max-w-2xl mx-auto">
     {{if .EditMode}}
     <nav class="flex items-center space-x-2 text-sm text-muted-foreground mb-4">
@@ -171,4 +172,5 @@
         </div>
     </form>
 </div>
+{{template "layout_end" .}}
 {{end}}

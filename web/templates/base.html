@@ -1,4 +1,4 @@
-{{define "base"}}
+{{define "layout_start"}}
 <!DOCTYPE html>
 <html lang="es" class="{{if .DarkMode}}dark{{end}}">
 <head>
@@ -61,6 +61,7 @@
                     <a href="/replicas" class="nav-link">Réplicas</a>
                     <a href="/dashboard" class="nav-link">Dashboard</a>
                     <a href="/documentos" class="nav-link">Documentos</a>
+                    <a href="/mantenimiento" class="nav-link">Mantenimiento</a>
                 </div>
                 
                 <!-- Theme Toggle -->
@@ -79,7 +80,9 @@
     
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {{template "content" .}}
+{{end}}
+
+{{define "layout_end"}}
     </main>
     
     <!-- Footer -->

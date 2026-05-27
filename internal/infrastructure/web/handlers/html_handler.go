@@ -12,9 +12,11 @@ import (
 
 // HTMLHandler maneja las vistas HTML del frontend
 type HTMLHandler struct {
-	replicaService   inbound.ReplicaService
-	actividadService inbound.ActividadService
-	documentoService inbound.DocumentoService
+	replicaService       inbound.ReplicaService
+	actividadService     inbound.ActividadService
+	documentoService     inbound.DocumentoService
+	mantenimientoService inbound.MantenimientoService
+	uploadPath           string
 }
 
 // NewHTMLHandler crea un nuevo handler HTML
@@ -22,11 +24,18 @@ func NewHTMLHandler(
 	replicaService inbound.ReplicaService,
 	actividadService inbound.ActividadService,
 	documentoService inbound.DocumentoService,
+	mantenimientoService inbound.MantenimientoService,
+	uploadPath string,
 ) *HTMLHandler {
+	if uploadPath == "" {
+		uploadPath = "./uploads"
+	}
 	return &HTMLHandler{
-		replicaService:   replicaService,
-		actividadService: actividadService,
-		documentoService: documentoService,
+		replicaService:       replicaService,
+		actividadService:     actividadService,
+		documentoService:     documentoService,
+		mantenimientoService: mantenimientoService,
+		uploadPath:           uploadPath,
 	}
 }
 
@@ -34,7 +43,7 @@ func NewHTMLHandler(
 func (h *HTMLHandler) RegisterHTMLRoutes(router *gin.Engine) {
 	// Static files
 	router.Static("/static", "./web/static")
-	router.Static("/uploads", "./uploads")
+	router.Static("/uploads", h.uploadPath)
 
 	// HTML routes
 	router.GET("/", h.Dashboard)
@@ -44,6 +53,7 @@ func (h *HTMLHandler) RegisterHTMLRoutes(router *gin.Engine) {
 	router.GET("/replicas/:id", h.ReplicaDetail)
 	router.GET("/replicas/:id/editar", h.ReplicaEditForm)
 	router.GET("/documentos", h.DocumentList)
+	router.GET("/mantenimiento", h.MantenimientoList)
 }
 
 // Dashboard muestra el dashboard principal
@@ -66,9 +76,9 @@ func (h *HTMLHandler) Dashboard(c *gin.Context) {
 		acts, _ := h.actividadService.ListByReplica(ctx, r.ID)
 		for _, a := range acts {
 			actividadesRecientes = append(actividadesRecientes, ActividadResumen{
-				Descripcion:    a.Descripcion,
-				Fecha:          a.Fecha,
-				Costo:          a.Costo,
+				Descripcion:   a.Descripcion,
+				Fecha:         a.Fecha,
+				Costo:         a.Costo,
 				ReplicaNombre: r.Nombre,
 			})
 		}
@@ -99,9 +109,9 @@ func (h *HTMLHandler) ReplicaList(c *gin.Context) {
 	stats := calculateDashboardStats(replicas)
 
 	c.HTML(http.StatusOK, "replica_list.html", gin.H{
-		"Title":   "Mis Réplicas",
+		"Title":    "Mis Réplicas",
 		"Replicas": replicas,
-		"Stats":   stats,
+		"Stats":    stats,
 	})
 }
 
@@ -122,15 +132,17 @@ func (h *HTMLHandler) ReplicaDetail(c *gin.Context) {
 
 	actividades, _ := h.actividadService.ListByReplica(ctx, id)
 	documentos, _ := h.documentoService.ListByReplica(ctx, id)
+	mantenimientos, _ := h.mantenimientoService.ListByReplica(ctx, id)
 
 	// Construir timeline
 	timeline := buildHTMLTimeline(actividades, documentos, h.documentoService)
 
 	c.HTML(http.StatusOK, "replica_detail.html", gin.H{
-		"Title":      replica.Nombre,
-		"Replica":    replica,
-		"Timeline":   timeline,
-		"Documentos": documentos,
+		"Title":          replica.Nombre,
+		"Replica":        replica,
+		"Timeline":       timeline,
+		"Documentos":     documentos,
+		"Mantenimientos": mantenimientos,
 	})
 }
 
@@ -167,8 +179,43 @@ func (h *HTMLHandler) ReplicaEditForm(c *gin.Context) {
 
 // DocumentList muestra la lista de documentos
 func (h *HTMLHandler) DocumentList(c *gin.Context) {
+	replicas, err := h.replicaService.List(c.Request.Context())
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
+		return
+	}
+
 	c.HTML(http.StatusOK, "document_list.html", gin.H{
-		"Title": "Documentos",
+		"Title":    "Documentos",
+		"Replicas": replicas,
+	})
+}
+
+// MantenimientoList muestra los mantenimientos próximos.
+func (h *HTMLHandler) MantenimientoList(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	mantenimientos, err := h.mantenimientoService.ListProximos(ctx, 90)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
+		return
+	}
+
+	replicas, err := h.replicaService.List(ctx)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
+		return
+	}
+
+	replicaNames := make(map[int]string, len(replicas))
+	for _, r := range replicas {
+		replicaNames[r.ID] = r.Nombre
+	}
+
+	c.HTML(http.StatusOK, "mantenimiento.html", gin.H{
+		"Title":          "Mantenimiento",
+		"Mantenimientos": mantenimientos,
+		"ReplicaNames":   replicaNames,
 	})
 }
 
@@ -216,24 +263,24 @@ type HTMLTimelineItem struct {
 // calculateDashboardStats calcula las estadísticas
 func calculateDashboardStats(replicas []models.Replica) DashboardStats {
 	stats := DashboardStats{}
-	
+
 	tipoCount := make(map[string]int)
 	estadoCount := make(map[string]int)
-	
+
 	for _, r := range replicas {
 		stats.Total++
 		stats.ValorTotal += r.CostoAdquisicion
-		
+
 		if r.Estado == "activo" {
 			stats.Activas++
 		} else if r.Estado == "reparacion" {
 			stats.Reparacion++
 		}
-		
+
 		tipoCount[r.Tipo]++
 		estadoCount[r.Estado]++
 	}
-	
+
 	// Calcular porcentajes para tipos
 	for tipo, count := range tipoCount {
 		porcentaje := 0.0
@@ -246,7 +293,7 @@ func calculateDashboardStats(replicas []models.Replica) DashboardStats {
 			Porcentaje: porcentaje,
 		})
 	}
-	
+
 	// Estados
 	for estado, count := range estadoCount {
 		stats.PorEstado = append(stats.PorEstado, EstadoStat{
@@ -254,14 +301,14 @@ func calculateDashboardStats(replicas []models.Replica) DashboardStats {
 			Cantidad: count,
 		})
 	}
-	
+
 	return stats
 }
 
 // buildHTMLTimeline construye el timeline con actividades y documentos
 func buildHTMLTimeline(actividades []models.Actividad, documentos []models.Documento, docService inbound.DocumentoService) []HTMLTimelineItem {
 	var timeline []HTMLTimelineItem
-	
+
 	for _, act := range actividades {
 		item := HTMLTimelineItem{
 			ID:               act.ID,
@@ -274,16 +321,16 @@ func buildHTMLTimeline(actividades []models.Actividad, documentos []models.Docum
 			Ubicacion:        act.Ubicacion,
 			Documentos:       []models.Documento{},
 		}
-		
+
 		// Buscar documentos de esta actividad
 		for _, doc := range documentos {
 			if doc.ActividadID != nil && *doc.ActividadID == act.ID {
 				item.Documentos = append(item.Documentos, doc)
 			}
 		}
-		
+
 		timeline = append(timeline, item)
 	}
-	
+
 	return timeline
 }

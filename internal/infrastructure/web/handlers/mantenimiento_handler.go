@@ -27,7 +27,7 @@ func (h *MantenimientoHandler) RegisterRoutes(router *gin.RouterGroup) {
 		mant.GET("", h.ListByReplica)
 		mant.POST("", h.Create)
 	}
-	
+
 	// Rutas independientes
 	router.GET("/mantenimiento/proximos", h.ListProximos)
 	router.GET("/mantenimiento/:mantenimiento_id", h.GetByID)
@@ -62,15 +62,15 @@ func (h *MantenimientoHandler) Create(c *gin.Context) {
 	}
 
 	var req struct {
-		TipoTarea      string `json:"tipo_tarea" binding:"required"`
-		FrecuenciaDias int    `json:"frecuencia_dias"`
-		FrecuenciaBB   int    `json:"frecuencia_bb"`
-		UltimaFecha    string `json:"ultima_fecha"`
-		ProximaFecha   string `json:"proxima_fecha"`
-		Notas          string `json:"notas"`
+		TipoTarea      string `json:"tipo_tarea" form:"tipo_tarea" binding:"required"`
+		FrecuenciaDias int    `json:"frecuencia_dias" form:"frecuencia_dias"`
+		FrecuenciaBB   int    `json:"frecuencia_bb" form:"frecuencia_bb"`
+		UltimaFecha    string `json:"ultima_fecha" form:"ultima_fecha"`
+		ProximaFecha   string `json:"proxima_fecha" form:"proxima_fecha"`
+		Notas          string `json:"notas" form:"notas"`
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -142,8 +142,8 @@ func (h *MantenimientoHandler) ListProximos(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"dias":          dias,
-		"count":         len(mantenimientos),
+		"dias":           dias,
+		"count":          len(mantenimientos),
 		"mantenimientos": mantenimientos,
 	})
 }
@@ -157,16 +157,16 @@ func (h *MantenimientoHandler) Update(c *gin.Context) {
 	}
 
 	var req struct {
-		TipoTarea      string `json:"tipo_tarea"`
-		FrecuenciaDias int    `json:"frecuencia_dias"`
-		FrecuenciaBB   int    `json:"frecuencia_bb"`
-		UltimaFecha    string `json:"ultima_fecha"`
-		ProximaFecha   string `json:"proxima_fecha"`
-		Completado     bool   `json:"completado"`
-		Notas          string `json:"notas"`
+		TipoTarea      string `json:"tipo_tarea" form:"tipo_tarea"`
+		FrecuenciaDias int    `json:"frecuencia_dias" form:"frecuencia_dias"`
+		FrecuenciaBB   int    `json:"frecuencia_bb" form:"frecuencia_bb"`
+		UltimaFecha    string `json:"ultima_fecha" form:"ultima_fecha"`
+		ProximaFecha   string `json:"proxima_fecha" form:"proxima_fecha"`
+		Completado     bool   `json:"completado" form:"completado"`
+		Notas          string `json:"notas" form:"notas"`
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -231,9 +231,9 @@ func (h *MantenimientoHandler) MarcarCompletado(c *gin.Context) {
 	}
 
 	var req struct {
-		FechaCompletado string `json:"fecha_completado"`
+		FechaCompletado string `json:"fecha_completado" form:"fecha_completado"`
 	}
-	c.ShouldBindJSON(&req)
+	_ = c.ShouldBind(&req)
 
 	var fecha *time.Time
 	if req.FechaCompletado != "" {
