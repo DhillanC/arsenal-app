@@ -6,8 +6,8 @@ Fuentes consolidadas:
 
 - `docs/TASKS.md`
 - `docs/FEATURE_REQUEST_BACKFILL.md`
-- `docs/FIELD_COLOR_OPTIONS.md`
 - Issues historicos `#1` a `#23` generados por el backfill de feature requests
+- Issue vivo `#24` para aplicar colores accesibles a campos de formulario
 
 Ultima actualizacion: 2026-05-27
 
@@ -102,7 +102,7 @@ Features cerrados:
 | Frontend HTMX + Tailwind con tema DCS | #16 | `6f1eea5` | Cerrado |
 | Correccion de drift: ruta Search API y validacion BB-count M6 | #18 | `ed131ab` | Cerrado |
 | Reparacion de frontend documentos/mantenimiento/HTMX | #22 | `2c22b23` | Cerrado |
-| Opciones de colores para campos de formulario | #23 | `2c22b23` | Cerrado |
+| Opciones de colores para campos de formulario | #23 | `2c22b23` | Cerrado como backfill historico; convertido en feature vivo `#24` |
 
 Resultado:
 
@@ -180,14 +180,14 @@ Estos son los pendientes vivos que deberian convertirse en nuevos issues de GitH
 
 | ID | Feature candidate | Estado | Fuente |
 |---|---|---|---|
-| MVP-P0-001 | Aplicar colores de inputs para modo claro y oscuro | Pendiente | `docs/FIELD_COLOR_OPTIONS.md` |
+| MVP-P0-001 | Aplicar colores de inputs para modo claro y oscuro | Pendiente | Issue `#24` |
 | MVP-P0-002 | Mejorar render de resultados de busqueda de documentos | Pendiente | `docs/TASKS.md` |
 | MVP-P0-003 | Agregar tests de render HTML para rutas principales | Pendiente | `docs/TASKS.md` |
 
 Detalle:
 
-- El problema de inputs ya esta analizado.
-- Recomendacion actual: opcion 1, neutro profesional.
+- El problema de inputs ya esta analizado en el issue `#24`.
+- Recomendacion actual: opcion 1, neutro profesional, registrada en `#24`.
 - Rutas prioritarias para tests HTML: `/`, `/replicas`, `/replicas/nueva`, `/documentos`, `/mantenimiento`.
 
 ### P1 - Integridad de documentos y datos
