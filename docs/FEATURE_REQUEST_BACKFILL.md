@@ -27,7 +27,7 @@ Este archivo controla el backfill de feature requests historicos para features y
 | FRB-001 | closed | #1 | Foundation de proyecto Go con Docker y estructura hexagonal | ec70a1a | `Dockerfile`, `docker-compose.yml`, `Makefile`, `cmd/api/main.go`, `internal/` | Base de proyecto, runtime local y estructura inicial. |
 | FRB-002 | closed | #2 | Modelo de dominio y esquema SQLite inicial | 5195c00 | `internal/domain/models/`, `internal/domain/ports/`, `internal/infrastructure/persistence/sqlite/migrations/001_initial.sql` | Entidades Replica, Actividad, Documento, Mantenimiento, piezas y sesiones. |
 | FRB-003 | closed | #3 | Repositorios, servicios y API REST core | 9fd086a | `internal/domain/services/`, `internal/infrastructure/persistence/sqlite/`, `internal/infrastructure/web/handlers/`, `internal/infrastructure/web/server.go` | CRUD base para replicas, actividades y documentos. |
-| FRB-004 | open | #4 | Storage local de documentos y pruebas de integracion | 5a0b779 | `internal/infrastructure/storage/local/storage.go`, `tests/` | Persistencia de archivos y cobertura inicial de storage/repositorios. |
+| FRB-004 | closed | #4 | Storage local de documentos y pruebas de integracion | 5a0b779 | `internal/infrastructure/storage/local/storage.go`, `tests/` | Persistencia de archivos y cobertura inicial de storage/repositorios. |
 | FRB-005 | open | #5 | Threat model STRIDE y DFD de seguridad | 61bf76e | `docs/SECURITY.md`, `docs/MERMAID.md` | Documentacion de amenazas y boundaries. |
 | FRB-006 | open | #6 | Runtime Docker optimizado para ARM64 y migraciones en contenedor | 568ece9 | `Dockerfile`, `PROBLEMAS_DOCKER.md` | Ajustes para correr en Mac mini/ARM64. |
 | FRB-007 | open | #7 | Configuracion por entorno y puerto configurable | 1b7de4d | `cmd/api/main.go`, `internal/infrastructure/web/server.go`, `internal/infrastructure/persistence/sqlite/replica_repository.go` | `APP_PORT`, config central y ajustes de handlers. |
@@ -53,4 +53,4 @@ Este archivo controla el backfill de feature requests historicos para features y
 - Job: `0c3a0e82-fe86-406e-beb5-9f8766662bdd` (`arsenal-feature-request-backfill`).
 - Cadencia: cada 6 minutos.
 - Regla: procesar un solo issue por corrida.
-- Ultimo item procesado: `FRB-003` / issue `#3` cerrado el 2026-05-27 06:40 PDT.
+- Ultimo item procesado: `FRB-004` / issue `#4` cerrado el 2026-05-27 06:52 PDT.
