@@ -3,10 +3,12 @@ package services
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/DhillanC/arsenal-app/internal/domain/models"
 	inbound "github.com/DhillanC/arsenal-app/internal/domain/ports/inbound"
 	outbound "github.com/DhillanC/arsenal-app/internal/domain/ports/outbound"
+	"github.com/DhillanC/arsenal-app/internal/infrastructure/ocr"
 )
 
 // DocumentoService implementa inbound.DocumentoService
@@ -37,6 +39,15 @@ func (s *DocumentoService) Create(ctx context.Context, documento *models.Documen
 		}
 		documento.RutaArchivo = ruta
 		documento.TamanoBytes = int64(len(file))
+
+		if shouldRunOCR(documento) {
+			text, err := extractOCRText(ruta)
+			if err != nil {
+				documento.OCRTexto = fmt.Sprintf("[OCR no disponible: %v]", err)
+			} else {
+				documento.OCRTexto = text
+			}
+		}
 	}
 
 	return s.repo.Create(ctx, documento)
@@ -50,6 +61,16 @@ func (s *DocumentoService) GetByID(ctx context.Context, id int) (*models.Documen
 // ListByReplica lista documentos de una réplica
 func (s *DocumentoService) ListByReplica(ctx context.Context, replicaID int) ([]models.Documento, error) {
 	return s.repo.ListByReplica(ctx, replicaID)
+}
+
+// ListByReplicaAndType lista documentos de una réplica filtrados por tipo
+func (s *DocumentoService) ListByReplicaAndType(ctx context.Context, replicaID int, tipo string) ([]models.Documento, error) {
+	return s.repo.ListByReplicaAndType(ctx, replicaID, tipo)
+}
+
+// ListByActividad lista documentos asociados a una actividad
+func (s *DocumentoService) ListByActividad(ctx context.Context, actividadID int) ([]models.Documento, error) {
+	return s.repo.ListByActividad(ctx, actividadID)
 }
 
 // Update actualiza un documento
@@ -69,4 +90,26 @@ func (s *DocumentoService) Delete(ctx context.Context, id int) error {
 // SearchByOCR busca documentos por texto OCR
 func (s *DocumentoService) SearchByOCR(ctx context.Context, query string) ([]models.Documento, error) {
 	return s.repo.SearchByOCR(ctx, query)
+}
+
+func shouldRunOCR(documento *models.Documento) bool {
+	if os.Getenv("OCR_ENABLED") == "false" {
+		return false
+	}
+	switch documento.MimeType {
+	case "image/jpeg", "image/png", "image/gif":
+		return true
+	default:
+		return false
+	}
+}
+
+func extractOCRText(filePath string) (string, error) {
+	client, err := ocr.NewOCRClient()
+	if err != nil {
+		return "", err
+	}
+	defer client.Close()
+
+	return client.ExtractText(filePath)
 }

@@ -146,3 +146,46 @@ func (r *ReplicaRepository) Delete(ctx context.Context, id int) error {
 	}
 	return nil
 }
+
+// Search busca réplicas por número de serie o nombre (para trazabilidad DIAN)
+func (r *ReplicaRepository) Search(ctx context.Context, query string) ([]models.Replica, error) {
+	searchTerm := "%" + query + "%"
+	sqlQuery := `
+		SELECT id, nombre, marca, modelo, tipo, numero_serie, fecha_adquisicion,
+			proveedor, costo_adquisicion, estado, fps, joules, peso_gramos,
+			longitud_mm, hop_up, capacidad_cargador, notas, created_at, updated_at
+		FROM replicas 
+		WHERE estado != 'archivado' AND (
+			nombre LIKE ? OR 
+			numero_serie LIKE ? OR 
+			marca LIKE ? OR
+			modelo LIKE ?
+		)
+		ORDER BY created_at DESC
+	`
+
+	rows, err := r.db.QueryContext(ctx, sqlQuery, searchTerm, searchTerm, searchTerm, searchTerm)
+	if err != nil {
+		return nil, fmt.Errorf("buscar replicas: %w", err)
+	}
+	defer rows.Close()
+
+	var replicas []models.Replica
+	for rows.Next() {
+		var replica models.Replica
+		err := rows.Scan(
+			&replica.ID, &replica.Nombre, &replica.Marca, &replica.Modelo,
+			&replica.Tipo, &replica.NumeroSerie, &replica.FechaAdquisicion,
+			&replica.Proveedor, &replica.CostoAdquisicion, &replica.Estado,
+			&replica.FPS, &replica.Joules, &replica.PesoGramos, &replica.LongitudMM,
+			&replica.HopUp, &replica.CapacidadCargador, &replica.Notas,
+			&replica.CreatedAt, &replica.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan replica: %w", err)
+		}
+		replicas = append(replicas, replica)
+	}
+
+	return replicas, rows.Err()
+}

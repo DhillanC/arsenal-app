@@ -1,0 +1,84 @@
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold gradient-text">Mis Réplicas</h1>
+        <a href="/replicas/nueva" class="btn-primary inline-flex items-center space-x-2">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Nueva Réplica</span>
+        </a>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card">
+            <div class="text-sm text-muted-foreground">Total Réplicas</div>
+            <div class="text-2xl font-bold">{{.Stats.Total}}</div>
+        </div>
+        <div class="card">
+            <div class="text-sm text-muted-foreground">Activas</div>
+            <div class="text-2xl font-bold text-green-600">{{.Stats.Activas}}</div>
+        </div>
+        <div class="card">
+            <div class="text-sm text-muted-foreground">En Reparación</div>
+            <div class="text-2xl font-bold text-amber-600">{{.Stats.Reparacion}}</div>
+        </div>
+        <div class="card">
+            <div class="text-sm text-muted-foreground">Valor Total</div>
+            <div class="text-2xl font-bold">${{printf "%.0f" .Stats.ValorTotal}}</div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="flex space-x-4">
+        <input type="text" 
+               name="search" 
+               placeholder="Buscar réplicas..."
+               class="flex-1 max-w-md"
+               hx-get="/api/v1/replicas"
+               hx-trigger="keyup changed delay:300ms"
+               hx-target="#replica-list">
+        
+        <select name="estado" 
+                class="w-40"
+                hx-get="/api/v1/replicas"
+                hx-trigger="change"
+                hx-target="#replica-list">
+            <option value="">Todos</option>
+            <option value="activo">Activo</option>
+            <option value="reparacion">Reparación</option>
+            <option value="vendido">Vendido</option>
+        </select>
+    </div>
+    
+    <!-- Replica Grid -->
+    <div id="replica-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {{range .Replicas}}
+        <a href="/replicas/{{.ID}}" class="card hover:shadow-lg transition-shadow group">
+            <div class="aspect-video bg-gradient-to-br from-gold-primary/10 to-gold-medium/5 rounded-md mb-4 flex items-center justify-center">
+                <i data-lucide="box" class="w-12 h-12 text-gold-primary/40"></i>
+            </div>
+            <h3 class="font-semibold text-lg group-hover:text-gold-primary transition-colors">{{.Nombre}}</h3>
+            <p class="text-sm text-muted-foreground">{{.Marca}} {{.Modelo}}</p>
+            <div class="flex items-center justify-between mt-4">
+                <span class="px-2 py-1 rounded-full text-xs font-medium
+                    {{if eq .Estado "activo"}}bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400
+                    {{else if eq .Estado "reparacion"}}bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400
+                    {{else}}bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400{{end}}">
+                    {{.Estado}}
+                </span>
+                <span class="text-sm font-medium">
+                    ${{printf "%.0f" .CostoAdquisicion}}
+                </span>
+            </div>
+        </a>
+        {{else}}
+        <div class="col-span-full text-center py-12 text-muted-foreground">
+            <i data-lucide="box" class="w-16 h-16 mx-auto mb-4 opacity-50"></i>
+            <p>No hay réplicas registradas</p>
+            <a href="/replicas/nueva" class="btn-primary mt-4 inline-block">Agregar primera réplica</a>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

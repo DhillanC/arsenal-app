@@ -1,0 +1,21 @@
+{
+  "name": "Arsenal App",
+  "short_name": "Arsenal",
+  "description": "Gestión de réplicas airsoft - Inventario, mantenimiento y documentación",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#131110",
+  "theme_color": "#b88834",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["utilities", "productivity"],
+  "lang": "es",
+  "dir": "ltr"
+}

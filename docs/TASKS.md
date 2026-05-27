@@ -11,8 +11,8 @@
 - [x] go.mod con dependencias
 
 ### Configuración
-- [ ] Configurar Viper (.env, flags)
-- [ ] Logger estructurado (zap/logrus)
+- [x] Configuración por variables de entorno (`APP_PORT`, `DB_PATH`, `UPLOAD_PATH`, `CORS_ALLOWED_ORIGINS`)
+- [ ] Logger estructurado (`log/slog`)
 - [x] Healthcheck endpoint
 
 ### Base de Datos
@@ -43,7 +43,7 @@
 - [x] Middleware (logging, CORS, recovery)
 - [x] Handlers réplicas (CRUD)
 - [x] Handlers actividades
-- [ ] Handlers documentos
+- [x] Handlers documentos (upload + list + search)
 - [x] Entry point main.go
 
 ### Storage
@@ -74,9 +74,9 @@
   - [x] Path traversal defense
   - [x] Docker target: builder eliminado
   - [x] CORS configurable
-- [ ] Controles pendientes (post-auth):
+  - [x] Max upload size limit (10MB) con `http.MaxBytesReader`
+- [ ] Controles pendientes:
   - [ ] File hash verification (SHA-256)
-  - [ ] Max upload size limit (10MB)
 - [ ] Backup y recuperación de datos
 - [ ] Encriptación de datos sensibles en reposo
 
@@ -91,48 +91,74 @@
 
 ---
 
-## Fase 3: Gestión de Documentos 📄
+## Fase 3: Gestión de Documentos ✅ (Completada)
 
 ### Subida de Archivos
-- [ ] Handler multipart para documentos
-- [ ] Validación MIME type
-- [ ] Límite de tamaño (10MB)
-- [ ] Organización por réplica en filesystem
+- [x] Handler multipart para documentos
+- [x] Validación MIME type
+- [x] Límite de tamaño (10MB) - http.MaxBytesReader para cap real
+- [x] Organización por réplica en filesystem
 
 ### OCR
-- [ ] Integración Tesseract (gosseract)
-- [ ] Extracción de texto en upload
-- [ ] Almacenar OCR en DB
+- [x] Integración Tesseract vía binario local
+- [x] Extracción de texto en upload para imágenes
+- [x] Almacenar OCR en DB
+- [ ] OCR de PDF mediante conversión previa a imagen
 
-### Búsqueda
-- [ ] Búsqueda full-text por contenido OCR
-- [ ] Filtros por tipo de documento
-- [ ] Timeline con documentos adjuntos
+### Búsqueda y Filtros
+- [x] Búsqueda full-text por contenido OCR
+- [x] Filtros por tipo de documento (`GET /documentos/filter?replica_id=X&tipo=Y`)
+- [x] Timeline con documentos adjuntos (`GET /replicas/:id/actividades/timeline`)
 
 ---
 
-## Fase 4: Frontend Web 🎨
+## Fase 4: Frontend Web ✅ (Completada)
 
 ### HTMX + Tailwind
-- [ ] Setup HTMX + Tailwind
-- [ ] Templates HTML base
-- [ ] Página lista réplicas
-- [ ] Página ficha réplica
-- [ ] Formularios
+- [x] Setup HTMX + Tailwind
+- [x] Templates HTML base (base.html, layouts con tema DCS)
+- [x] Página lista réplicas (replica_list.html)
+- [x] Página ficha réplica (replica_detail.html con tabs)
+- [x] Formularios (replica_form.html)
+- [x] Vista de error (error.html)
 
 ### Dashboard
-- [ ] Estadísticas generales
-- [ ] Gráficos de uso
-- [ ] Costo total de propiedad
+- [x] Estadísticas generales (conteos, valores)
+- [x] Gráficos de uso (por tipo, por estado)
+- [x] Costo total de propiedad
+- [x] Actividad reciente
+
+### Tema DCS Web
+- [x] Paleta: Gold #b88834, Gold Medium #ca9250, Gold Light #fdf3aa
+- [x] Dark mode: Near-black #131110, Teal accent #5DC8D2
+- [x] Light mode: Cream #f9f6f0
+- [x] Toggle con localStorage (key: theme)
+- [x] CSS variables y transiciones
 
 ### PWA
-- [ ] Manifest.json
-- [ ] Service Worker
-- [ ] Offline indicators
+- [x] Manifest.json (con iconos y colores)
+- [x] Service Worker (placeholder)
+- [x] Meta tags para mobile
 
 ---
 
-## Fase 5: Autenticación y Seguridad API 🔐
+## Fase 5: Mantenimiento & DIAN 🔧 ✅ (Completada)
+
+### Mantenimiento Programado
+- [x] CRUD tareas de mantenimiento (`/api/v1/replicas/:id/mantenimiento`)
+- [x] Cálculo de próximas fechas (automático al completar)
+- [x] Endpoint mantenimientos próximos (`/api/v1/mantenimiento/proximos?dias=N`)
+- [x] Marcar como completado con recálculo de fecha
+
+### DIAN - Trazabilidad
+- [x] Búsqueda por número de serie (`/api/v1/replicas/search?q=...`)
+- [x] Campo numero_serie en réplicas (ya existía)
+- [x] Documentos tipo manifiesto_dian y declaracion_dian (ya existían)
+
+---
+
+## Fase 6: Autenticación y Seguridad API 🔐
+**Penúltima fase** - para futuro multi-user
 
 ### JWT Authentication
 - [ ] Login/registro de usuarios
@@ -150,20 +176,6 @@
 
 ---
 
-## Fase 6: Mantenimiento & DIAN 🔧
-
-### Mantenimiento Programado
-- [ ] CRUD tareas de mantenimiento
-- [ ] Cálculo de próximas fechas
-- [ ] Alertas/recordatorios
-
-### DIAN
-- [ ] Campos específicos importación
-- [ ] Búsqueda por número manifiesto
-- [ ] Trazabilidad completa
-
----
-
 ## Fase 7: Polish ✨
 
 ### Exportar
@@ -172,7 +184,7 @@
 
 ### Deploy
 - [ ] Documentación deploy Mac mini
-- [ ] PM2 config
+- [ ] Configuración de servicio para Mac mini
 - [ ] Tailscale access
 - [ ] GitHub Actions CI/CD
 - [ ] Release v1.0.0
@@ -181,7 +193,8 @@
 
 ## Estado General
 
-**Fase actual:** 3 - Gestión de Documentos
-**Progreso:** 18/35 tareas completadas (51%)
+**Fase actual:** 6 - Autenticación y Seguridad API
+**Última fase completada:** 5 - Mantenimiento & DIAN
+**Siguiente paso recomendado:** implementar JWT Authentication o corregir primero controles transversales de seguridad pendientes.
 
-*Última actualización: 2026-05-25*
+*Última actualización: 2026-05-26*

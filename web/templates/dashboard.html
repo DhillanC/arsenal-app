@@ -1,0 +1,149 @@
+{{define "content"}}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-3xl font-bold gradient-text">Dashboard</h1>
+        <p class="text-muted-foreground">Resumen de tu arsenal</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total Réplicas -->
+        <div class="card">
+            <div class="flex items-center space-x-4">
+                <div class="p-3 rounded-lg bg-gold-primary/10">
+                    <i data-lucide="box" class="w-6 h-6 text-gold-primary"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-muted-foreground">Total Réplicas</p>
+                    <p class="text-2xl font-bold">{{.Stats.Total}}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Valor Total -->
+        <div class="card">
+            <div class="flex items-center space-x-4">
+                <div class="p-3 rounded-lg bg-green-500/10">
+                    <i data-lucide="dollar-sign" class="w-6 h-6 text-green-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-muted-foreground">Valor Total</p>
+                    <p class="text-2xl font-bold">${{printf "%.0f" .Stats.ValorTotal}}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activas -->
+        <div class="card">
+            <div class="flex items-center space-x-4">
+                <div class="p-3 rounded-lg bg-teal-light/10">
+                    <i data-lucide="check-circle" class="w-6 h-6 text-teal"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-muted-foreground">Activas</p>
+                    <p class="text-2xl font-bold">{{.Stats.Activas}}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- En Reparación -->
+        <div class="card">
+            <div class="flex items-center space-x-4">
+                <div class="p-3 rounded-lg bg-amber-500/10">
+                    <i data-lucide="wrench" class="w-6 h-6 text-amber-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-muted-foreground">En Reparación</p>
+                    <p class="text-2xl font-bold">{{.Stats.Reparacion}}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Por Tipo -->
+        <div class="card">
+            <h3 class="font-semibold mb-4">Réplicas por Tipo</h3>
+            <div class="space-y-3">
+                {{range .Stats.PorTipo}}
+                <div class="flex items-center justify-between">
+                    <span class="text-sm">{{.Tipo}}</span>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-gold-primary rounded-full" style="width: {{.Porcentaje}}%"></div>
+                        </div>
+                        <span class="text-sm font-medium w-8 text-right">{{.Cantidad}}</span>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+        </div>
+
+        <!-- Por Estado -->
+        <div class="card">
+            <h3 class="font-semibold mb-4">Distribución por Estado</h3>
+            <div class="flex justify-around items-center">
+                {{range .Stats.PorEstado}}
+                <div class="text-center">
+                    <div class="w-16 h-16 rounded-full border-4 flex items-center justify-center mx-auto mb-2
+                        {{if eq .Estado "activo"}}border-green-500 text-green-500
+                        {{else if eq .Estado "reparacion"}}border-amber-500 text-amber-500
+                        {{else}}border-gold-primary text-gold-primary{{end}}">
+                        <span class="text-lg font-bold">{{.Cantidad}}</span>
+                    </div>
+                    <span class="text-sm text-muted-foreground capitalize">{{.Estado}}</span>
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-semibold">Actividad Reciente</h3>
+            <a href="/replicas" class="text-sm text-gold-primary hover:underline">Ver todas</a>
+        </div>
+        <div class="space-y-3">
+            {{range .ActividadesRecientes}}
+            <div class="flex items-center justify-between py-2 border-b border-gold-primary/10 last:border-0">
+                <div class="flex items-center space-x-3">
+                    <div class="w-2 h-2 rounded-full bg-gold-primary"></div>
+                    <div>
+                        <p class="font-medium">{{.Descripcion}}</p>
+                        <p class="text-sm text-muted-foreground">{{.ReplicaNombre}} - {{.Fecha.Format "2006-01-02"}}</p>
+                    </div>
+                </div>
+                {{if .Costo}}
+                <span class="text-sm font-medium">${{printf "%.0f" .Costo}}</span>
+                {{end}}
+            </div>
+            {{else}}
+            <p class="text-center text-muted-foreground py-4">No hay actividad reciente</p>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <a href="/replicas/nueva" class="card text-center hover:bg-gold-primary/5 transition-colors">
+            <i data-lucide="plus-circle" class="w-8 h-8 mx-auto mb-2 text-gold-primary"></i>
+            <span class="text-sm font-medium">Nueva Réplica</span>
+        </a>
+        <a href="/documentos" class="card text-center hover:bg-gold-primary/5 transition-colors">
+            <i data-lucide="file-up" class="w-8 h-8 mx-auto mb-2 text-gold-primary"></i>
+            <span class="text-sm font-medium">Subir Documento</span>
+        </a>
+        <a href="/replicas" class="card text-center hover:bg-gold-primary/5 transition-colors">
+            <i data-lucide="search" class="w-8 h-8 mx-auto mb-2 text-gold-primary"></i>
+            <span class="text-sm font-medium">Buscar</span>
+        </a>
+        <a href="/mantenimiento" class="card text-center hover:bg-gold-primary/5 transition-colors">
+            <i data-lucide="calendar" class="w-8 h-8 mx-auto mb-2 text-gold-primary"></i>
+            <span class="text-sm font-medium">Mantenimiento</span>
+        </a>
+    </div>
+</div>
+{{end}}

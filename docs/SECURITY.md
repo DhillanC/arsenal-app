@@ -12,8 +12,8 @@ flowchart LR
     subgraph DMZ["🛡️ DMZ Trust Boundary"]
         direction TB
         APIServer[API Server<br/>Gin HTTP]
-        Auth[Auth Middleware<br/>JWT Validation]
-        RateLimit[Rate Limiter]
+        Auth[Auth Middleware<br/>JWT Validation planned]
+        RateLimit[Rate Limiter planned]
         CORS[CORS Middleware]
     end
 
@@ -66,7 +66,7 @@ flowchart LR
 | Datos de réplicas (seriales) | Identificación | 🟡 Media | SQLite |
 | Registro de actividades | Operativa | 🟢 Baja | SQLite |
 | Fotos/videos | Personal | 🟡 Media | Local Storage |
-| Credenciales JWT | Auth | 🔴 Alta | Memoria |
+| Credenciales JWT | Auth planeado | 🔴 Alta | Memoria |
 
 ## 3. Vectores de Amenaza (STRIDE)
 
@@ -119,13 +119,15 @@ flowchart LR
   - Subida masiva de archivos grandes
   - OCR excesivo consume CPU
   - DB locked por operaciones largas
+  - Crash del servidor sin graceful shutdown
 - **Impacto:** 🟡 Medio - Inconveniente
 - **Mitigación:**
   - [ ] Rate limiting (100 req/min)
-  - [ ] Max file size (10MB)
+  - [x] **Max file size (10MB)**: `http.MaxBytesReader` corta el body en el límite real; 413 si se excede
   - [ ] Timeout en OCR (30s)
-  - [ ] Connection pooling SQLite
-  - [ ] Health checks
+  - [x] **Connection pooling SQLite**: `SetMaxOpenConns(1)` + `_busy_timeout=5000` para WAL
+  - [x] **Health checks**: `/health` con `PingContext(2s)` → 503 si DB caída, facilita auto-restart
+  - [x] **Graceful shutdown**: `signal.NotifyContext` + `serverErr` channel + `Shutdown(10s)` garantiza cierre limpio y ejecución de defers (`db.Close`)
 
 ### E - Elevation of Privilege (Escalación)
 - **Amenaza:** Acceso a datos de otros usuarios (futuro multi-user)
@@ -138,22 +140,28 @@ flowchart LR
 
 ## 4. Controles de Seguridad Implementados
 
-### ✅ Ya implementados (Fase 1)
+### ✅ Ya implementados (Fase 1-2)
 - [x] SQLite con foreign keys y constraints
 - [x] Soft delete (no borrado físico)
-- [x] CORS middleware
+- [x] CORS middleware (configurable via env)
 - [x] Input validation básica en servicios
 - [x] .gitignore para data/ y uploads/
+- [x] **Path traversal protection**: sanitizeFilename rechaza `../`, paths absolutos, NUL, separadores ANTES de `filepath.Base`; validación con `filepath.Rel`
+- [x] **Real upload size cap**: `http.MaxBytesReader(10MB)` + `ParseMultipartForm`; response 413 (no 400) al exceder límite
+- [x] **Graceful shutdown**: `signal.NotifyContext` + `serverErr` channel + `http.Server.Shutdown` con timeout 10s
+- [x] **Patrón run() error**: sin `log.Fatalf`, todos los errores retornan `fmt.Errorf` con `%w`; `defer db.Close()` garantizado en todos los paths
+- [x] **Health check**: `PingContext(2s)` → HTTP 503 si DB no responde
+- [x] **SQLite hardening**: `_busy_timeout=5000`, `SetMaxOpenConns(1)` para WAL mode, skip `MkdirAll` en `:memory:`
+- [x] **Tests de integración**: HTTP handler tests (health 200/503, CORS allow/block/preflight, upload 413)
 
-### 🔄 Pendientes Fase 2
+### 🔄 Pendientes Fase 6
 - [ ] JWT Authentication
 - [ ] Rate limiting
 - [ ] Audit logging
 - [ ] File hash verification
-- [ ] Path traversal protection
-- [ ] Max upload size limit
+- [ ] OCR timeout controls
 
-### 📋 Futuros (Fase 3+)
+### 📋 Futuros (Fase 7+)
 - [ ] Encriptación de documentos sensibles
 - [ ] Backup automático encriptado
 - [ ] 2FA opcional

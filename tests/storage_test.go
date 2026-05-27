@@ -12,7 +12,6 @@ import (
 )
 
 func TestStorage(t *testing.T) {
-	// Crear directorio temporal
 	tempDir := t.TempDir()
 	storage := local.NewStorage(tempDir)
 
@@ -54,42 +53,73 @@ func TestStorage(t *testing.T) {
 		path2, err := storage.Save(content2, "dup.txt", 1)
 		require.NoError(t, err)
 
-		// Deben ser paths diferentes
 		assert.NotEqual(t, path1, path2)
 		assert.FileExists(t, path1)
 		assert.FileExists(t, path2)
 	})
+}
 
-	t.Run("Path traversal blocked", func(t *testing.T) {
-		content := []byte("evil")
-		// filepath.Base("../../../etc/passwd") devuelve "passwd"
-		// filepath.Base limpia los "../" así que no detectamos por strings.Contains
-		// Pero el filepath.Rel check debería detectar que está fuera de basePath
-		_, err := storage.Save(content, "../../../etc/passwd", 1)
-		// Nota: filepath.Base hace que esto pase, pero el filepath.Rel check debería fallar
-		// Si no falla, es un bug que necesitamos arreglar
-		if err == nil {
-			// Si no hay error, verificar que al menos no escapó del tempDir
-			outsidePath := filepath.Join(tempDir, "..", "..", "..", "etc", "passwd")
-			_, statErr := os.Stat(outsidePath)
-			assert.True(t, os.IsNotExist(statErr), "El archivo no debería existir fuera del tempDir")
-		} else {
-			assert.Contains(t, err.Error(), "path traversal")
-		}
-	})
+// TestStorage_SanitizeRejection verifica que el storage RECHAZA entradas
+// peligrosas en lugar de neutralizarlas silenciosamente. Esto es importante:
+// la versión anterior aceptaba "../../../etc/passwd" como "passwd" y lo
+// guardaba bajo basePath. Funcional, pero opaca para auditoría.
+func TestStorage_SanitizeRejection(t *testing.T) {
+	tempDir := t.TempDir()
+	storage := local.NewStorage(tempDir)
 
-	t.Run("Path traversal with Base escape blocked", func(t *testing.T) {
-		content := []byte("evil2")
-		// filepath.Base limpia "../../" pero debería quedar "passwd"
-		// El regex rechazaría "passwd" sin extensión? No, es válido
-		// Pero el path final debería estar dentro de tempDir/1/2026-01/
-		path, err := storage.Save(content, "../../passwd", 1)
-		require.NoError(t, err)
+	cases := []struct {
+		name     string
+		filename string
+		wantErr  string
+	}{
+		{"empty filename", "", "vacío"},
+		{"forward slash traversal", "../../../etc/passwd", "separadores"},
+		{"backslash traversal", "..\\..\\windows\\system32", "separadores"},
+		{"null byte injection", "evil\x00.txt", "separadores"},
+		{"only dots", "..", "relativos"},
+		{"hidden traversal", "foo..bar", "relativos"},
+		{"single dot", ".", "relativos"},
+		{"non-ascii", "archivo_ñ.txt", "inválido"},
+		{"space in name", "my file.txt", "inválido"},
+		{"shell metachar", "a;rm -rf b.txt", "inválido"},
+	}
 
-		// Verificar que está dentro del directorio esperado
-		assert.True(t, strings.HasPrefix(path, tempDir))
-		// No debería haber creado "etc/passwd"
-		_, err = os.Stat(filepath.Join(tempDir, "etc", "passwd"))
-		assert.True(t, os.IsNotExist(err))
-	})
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := storage.Save([]byte("x"), tc.filename, 1)
+			require.Error(t, err, "esperaba rechazo de %q", tc.filename)
+			assert.Contains(t, err.Error(), tc.wantErr,
+				"mensaje de error debe mencionar la causa, got: %v", err)
+		})
+	}
+
+	// Independientemente del path lógico que el atacante intentó, /etc/passwd
+	// no debe existir bajo tempDir y nada debe haberse creado fuera.
+	outsidePath := filepath.Join(tempDir, "..", "..", "..", "etc", "passwd")
+	_, statErr := os.Stat(outsidePath)
+	assert.True(t, os.IsNotExist(statErr), "ningún archivo debe escapar de tempDir")
+}
+
+// TestStorage_AcceptsValidNames verifica que nombres legítimos pasan el filtro.
+func TestStorage_AcceptsValidNames(t *testing.T) {
+	tempDir := t.TempDir()
+	storage := local.NewStorage(tempDir)
+
+	valid := []string{
+		"factura.pdf",
+		"foto_2026-05.jpg",
+		"A1B2C3.txt",
+		"archivo-con-guiones.dat",
+		"sin_extension",
+		".dotfile",
+	}
+
+	for _, name := range valid {
+		t.Run(name, func(t *testing.T) {
+			path, err := storage.Save([]byte("x"), name, 1)
+			require.NoError(t, err, "nombre válido rechazado: %q", name)
+			assert.True(t, strings.HasPrefix(path, tempDir),
+				"archivo debe quedar bajo tempDir, got %q", path)
+		})
+	}
 }

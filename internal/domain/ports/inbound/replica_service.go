@@ -2,6 +2,8 @@ package ports
 
 import (
 	"context"
+	"time"
+
 	"github.com/DhillanC/arsenal-app/internal/domain/models"
 )
 
@@ -12,6 +14,7 @@ type ReplicaService interface {
 	List(ctx context.Context) ([]models.Replica, error)
 	Update(ctx context.Context, replica *models.Replica) error
 	Delete(ctx context.Context, id int) error
+	Search(ctx context.Context, query string) ([]models.Replica, error)
 }
 
 // ActividadService define los casos de uso para actividades
@@ -28,7 +31,20 @@ type DocumentoService interface {
 	Create(ctx context.Context, documento *models.Documento, file []byte) error
 	GetByID(ctx context.Context, id int) (*models.Documento, error)
 	ListByReplica(ctx context.Context, replicaID int) ([]models.Documento, error)
+	ListByReplicaAndType(ctx context.Context, replicaID int, tipo string) ([]models.Documento, error)
+	ListByActividad(ctx context.Context, actividadID int) ([]models.Documento, error)
 	Update(ctx context.Context, documento *models.Documento) error
 	Delete(ctx context.Context, id int) error
 	SearchByOCR(ctx context.Context, query string) ([]models.Documento, error)
+}
+
+// MantenimientoService define los casos de uso para mantenimiento programado
+type MantenimientoService interface {
+	Create(ctx context.Context, mantenimiento *models.Mantenimiento) error
+	GetByID(ctx context.Context, id int) (*models.Mantenimiento, error)
+	ListByReplica(ctx context.Context, replicaID int) ([]models.Mantenimiento, error)
+	ListProximos(ctx context.Context, dias int) ([]models.Mantenimiento, error)
+	Update(ctx context.Context, mantenimiento *models.Mantenimiento) error
+	Delete(ctx context.Context, id int) error
+	MarcarCompletado(ctx context.Context, id int, fechaCompletado *time.Time) error
 }

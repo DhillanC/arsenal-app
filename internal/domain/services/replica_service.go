@@ -52,3 +52,11 @@ func (s *ReplicaService) Update(ctx context.Context, replica *models.Replica) er
 func (s *ReplicaService) Delete(ctx context.Context, id int) error {
 	return s.repo.Delete(ctx, id)
 }
+
+// Search busca réplicas por nombre, número de serie, marca o modelo (trazabilidad DIAN)
+func (s *ReplicaService) Search(ctx context.Context, query string) ([]models.Replica, error) {
+	if query == "" {
+		return s.repo.List(ctx)
+	}
+	return s.repo.Search(ctx, query)
+}

@@ -1,0 +1,55 @@
+name: User Story
+description: Capture a requirement from the perspective of the end user.
+title: "[Story]: "
+labels: ["enhancement", "user story"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form when the work describes value from a user's perspective.
+  - type: input
+    id: role
+    attributes:
+      label: As a
+      description: Who is the user or stakeholder?
+      placeholder: project manager
+    validations:
+      required: true
+  - type: input
+    id: capability
+    attributes:
+      label: I need
+      description: What does the user need to do?
+      placeholder: create a project board from a template
+    validations:
+      required: true
+  - type: input
+    id: benefit
+    attributes:
+      label: So that
+      description: What value or outcome does this create?
+      placeholder: the team can track work consistently
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details and assumptions
+      description: Add context, constraints, dependencies, and open questions.
+      placeholder: |
+        - Known context
+        - Assumptions
+        - Dependencies
+    validations:
+      required: false
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: Define how the story will be accepted.
+      value: |
+        Given [some context]
+        When [certain action is taken]
+        Then [the expected outcome is observed]
+    validations:
+      required: true

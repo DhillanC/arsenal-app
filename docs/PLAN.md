@@ -8,16 +8,16 @@ Aplicación web/móvil (PWA) para gestión integral de réplicas airsoft. Invent
 
 | Capa | Tecnología | Justificación |
 |------|-----------|---------------|
-| **Backend** | Go 1.26+ | Performance, tipado fuerte, excelente para APIs |
+| **Backend** | Go 1.21+ | Performance, tipado fuerte, excelente para APIs |
 | **Web Framework** | Gin | Ligero, middleware ecosystem maduro |
 | **Base de Datos** | SQLite | Zero-config, portable, perfecto para single-user |
-| **Migraciones** | golang-migrate | Estándar de la industria |
-| **OCR** | gosseract (wrapper de Tesseract) | Extrae texto de documentos DIAN |
+| **Migraciones** | Migraciones SQL embebidas | Binario portable sin depender del filesystem en Docker |
+| **OCR** | Tesseract CLI | Extrae texto de imágenes cargadas como documentos |
 | **Storage** | fs (stdlib) + filepath | Filesystem local, simple |
-| **Auth** | JWT (golang-jwt) | Stateless, perfecto para PWA |
-| **Config** | Viper | .env, flags, defaults |
+| **Auth** | JWT (pendiente Fase 6) | Stateless, perfecto para PWA |
+| **Config** | Variables de entorno | Configuración simple para app single-user |
 | **Testing** | testify | Unit + integration testing |
-| **Frontend** | HTMX + Alpine.js | Minimal JS, server-rendered, PWA-capable |
+| **Frontend** | HTMX + JavaScript mínimo | Server-rendered, PWA-capable |
 | **Estilos** | Tailwind CSS | Utility-first, bundle pequeño |
 | **Deploy** | Docker + Docker Compose | Portabilidad, reproducibilidad |
 | **Network** | Tailscale | Acceso remoto seguro sin exponer puertos |
@@ -28,6 +28,65 @@ Aplicación web/móvil (PWA) para gestión integral de réplicas airsoft. Invent
 - 🟥 **Dominio:** Entities + Ports (interfaces)
 - 🟨 **Aplicación:** Services + Commands/Queries
 - 🟦 **Infraestructura:** Repositories + Web + Storage + OCR
+
+### Diagrama de Arquitectura
+
+```mermaid
+flowchart TD
+    subgraph Core["🔴 Core - Dominio"]
+        direction TB
+        subgraph Models["Models"]
+            R["Replica"]
+            A["Actividad"]
+            D["Documento"]
+        end
+    end
+    
+    subgraph Inbound["🟡 Inbound Ports"]
+        RS["ReplicaService"]
+        AS["ActividadService"]
+        DS["DocumentoService"]
+    end
+    
+    subgraph Outbound["🟡 Outbound Ports"]
+        RR["ReplicaRepository"]
+        AR["ActividadRepository"]
+        DR["DocumentoRepository"]
+        ST["Storage"]
+    end
+    
+    subgraph Infra["🔵 Infraestructura"]
+        HTTP["Gin HTTP Handler"]
+        DB[(SQLite)]
+        FS["Local Filesystem"]
+        OCR["Tesseract OCR"]
+    end
+    
+    subgraph Client["👤 Cliente"]
+        Browser["Navegador / HTMX"]
+    end
+
+    Browser -->|HTTP| HTTP
+    
+    HTTP -->|usa| RS
+    HTTP -->|usa| AS
+    HTTP -->|usa| DS
+    
+    RS -->|maneja| R
+    AS -->|maneja| A
+    DS -->|maneja| D
+    
+    R -->|persiste en| RR
+    A -->|persiste en| AR
+    D -->|persiste en| DR
+    D -->|almacena en| ST
+    
+    RR -->|implementa| DB
+    AR -->|implementa| DB
+    DR -->|implementa| DB
+    ST -->|usa| FS
+    DS -->|usa| OCR
+```
 
 ## Estructura del Proyecto
 
@@ -57,41 +116,6 @@ arsenal-app/
     ├── PLAN.md                   # Este archivo
     ├── TASKS.md                  # Tareas por fase
     └── SECURITY.md               # Análisis de seguridad
-```
-
-## Estructura del Proyecto
-
-```
-arsenal-app/
-├── app/                          # Next.js App Router
-│   ├── (dashboard)/              # Layout principal
-│   │   ├── replicas/             # Lista de réplicas
-│   │   ├── replicas/[id]/        # Ficha de réplica
-│   │   ├── mantenimiento/        # Calendario de mantenimiento
-│   │   ├── documentos/           # Gestión documental
-│   │   └── estadisticas/         # Dashboard de uso
-│   ├── api/                      # API Routes
-│   │   ├── trpc/                 # tRPC router
-│   │   └── auth/                 # NextAuth handlers
-│   └── layout.tsx                # Root layout
-├── components/                   # Componentes React
-│   ├── ui/                       # shadcn/ui base
-│   ├── replica-card.tsx          # Tarjeta de réplica
-│   ├── timeline.tsx              # Timeline de actividades
-│   └── document-uploader.tsx     # Subida con OCR
-├── lib/                          # Utilidades
-│   ├── db/                       # Drizzle schema + queries
-│   ├── auth.ts                   # Configuración auth
-│   └── ocr.ts                    # Wrapper Tesseract.js
-├── public/                       # Assets estáticos
-│   └── uploads/                  # Archivos subidos (gitignored)
-├── types/                        # Tipos TypeScript globales
-├── docs/                         # Documentación del proyecto
-│   ├── adr/                      # Architecture Decision Records
-│   └── wireframes/               # Mockups y diseños
-├── tests/                        # Tests E2E y unitarios
-└── scripts/                      # Scripts de utilidad
-    └── seed.ts                   # Datos de ejemplo
 ```
 
 ## Modelo de Datos (SQLite)
@@ -213,40 +237,60 @@ CREATE TABLE replica_sesion (
 
 ### Fase 2 - Seguridad + Core Ops ✅ (Completada)
 - [x] Análisis de amenazas STRIDE
-- [x] 11 fixes de seguridad y operación aplicados
-- [x] Graceful shutdown
-- [x] Health check con DB ping
-- [x] Path traversal defense
+- [x] 11+ fixes de seguridad y operación aplicados
+- [x] **Graceful shutdown** con signal.NotifyContext + serverErr channel
+- [x] **Health check** con DB PingContext(2s) → 503 si DB caída
+- [x] **Path traversal defense**: sanitize antes de filepath.Base, rechaza ../, abs paths, NUL
+- [x] **Real upload cap**: http.MaxBytesReader(10MB) + 413 response (no solo memoria)
+- [x] **Patrón run() error**: sin log.Fatalf, defer db.Close() siempre corre
+- [x] SQLite busy_timeout=5000, SetMaxOpenConns(1) para WAL
 - [x] Docker compose target: builder eliminado
-- [x] CORS configurable
+- [x] CORS configurable via env
+- [x] Tests de integración HTTP (health, CORS, 413, 400)
 
-### Fase 3 - Gestión de Documentos
-- [ ] Subida de archivos (multipart)
-- [ ] OCR con Tesseract
-- [ ] Búsqueda full-text por contenido OCR
-- [ ] Timeline de actividades
+### Fase 3 - Gestión de Documentos ✅ (Completada)
+- [x] Subida de archivos (multipart)
+- [x] OCR con Tesseract para imágenes
+- [x] Búsqueda full-text por contenido OCR
+- [x] Timeline de actividades con documentos adjuntos vía API
+- [ ] OCR de PDF mediante conversión previa a imagen
 
-### Fase 4 - Frontend Web
-- [ ] HTMX + Tailwind frontend
-- [ ] Vistas: lista de réplicas, detalle, formularios
-- [ ] Dashboard con estadísticas
-- [ ] PWA manifest + service worker
+### Fase 4 - Frontend Web ✅ (Completada)
 
-### Fase 5 - Autenticación y Seguridad API
+**Estilo basado en DCS Web:**
+- **Paleta de colores:**
+  - Gold Primary: `#b88834` (hsl(38 56% 46%))
+  - Gold Medium: `#ca9250` (hsl(33 54% 55%))
+  - Gold Light: `#fdf3aa` (hsl(53 95% 83%))
+  - Near-black (dark bg): `#131110` (hsl(20 9% 7%))
+  - Cream (light bg): `#f9f6f0` (hsl(45 33% 96%))
+  - Teal accent (dark mode): `#5DC8D2` (hsl(188 60% 55%))
+- **Dark/Light mode:** Toggle con `localStorage` (key: `theme`), clase `.dark` en `:root`
+- **CSS variables:** Transiciones suaves, gradient text, grid pattern background
+
+**Features:**
+- [x] HTMX + Tailwind frontend
+- [x] Vistas: lista de réplicas, detalle, formularios
+- [x] Dashboard con estadísticas
+- [x] PWA manifest + service worker placeholder
+
+### Fase 5 - Mantenimiento + DIAN ✅ (Completada)
+- [x] CRUD de mantenimiento programado
+- [x] Endpoint de próximos mantenimientos
+- [x] Marcar mantenimiento completado con recálculo de fecha
+- [x] Búsqueda por número de serie para trazabilidad DIAN
+- [ ] Recordatorios (cron jobs locales)
+
+### Fase 6 - Autenticación y Seguridad API 🔐
+**Penúltima fase** - para futuro multi-user.
 - [ ] JWT Authentication
 - [ ] Rate limiting
 - [ ] Audit logging
 
-### Fase 6 - Mantenimiento + DIAN
-- [ ] Calendario de mantenimiento
-- [ ] Recordatorios (cron jobs locales)
-- [ ] Campos específicos importación DIAN
-- [ ] Búsqueda por número manifiesto/serial
-
 ### Fase 7 - Polish + Deploy
 - [ ] Backup automático
 - [ ] Export JSON/CSV
-- [ ] PM2 config
+- [ ] Configuración de servicio para Mac mini
 - [ ] Documentación deploy Mac mini
 - [ ] README completo
 - [ ] GitHub Actions CI/CD
@@ -312,9 +356,9 @@ CREATE TABLE replica_sesion (
 **Decisión:** SQLite con WAL mode. Backup es copiar archivo.
 **Consecuencias:** No escala a multi-user concurrente. Para multi-user futuro, migrar a PostgreSQL.
 
-### ADR-004: HTMX + Alpine.js sobre React/Vue
+### ADR-004: HTMX + JavaScript mínimo sobre React/Vue
 **Contexto:** Queremos PWA con mínimo JavaScript, server-rendered, y sin build step complejo.
-**Decisión:** HTMX para interacciones AJAX, Alpine.js para reactividad ligera.
+**Decisión:** HTMX para interacciones AJAX y JavaScript puntual para el tema claro/oscuro.
 **Consecuencias:** Menos "app-like", más "web-like". Bundle pequeño, SEO-friendly.
 
 ### ADR-005: Filesystem Local sobre Cloud Storage
@@ -322,7 +366,7 @@ CREATE TABLE replica_sesion (
 **Decisión:** ~/arsenal-uploads/ con estructura por réplica.
 **Consecuencias:** Backup manual (rsync a GitHub/otro repo). Sin CDN.
 
-### ADR-006: Docker sobre PM2 directo
+### ADR-006: Docker Compose como runtime principal
 **Contexto:** Necesitamos reproducibilidad y portabilidad del deploy.
 **Decisión:** Docker + Docker Compose para desarrollo y producción.
 **Consecuencias:** Overhead mínimo, pero máxima consistencia entre ambientes.
@@ -339,11 +383,11 @@ CREATE TABLE replica_sesion (
 
 ## Notas de Desarrollo
 
-- Usar `sharp` para optimización de imágenes al subir
+- Optimización de imágenes pendiente; si se agrega, preferir herramienta disponible en Go o binario local antes que introducir build Node.
 - Videos: almacenar como están, mostrar con `<video>` tag
-- OCR: procesar en cliente para no cargar servidor, guardar resultado en DB
+- OCR: procesar en servidor con Tesseract CLI para imágenes; PDF requiere conversión previa.
 - Tailscale para acceso remoto seguro desde cualquier lugar
-- PM2 para mantener el proceso vivo en Mac mini
+- Evaluar LaunchAgent o Docker Compose restart policy para mantener el proceso vivo en Mac mini
 
 ---
 

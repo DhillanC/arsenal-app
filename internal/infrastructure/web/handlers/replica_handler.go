@@ -26,10 +26,23 @@ func (h *ReplicaHandler) RegisterRoutes(router *gin.RouterGroup) {
 	{
 		replicas.GET("", h.List)
 		replicas.POST("", h.Create)
+		replicas.GET("/search", h.Search)
 		replicas.GET("/:id", h.GetByID)
 		replicas.PUT("/:id", h.Update)
 		replicas.DELETE("/:id", h.Delete)
 	}
+}
+
+// Search busca réplicas por nombre, numero_serie, marca o modelo (trazabilidad DIAN)
+func (h *ReplicaHandler) Search(c *gin.Context) {
+	ctx := c.Request.Context()
+	query := c.Query("q")
+	replicas, err := h.service.Search(ctx, query)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, replicas)
 }
 
 // List devuelve todas las réplicas
