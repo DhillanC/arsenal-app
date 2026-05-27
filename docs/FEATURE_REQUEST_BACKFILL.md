@@ -32,7 +32,7 @@ Este archivo controla el backfill de feature requests historicos para features y
 | FRB-006 | closed | #6 | Runtime Docker optimizado para ARM64 y migraciones en contenedor | 568ece9 | `Dockerfile`, `PROBLEMAS_DOCKER.md` | Ajustes para correr en Mac mini/ARM64. |
 | FRB-007 | closed | #7 | Configuracion por entorno y puerto configurable | 1b7de4d | `cmd/api/main.go`, `internal/infrastructure/web/server.go`, `internal/infrastructure/persistence/sqlite/replica_repository.go` | `APP_PORT`, config central y ajustes de handlers. |
 | FRB-008 | closed | #8 | Migraciones SQLite embebidas en el binario | f44d3ec | `internal/infrastructure/persistence/sqlite/migrations_embed.go`, `internal/infrastructure/persistence/sqlite/db.go`, `cmd/api/main.go` | Despliegue portable sin depender de archivos externos. |
-| FRB-009 | open | #9 | Healthcheck con ping de base de datos, graceful shutdown y runtime hardening | e2512c0 | `cmd/api/main.go`, `internal/infrastructure/persistence/sqlite/db.go`, `internal/infrastructure/web/server.go` | Timeouts HTTP, WAL/busy timeout y cierre ordenado. |
+| FRB-009 | closed | #9 | Healthcheck con ping de base de datos, graceful shutdown y runtime hardening | e2512c0 | `cmd/api/main.go`, `internal/infrastructure/persistence/sqlite/db.go`, `internal/infrastructure/web/server.go` | Timeouts HTTP, WAL/busy timeout y cierre ordenado. |
 | FRB-010 | open | #10 | Defensa contra path traversal y CORS configurable | 1bb04c9 | `internal/infrastructure/storage/local/storage.go`, `tests/storage_test.go`, `tests/integration/repository_test.go` | Controles de seguridad de rutas y origenes. |
 | FRB-011 | open | #11 | Límite real de upload y patron `run()` para cierre de DB | 6c34355 | `cmd/api/main.go`, `internal/infrastructure/web/handlers/documento_handler.go` | `http.MaxBytesReader` y cleanup fiable del proceso. |
 | FRB-012 | open | #12 | Upload multipart de documentos | 75c27fc | `internal/infrastructure/web/handlers/documento_handler.go`, `internal/infrastructure/web/server.go` | Subida de archivos asociada a replicas. |
@@ -53,4 +53,4 @@ Este archivo controla el backfill de feature requests historicos para features y
 - Job: `0c3a0e82-fe86-406e-beb5-9f8766662bdd` (`arsenal-feature-request-backfill`).
 - Cadencia: cada 6 minutos.
 - Regla: procesar un solo issue por corrida.
-- Ultimo item procesado: `FRB-008` / issue `#8` cerrado el 2026-05-27 07:17 PDT.
+- Ultimo item procesado: `FRB-009` / issue `#9` cerrado el 2026-05-27 07:22 PDT.
