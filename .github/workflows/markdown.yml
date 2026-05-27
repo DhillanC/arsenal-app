@@ -1,0 +1,57 @@
+name: Markdown
+
+on:
+  pull_request:
+    paths:
+      - "**/*.md"
+      - ".markdownlint.json"
+      - ".github/workflows/markdown.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*.md"
+      - ".markdownlint.json"
+      - ".github/workflows/markdown.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  markdown:
+    name: Validate Markdown
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run markdownlint
+        run: npx markdownlint-cli2@latest "**/*.md"
+
+      - name: Check code fences
+        shell: bash
+        run: |
+          set -euo pipefail
+          failed=0
+          while IFS= read -r file; do
+            count=$(grep -c '^```' "$file" || true)
+            if [ $((count % 2)) -ne 0 ]; then
+              echo "::error file=$file::Odd number of Markdown code fences"
+              failed=1
+            fi
+          done < <(find . -name "*.md" -not -path "./.git/*")
+          exit "$failed"
+
+      - name: Check Mermaid compatibility patterns
+        shell: bash
+        run: |
+          set -euo pipefail
+          failed=0
+          while IFS= read -r file; do
+            if awk '/^```mermaid/{in_block=1} /^```$/{if(in_block){in_block=0}} in_block && /classDef|<br\/>|-- ".*" -->|—/' "$file" | grep -q .; then
+              echo "::error file=$file::Mermaid block contains a pattern rejected by this template"
+              failed=1
+            fi
+          done < <(find . -name "*.md" -not -path "./.git/*")
+          exit "$failed"
