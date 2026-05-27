@@ -44,7 +44,7 @@ Este archivo controla el backfill de feature requests historicos para features y
 | FRB-018 | closed | #18 | Correccion de drift: ruta Search API y validacion BB-count M6 | ed131ab | `internal/infrastructure/web/server.go`, `internal/infrastructure/web/handlers/` | Ajustes funcionales detectados despues de Fase 5. |
 | FRB-019 | closed | #19 | Correccion de drift y conexion real de OCR | 1d82e09 | `internal/infrastructure/ocr/tesseract.go`, `internal/infrastructure/web/handlers/documento_handler.go`, `docs/TASKS.md` | Alinea codigo con documentacion y activa flujo OCR real. |
 | FRB-020 | closed | #20 | Workflow de planeacion en GitHub | 5ccb0fb | `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`, `docs/PROJECT_BOARD.md`, `docs/EXAMPLES.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md` | Base de templates y flujo de tablero. |
-| FRB-021 | open | #21 | Actualizacion de templates de contribucion y workflow Markdown | b198713 | `.github/ISSUE_TEMPLATE/`, `.github/workflows/markdown.yml`, `.editorconfig`, `.markdownlint.json`, `CONTRIBUTING.md` | Refinamiento del flujo de issues/PR/documentacion. |
+| FRB-021 | closed | #21 | Actualizacion de templates de contribucion y workflow Markdown | b198713 | `.github/ISSUE_TEMPLATE/`, `.github/workflows/markdown.yml`, `.editorconfig`, `.markdownlint.json`, `CONTRIBUTING.md` | Refinamiento del flujo de issues/PR/documentacion. |
 | FRB-022 | open | #22 | Reparacion de frontend documentos/mantenimiento/HTMX | 2c22b23 | `docs/TASKS.md`, `internal/infrastructure/web/handlers/html_handler.go`, `internal/infrastructure/web/handlers/mantenimiento_handler.go`, `internal/infrastructure/web/handlers/replica_handler.go`, `internal/infrastructure/web/server.go`, `web/templates/` | Corrige vistas HTML de documentos y mantenimiento, formularios HTMX y estructura de templates. |
 | FRB-023 | open | #23 | Opciones de colores para campos de formulario | 2c22b23 | `docs/FIELD_COLOR_OPTIONS.md` | Documenta combinaciones de color para inputs en modo claro y oscuro; no cambia estilos todavia. |
 
@@ -53,4 +53,4 @@ Este archivo controla el backfill de feature requests historicos para features y
 - Job: `0c3a0e82-fe86-406e-beb5-9f8766662bdd` (`arsenal-feature-request-backfill`).
 - Cadencia: cada 6 minutos.
 - Regla: procesar un solo issue por corrida.
-- Ultimo item procesado: `FRB-020` / issue `#20` cerrado el 2026-05-27 08:29 PDT.
+- Ultimo item procesado: `FRB-021` / issue `#21` cerrado el 2026-05-27 08:35 PDT.
