@@ -35,7 +35,7 @@ Este archivo controla el backfill de feature requests historicos para features y
 | FRB-009 | closed | #9 | Healthcheck con ping de base de datos, graceful shutdown y runtime hardening | e2512c0 | `cmd/api/main.go`, `internal/infrastructure/persistence/sqlite/db.go`, `internal/infrastructure/web/server.go` | Timeouts HTTP, WAL/busy timeout y cierre ordenado. |
 | FRB-010 | closed | #10 | Defensa contra path traversal y CORS configurable | 1bb04c9 | `internal/infrastructure/storage/local/storage.go`, `tests/storage_test.go`, `tests/integration/repository_test.go` | Controles de seguridad de rutas y origenes. |
 | FRB-011 | closed | #11 | Límite real de upload y patron `run()` para cierre de DB | 6c34355 | `cmd/api/main.go`, `internal/infrastructure/web/handlers/documento_handler.go` | `http.MaxBytesReader` y cleanup fiable del proceso. |
-| FRB-012 | open | #12 | Upload multipart de documentos | 75c27fc | `internal/infrastructure/web/handlers/documento_handler.go`, `internal/infrastructure/web/server.go` | Subida de archivos asociada a replicas. |
+| FRB-012 | closed | #12 | Upload multipart de documentos | 75c27fc | `internal/infrastructure/web/handlers/documento_handler.go`, `internal/infrastructure/web/server.go` | Subida de archivos asociada a replicas. |
 | FRB-013 | open | #13 | OCR con Tesseract para documentos de imagen | 3b142d2 | `internal/domain/services/ocr_service.go`, `internal/infrastructure/ocr/tesseract.go`, `internal/infrastructure/web/handlers/documento_handler.go` | Integracion inicial OCR. |
 | FRB-014 | open | #14 | Busqueda full-text por contenido OCR | 8ead052 | `internal/infrastructure/web/handlers/documento_handler.go`, `internal/infrastructure/web/server.go` | Endpoint de busqueda documental. |
 | FRB-015 | open | #15 | Filtros de documentos y timeline con documentos adjuntos | 9d1eee9 | `internal/domain/services/documento_service.go`, `internal/infrastructure/persistence/sqlite/documento_repository.go`, `internal/infrastructure/web/handlers/actividad_handler.go`, `internal/infrastructure/web/handlers/documento_handler.go` | Cierra Fase 3 funcional. |
@@ -53,4 +53,4 @@ Este archivo controla el backfill de feature requests historicos para features y
 - Job: `0c3a0e82-fe86-406e-beb5-9f8766662bdd` (`arsenal-feature-request-backfill`).
 - Cadencia: cada 6 minutos.
 - Regla: procesar un solo issue por corrida.
-- Ultimo item procesado: `FRB-011` / issue `#11` cerrado el 2026-05-27 07:35 PDT.
+- Ultimo item procesado: `FRB-012` / issue `#12` cerrado el 2026-05-27 07:41 PDT.
