@@ -42,6 +42,25 @@ body:
         - Dependencies
     validations:
       required: false
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Product priority for this story.
+      options:
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+  - type: input
+    id: estimate
+    attributes:
+      label: Estimate
+      description: Optional effort estimate.
+      placeholder: 1, 2, 3, 5, 8, or unknown
+    validations:
+      required: false
   - type: textarea
     id: acceptance-criteria
     attributes:
@@ -53,3 +72,11 @@ body:
         Then [the expected outcome is observed]
     validations:
       required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation notes
+      description: How should this be checked once implemented?
+      placeholder: Manual flow, automated test, screenshot, API response, etc.
+    validations:
+      required: false

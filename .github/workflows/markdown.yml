@@ -5,6 +5,8 @@ on:
     paths:
       - "**/*.md"
       - ".markdownlint.json"
+      - ".github/ISSUE_TEMPLATE/*.yml"
+      - ".github/PULL_REQUEST_TEMPLATE.md"
       - ".github/workflows/markdown.yml"
   push:
     branches:
@@ -12,6 +14,8 @@ on:
     paths:
       - "**/*.md"
       - ".markdownlint.json"
+      - ".github/ISSUE_TEMPLATE/*.yml"
+      - ".github/PULL_REQUEST_TEMPLATE.md"
       - ".github/workflows/markdown.yml"
 
 permissions:
@@ -27,7 +31,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run markdownlint
-        run: npx markdownlint-cli2@latest "**/*.md"
+        run: npx markdownlint-cli2@latest --config .markdownlint.json "**/*.md"
+
+      - name: Validate issue forms YAML
+        shell: bash
+        run: |
+          set -euo pipefail
+          ruby -e 'require "yaml"; ARGV.each { |file| YAML.load_file(file) }' .github/ISSUE_TEMPLATE/*.yml
 
       - name: Check code fences
         shell: bash

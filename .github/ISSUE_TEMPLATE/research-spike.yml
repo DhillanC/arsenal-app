@@ -1,0 +1,39 @@
+name: Research Spike
+description: Investigate an unknown before committing to implementation.
+title: "[Spike]: "
+labels: ["research", "technical debt"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What uncertainty needs to be resolved?
+      placeholder: Which OCR approach is reliable enough for document ingestion?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why does this matter now?
+    validations:
+      required: true
+  - type: textarea
+    id: approach
+    attributes:
+      label: Investigation plan
+      description: List the checks, prototypes, or comparisons to run.
+      value: |
+        - [ ] Review current implementation
+        - [ ] Test the smallest viable option
+        - [ ] Document recommendation and tradeoffs
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Expected output
+      description: What artifact should this produce?
+      placeholder: Recommendation, proof of concept, decision record, or follow-up issues.
+    validations:
+      required: true

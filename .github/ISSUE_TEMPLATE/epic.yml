@@ -1,0 +1,54 @@
+name: Epic
+description: Group related stories and tasks under one larger outcome.
+title: "[Epic]: "
+labels: ["epic"]
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: What larger result should this epic deliver?
+      placeholder: Complete document management for replicas.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Define included and excluded work.
+      value: |
+        Included:
+        - ...
+
+        Not included:
+        - ...
+    validations:
+      required: true
+  - type: textarea
+    id: stories
+    attributes:
+      label: Related stories and tasks
+      description: Link or list the child issues.
+      placeholder: |
+        - [ ] #123
+        - [ ] #124
+    validations:
+      required: false
+  - type: textarea
+    id: success
+    attributes:
+      label: Success criteria
+      description: How will the epic be accepted?
+      value: |
+        - [ ] Users can complete the core workflow
+        - [ ] Known edge cases are handled
+        - [ ] Tests or manual checks are documented
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and dependencies
+      description: Note blockers, migrations, design decisions, or sequencing concerns.
+    validations:
+      required: false
