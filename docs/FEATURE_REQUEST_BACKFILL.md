@@ -50,7 +50,7 @@ Este archivo controla el backfill de feature requests historicos para features y
 
 ## Progreso de cron
 
-- Job: `0c3a0e82-fe86-406e-beb5-9f8766662bdd` (`arsenal-feature-request-backfill`).
+- Job: `0c3a0e82-fe86-406e-beb5-9f8766662bdd` (`arsenal-feature-request-backfill`) completado y eliminado el 2026-05-27 08:59 PDT.
 - Cadencia: cada 6 minutos.
 - Regla: procesar un solo issue por corrida.
 - Ultimo item procesado: `FRB-023` / issue `#23` cerrado el 2026-05-27 08:47 PDT.
