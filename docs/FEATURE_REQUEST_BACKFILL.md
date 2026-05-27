@@ -46,11 +46,11 @@ Este archivo controla el backfill de feature requests historicos para features y
 | FRB-020 | closed | #20 | Workflow de planeacion en GitHub | 5ccb0fb | `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`, `docs/PROJECT_BOARD.md`, `docs/EXAMPLES.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md` | Base de templates y flujo de tablero. |
 | FRB-021 | closed | #21 | Actualizacion de templates de contribucion y workflow Markdown | b198713 | `.github/ISSUE_TEMPLATE/`, `.github/workflows/markdown.yml`, `.editorconfig`, `.markdownlint.json`, `CONTRIBUTING.md` | Refinamiento del flujo de issues/PR/documentacion. |
 | FRB-022 | closed | #22 | Reparacion de frontend documentos/mantenimiento/HTMX | 2c22b23 | `docs/TASKS.md`, `internal/infrastructure/web/handlers/html_handler.go`, `internal/infrastructure/web/handlers/mantenimiento_handler.go`, `internal/infrastructure/web/handlers/replica_handler.go`, `internal/infrastructure/web/server.go`, `web/templates/` | Corrige vistas HTML de documentos y mantenimiento, formularios HTMX y estructura de templates. |
-| FRB-023 | open | #23 | Opciones de colores para campos de formulario | 2c22b23 | `docs/FIELD_COLOR_OPTIONS.md` | Documenta combinaciones de color para inputs en modo claro y oscuro; no cambia estilos todavia. |
+| FRB-023 | closed | #23 | Opciones de colores para campos de formulario | 2c22b23 | `docs/FIELD_COLOR_OPTIONS.md` | Documenta combinaciones de color para inputs en modo claro y oscuro; no cambia estilos todavia. |
 
 ## Progreso de cron
 
 - Job: `0c3a0e82-fe86-406e-beb5-9f8766662bdd` (`arsenal-feature-request-backfill`).
 - Cadencia: cada 6 minutos.
 - Regla: procesar un solo issue por corrida.
-- Ultimo item procesado: `FRB-022` / issue `#22` cerrado el 2026-05-27 08:40 PDT.
+- Ultimo item procesado: `FRB-023` / issue `#23` cerrado el 2026-05-27 08:47 PDT.
