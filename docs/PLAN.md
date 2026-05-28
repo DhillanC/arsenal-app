@@ -93,6 +93,7 @@ flowchart TD
 ```
 arsenal-app/
 ├── cmd/api/                      # Entry point (main.go)
+│   └── README.md                 # Setup del servidor
 ├── internal/
 │   ├── domain/                   # Núcleo hexagonal
 │   │   ├── models/               # Entidades (Replica, Actividad, Documento)
@@ -100,6 +101,7 @@ arsenal-app/
 │   │   │   ├── inbound/        # Service interfaces
 │   │   │   └── outbound/       # Repository interfaces
 │   │   └── services/             # Lógica de negocio
+│   │   └── README.md             # Documentación del dominio
 │   ├── application/              # Casos de uso
 │   │   ├── commands/             # Operaciones de escritura
 │   │   ├── queries/              # Operaciones de lectura
@@ -109,13 +111,30 @@ arsenal-app/
 │       ├── storage/local/        # Filesystem
 │       ├── ocr/                  # Tesseract
 │       └── web/                  # HTTP server (Gin)
+│       └── README.md             # Documentación de infraestructura
 ├── pkg/                          # Librerías compartidas
 ├── scripts/                      # Utilidades
 ├── tests/                        # Tests
-└── docs/                         # Documentación
-    ├── PLAN.md                   # Este archivo
-    ├── TASKS.md                  # Tareas por fase
-    └── SECURITY.md               # Análisis de seguridad
+│   └── README.md                 # Guía de testing
+├── web/                          # Frontend HTMX + Tailwind
+│   ├── static/                   # CSS, JS, assets
+│   └── templates/                # HTML templates
+│   └── README.md                 # Documentación del frontend
+├── bin/                          # Binarios compilados (gitignored)
+│   └── README.md                 # Notas de compilación
+├── data/                         # SQLite + uploads (gitignored)
+│   └── README.md                 # Estructura y permisos
+├── docs/                         # Documentación
+│   ├── PLAN.md                   # Plan de desarrollo
+│   ├── TASKS.md                  # Tareas por fase
+│   ├── SECURITY.md               # Análisis de seguridad
+│   ├── MERMAID.md                # Guía de diagramas
+│   └── README.md                 # Este archivo
+├── .github/                      # GitHub config
+│   ├── workflows/                # CI/CD (pendiente)
+│   ├── ISSUE_TEMPLATE/           # Templates de issues
+│   └── README.md                 # Configuración de GitHub
+└── README.md                     # Documentación principal
 ```
 
 ## Modelo de Datos (SQLite)
@@ -286,6 +305,7 @@ CREATE TABLE replica_sesion (
 - [ ] JWT Authentication
 - [ ] Rate limiting
 - [ ] Audit logging
+- [ ] **Análisis de seguridad v1** — revisión post-Fase 5, antes de implementar auth (enfoque: superficie de ataque actual sin auth)
 
 ### Fase 7 - Polish + Deploy
 - [ ] Backup automático
@@ -294,6 +314,7 @@ CREATE TABLE replica_sesion (
 - [ ] Documentación deploy Mac mini
 - [ ] README completo
 - [ ] GitHub Actions CI/CD
+- [ ] **Análisis de seguridad v2 (final)** — revisión completa post-MVP, antes de release público (incluye auth, rate limiting, audit logs)
 - [ ] Release v1.0.0
 
 ## Wireframes / UI Ideas

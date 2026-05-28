@@ -178,18 +178,34 @@
 **Penúltima fase** - para futuro multi-user
 
 ### JWT Authentication
-- [ ] Login/registro de usuarios
-- [ ] Middleware de auth
-- [ ] Password hashing (bcrypt)
+- [ ] Login/registro de usuarios → **DELEGADO a Keycloak (FRB-024)**
+- [ ] Middleware de auth → OIDC con Keycloak
+- [ ] Password hashing (bcrypt) → **N/A (Keycloak lo maneja)**
+
+### Keycloak Integration
+- [ ] Deploy Keycloak server (Docker Compose)
+- [ ] Realm "dcs-apps" + cliente "arsenal-app"
+- [ ] Middleware Gin para validar JWT de Keycloak
+- [ ] Login/logout con redirect OIDC
+- [ ] Mapeo `sub` claim → `user_id` en Arsenal DB
+- [ ] Filtrar queries por `user_id`
 
 ### Rate Limiting
 - [ ] Límite por IP (100 req/min)
 - [ ] Límite por usuario autenticado
+- [ ] Brute force detection (Keycloak nativo)
 
 ### Audit Logging
 - [ ] Quién hizo qué y cuándo
 - [ ] Immutable audit store
 - [ ] Queries de auditoría
+
+### Análisis de Seguridad
+- [x] **Análisis de seguridad v1** — revisión post-Fase 5, antes de implementar auth
+  - 📄 Ver `docs/SECURITY_ANALYSIS_V1.md` (completado 2026-05-28)
+  - 12 hallazgos: 2 críticos, 3 altos, 4 medios, 3 bajos
+  - **Mitigados por Keycloak:** H-001, H-002, H-004, H-005, H-008
+  - **Requieren fixes en Arsenal:** H-003, H-006, H-007, H-009, H-010, H-011, H-012
 
 ---
 
@@ -212,6 +228,7 @@
 - [ ] Configuración de servicio para Mac mini
 - [ ] Tailscale access
 - [ ] GitHub Actions CI/CD
+- [ ] **Análisis de seguridad v2 (final)** — revisión completa post-MVP, antes del release público. Incluye auth, rate limiting, audit logs, y todo lo que se haya agregado desde v1
 - [ ] Release v1.0.0
 
 ---
@@ -222,4 +239,4 @@
 **Última fase completada:** 5 - Mantenimiento & DIAN
 **Siguiente paso recomendado:** mejorar tests HTML y luego avanzar a JWT Authentication o controles transversales de seguridad pendientes.
 
-*Última actualización: 2026-05-27*
+*Última actualización: 2026-05-28*
