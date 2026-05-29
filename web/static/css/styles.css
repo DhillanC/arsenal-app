@@ -12,10 +12,30 @@
   --teal:         #167485;
   --teal-light:   #5DC8D2;
   --muted-fg:     #6b6258;
+  
+  /* Form colors - Neutro Profesional (Light Mode) */
+  --form-bg:              #f3f4f6;
+  --form-border:          #d1d5db;
+  --form-text:            #111827;
+  --form-placeholder:     #6b7280;
+  --form-focus:           #b88834;
+  --form-halo:            rgba(184, 136, 52, 0.18);
+  --form-disabled-bg:     #e5e7eb;
+  --form-disabled-text:   #9ca3af;
 }
 
 html.dark {
   --muted-fg: #a39d92;
+  
+  /* Form colors - Neutro Profesional (Dark Mode) */
+  --form-bg:              #1f2937;
+  --form-border:          #4b5563;
+  --form-text:            #f9fafb;
+  --form-placeholder:     #9ca3af;
+  --form-focus:           #b88834;
+  --form-halo:            rgba(184, 136, 52, 0.18);
+  --form-disabled-bg:     #374151;
+  --form-disabled-text:   #6b7280;
 }
 
 /* Logo gradient */
@@ -133,6 +153,67 @@ html.dark .card {
 
 /* Muted foreground (used in footer and metadata text) */
 .text-muted-foreground { color: var(--muted-fg); }
+
+/* Form inputs - Neutro Profesional */
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.5rem;
+  border: 2px solid var(--form-border);
+  background-color: var(--form-bg);
+  color: var(--form-text);
+  font-size: 0.9375rem;
+  font-family: inherit;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: var(--form-placeholder);
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--form-focus);
+  box-shadow: 0 0 0 3px var(--form-halo);
+}
+
+.form-input:disabled,
+.form-select:disabled,
+.form-textarea:disabled {
+  background-color: var(--form-disabled-bg);
+  color: var(--form-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--muted-fg);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* Optional decorative background grid — referenced in commit msg, not in templates,
    but cheap to include. Apply by adding .grid-pattern to a container. */

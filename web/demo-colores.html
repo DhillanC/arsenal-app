@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arsenal - Demo Colores de Formularios</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.7;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        select, button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: 2px solid;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .theme-toggle button {
+            min-width: 100px;
+        }
+
+        .theme-toggle button.active {
+            font-weight: bold;
+        }
+
+        .palettes-grid {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            margin-bottom: 40px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .palette-card {
+            flex: 1;
+            min-width: 280px;
+            max-width: 25%;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid;
+            transition: all 0.3s;
+        }
+
+        .palette-card h2 {
+            margin-bottom: 8px;
+            font-size: 1.25rem;
+        }
+
+        .palette-card .description {
+            font-size: 0.875rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 2px solid;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            opacity: 0.7;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+        }
+
+        .form-group input:disabled,
+        .form-group select:disabled,
+        .form-group textarea:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .states-demo {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .state-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .color-info {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+
+        .color-info h3 {
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .color-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        /* ========== PALETA 1: NEUTRO PROFESIONAL ========== */
+        .palette-neutro .form-group input,
+        .palette-neutro .form-group select,
+        .palette-neutro .form-group textarea {
+            background-color: var(--n-bg);
+            border-color: var(--n-border);
+            color: var(--n-text);
+        }
+
+        .palette-neutro .form-group input::placeholder,
+        .palette-neutro .form-group textarea::placeholder {
+            color: var(--n-placeholder);
+        }
+
+        .palette-neutro .form-group input:focus,
+        .palette-neutro .form-group select:focus,
+        .palette-neutro .form-group textarea:focus {
+            border-color: var(--n-focus);
+            box-shadow: 0 0 0 3px var(--n-halo);
+        }
+
+        /* ========== PALETA 2: AZUL CLARO Y SLATE ========== */
+        .palette-azul .form-group input,
+        .palette-azul .form-group select,
+        .palette-azul .form-group textarea {
+            background-color: var(--a-bg);
+            border-color: var(--a-border);
+            color: var(--a-text);
+        }
+
+        .palette-azul .form-group input::placeholder,
+        .palette-azul .form-group textarea::placeholder {
+            color: var(--a-placeholder);
+        }
+
+        .palette-azul .form-group input:focus,
+        .palette-azul .form-group select:focus,
+        .palette-azul .form-group textarea:focus {
+            border-color: var(--a-focus);
+            box-shadow: 0 0 0 3px var(--a-halo);
+        }
+
+        /* ========== PALETA 3: CREMA Y CARBON (DCS) ========== */
+        .palette-crema .form-group input,
+        .palette-crema .form-group select,
+        .palette-crema .form-group textarea {
+            background-color: var(--c-bg);
+            border-color: var(--c-border);
+            color: var(--c-text);
+        }
+
+        .palette-crema .form-group input::placeholder,
+        .palette-crema .form-group textarea::placeholder {
+            color: var(--c-placeholder);
+        }
+
+        .palette-crema .form-group input:focus,
+        .palette-crema .form-group select:focus,
+        .palette-crema .form-group textarea:focus {
+            border-color: var(--c-focus);
+            box-shadow: 0 0 0 3px var(--c-halo);
+        }
+
+        /* ========== PALETA 4: BLANCO CONTROLADO ========== */
+        .palette-blanco .form-group input,
+        .palette-blanco .form-group select,
+        .palette-blanco .form-group textarea {
+            background-color: var(--b-bg);
+            border-color: var(--b-border);
+            color: var(--b-text);
+        }
+
+        .palette-blanco .form-group input::placeholder,
+        .palette-blanco .form-group textarea::placeholder {
+            color: var(--b-placeholder);
+        }
+
+        .palette-blanco .form-group input:focus,
+        .palette-blanco .form-group select:focus,
+        .palette-blanco .form-group textarea:focus {
+            border-color: var(--b-focus);
+            box-shadow: 0 0 0 3px var(--b-halo);
+        }
+
+        /* ========== MODO CLARO ========== */
+        body.light-mode {
+            background-color: #f5f5f5;
+            color: #1a1a1a;
+        }
+
+        body.light-mode .palette-card {
+            background-color: #ffffff;
+            border-color: #e0e0e0;
+        }
+
+        body.light-mode .color-info {
+            background-color: #f0f0f0;
+        }
+
+        body.light-mode .state-badge {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        body.light-mode select,
+        body.light-mode button {
+            background-color: #ffffff;
+            border-color: #cccccc;
+            color: #1a1a1a;
+        }
+
+        body.light-mode {
+            --n-bg: #f3f4f6;
+            --n-border: #d1d5db;
+            --n-text: #111827;
+            --n-placeholder: #6b7280;
+            --n-focus: #b88834;
+            --n-halo: rgba(184, 136, 52, 0.18);
+
+            --a-bg: #eff6ff;
+            --a-border: #bfdbfe;
+            --a-text: #0f172a;
+            --a-placeholder: #64748b;
+            --a-focus: #5DC8D2;
+            --a-halo: rgba(93, 200, 210, 0.18);
+
+            --c-bg: #f5efe3;
+            --c-border: #d8c7a3;
+            --c-text: #1f1a14;
+            --c-placeholder: #7c6f60;
+            --c-focus: #b88834;
+            --c-halo: rgba(184, 136, 52, 0.20);
+
+            --b-bg: #ffffff;
+            --b-border: #cbd5e1;
+            --b-text: #0f172a;
+            --b-placeholder: #64748b;
+            --b-focus: #b88834;
+            --b-halo: rgba(184, 136, 52, 0.18);
+        }
+
+        /* ========== MODO OSCURO ========== */
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #f5f5f5;
+        }
+
+        body.dark-mode .palette-card {
+            background-color: #2a2a2a;
+            border-color: #404040;
+        }
+
+        body.dark-mode .color-info {
+            background-color: #333333;
+        }
+
+        body.dark-mode .state-badge {
+            background-color: #404040;
+            color: #f0f0f0;
+        }
+
+        body.dark-mode select,
+        body.dark-mode button {
+            background-color: #2a2a2a;
+            border-color: #555555;
+            color: #f5f5f5;
+        }
+
+        body.dark-mode {
+            --n-bg: #1f2937;
+            --n-border: #4b5563;
+            --n-text: #f9fafb;
+            --n-placeholder: #9ca3af;
+            --n-focus: #b88834;
+            --n-halo: rgba(184, 136, 52, 0.18);
+
+            --a-bg: #172033;
+            --a-border: #334155;
+            --a-text: #f8fafc;
+            --a-placeholder: #94a3b8;
+            --a-focus: #5DC8D2;
+            --a-halo: rgba(93, 200, 210, 0.18);
+
+            --c-bg: #241f1a;
+            --c-border: #5b4630;
+            --c-text: #f7efe4;
+            --c-placeholder: #b8a895;
+            --c-focus: #b88834;
+            --c-halo: rgba(184, 136, 52, 0.20);
+
+            --b-bg: #111827;
+            --b-border: #374151;
+            --b-text: #f9fafb;
+            --b-placeholder: #9ca3af;
+            --b-focus: #b88834;
+            --b-halo: rgba(184, 136, 52, 0.18);
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .palettes-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="light-mode">
+    <div class="container">
+        <h1>🎨 Demo: Colores de Formularios</h1>
+        <p class="subtitle">Comparación visual de las 4 paletas propuestas en el Issue #24</p>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Modo Visual</label>
+                <div class="theme-toggle">
+                    <button onclick="setTheme('light')" class="active" id="btn-light">☀️ Claro</button>
+                    <button onclick="setTheme('dark')" id="btn-dark">🌙 Oscuro</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="palettes-grid">
+            <!-- PALETA 1: NEUTRO PROFESIONAL -->
+            <div class="palette-card palette-neutro">
+                <h2>1. Neutro Profesional</h2>
+                <p class="description">Opción recomendada. Equilibrada y versátil.</p>
+                
+                <div class="form-group">
+                    <label>Nombre completo</label>
+                    <input type="text" placeholder="Ej: Juan Pérez" value="">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" placeholder="correo@ejemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" placeholder="+57 300 123 4567" disabled value="+57 300 123 4567">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select>
+                        <option value="">Seleccionar...</option>
+                        <option value="1">Réplica</option>
+                        <option value="2">Documento</option>
+                        <option value="3">Mantenimiento</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea rows="3" placeholder="Describe el problema o solicitud..."></textarea>
+                </div>
+
+                <div class="states-demo">
+                    <span class="state-badge">Default</span>
+                    <span class="state-badge">Focus</span>
+                    <span class="state-badge">Disabled</span>
+                </div>
+
+                <div class="color-info">
+                    <h3>🎨 Colores Actuales</h3>
+                    <div class="color-grid" id="neutro-colors">
+                        <!-- Se llena con JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- PALETA 2: AZUL CLARO Y SLATE -->
+            <div class="palette-card palette-azul">
+                <h2>2. Azul Claro y Slate</h2>
+                <p class="description">Tono fresco, ideal para interfaces modernas.</p>
+                
+                <div class="form-group">
+                    <label>Nombre completo</label>
+                    <input type="text" placeholder="Ej: Juan Pérez">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" placeholder="correo@ejemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" placeholder="+57 300 123 4567" disabled value="+57 300 123 4567">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select>
+                        <option value="">Seleccionar...</option>
+                        <option value="1">Réplica</option>
+                        <option value="2">Documento</option>
+                        <option value="3">Mantenimiento</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea rows="3" placeholder="Describe el problema o solicitud..."></textarea>
+                </div>
+
+                <div class="states-demo">
+                    <span class="state-badge">Default</span>
+                    <span class="state-badge">Focus</span>
+                    <span class="state-badge">Disabled</span>
+                </div>
+
+                <div class="color-info">
+                    <h3>🎨 Colores Actuales</h3>
+                    <div class="color-grid" id="azul-colors">
+                        <!-- Se llena con JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- PALETA 3: CREMA Y CARBON (DCS) -->
+            <div class="palette-card palette-crema">
+                <h2>3. Crema y Carbón (DCS)</h2>
+                <p class="description">Alineada con la identidad visual de DCS.</p>
+                
+                <div class="form-group">
+                    <label>Nombre completo</label>
+                    <input type="text" placeholder="Ej: Juan Pérez">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" placeholder="correo@ejemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" placeholder="+57 300 123 4567" disabled value="+57 300 123 4567">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select>
+                        <option value="">Seleccionar...</option>
+                        <option value="1">Réplica</option>
+                        <option value="2">Documento</option>
+                        <option value="3">Mantenimiento</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea rows="3" placeholder="Describe el problema o solicitud..."></textarea>
+                </div>
+
+                <div class="states-demo">
+                    <span class="state-badge">Default</span>
+                    <span class="state-badge">Focus</span>
+                    <span class="state-badge">Disabled</span>
+                </div>
+
+                <div class="color-info">
+                    <h3>🎨 Colores Actuales</h3>
+                    <div class="color-grid" id="crema-colors">
+                        <!-- Se llena con JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- PALETA 4: BLANCO CONTROLADO -->
+            <div class="palette-card palette-blanco">
+                <h2>4. Blanco Controlado</h2>
+                <p class="description">Máximo contraste, campos bien definidos.</p>
+                
+                <div class="form-group">
+                    <label>Nombre completo</label>
+                    <input type="text" placeholder="Ej: Juan Pérez">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" placeholder="correo@ejemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" placeholder="+57 300 123 4567" disabled value="+57 300 123 4567">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select>
+                        <option value="">Seleccionar...</option>
+                        <option value="1">Réplica</option>
+                        <option value="2">Documento</option>
+                        <option value="3">Mantenimiento</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea rows="3" placeholder="Describe el problema o solicitud..."></textarea>
+                </div>
+
+                <div class="states-demo">
+                    <span class="state-badge">Default</span>
+                    <span class="state-badge">Focus</span>
+                    <span class="state-badge">Disabled</span>
+                </div>
+
+                <div class="color-info">
+                    <h3>🎨 Colores Actuales</h3>
+                    <div class="color-grid" id="blanco-colors">
+                        <!-- Se llena con JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding: 20px; opacity: 0.7;">
+            <p>💡 Haz clic en los campos para ver el estado <strong>focus</strong> de cada paleta</p>
+            <p>🌓 Cambia entre modo claro y oscuro para comparar el contraste</p>
+        </div>
+    </div>
+
+    <script>
+        const palettes = {
+            neutro: {
+                light: {
+                    'Fondo': '#f3f4f6',
+                    'Borde': '#d1d5db',
+                    'Texto': '#111827',
+                    'Placeholder': '#6b7280',
+                    'Focus': '#b88834',
+                    'Halo': 'rgba(184,136,52,0.18)'
+                },
+                dark: {
+                    'Fondo': '#1f2937',
+                    'Borde': '#4b5563',
+                    'Texto': '#f9fafb',
+                    'Placeholder': '#9ca3af',
+                    'Focus': '#b88834',
+                    'Halo': 'rgba(184,136,52,0.18)'
+                }
+            },
+            azul: {
+                light: {
+                    'Fondo': '#eff6ff',
+                    'Borde': '#bfdbfe',
+                    'Texto': '#0f172a',
+                    'Placeholder': '#64748b',
+                    'Focus': '#5DC8D2',
+                    'Halo': 'rgba(93,200,210,0.18)'
+                },
+                dark: {
+                    'Fondo': '#172033',
+                    'Borde': '#334155',
+                    'Texto': '#f8fafc',
+                    'Placeholder': '#94a3b8',
+                    'Focus': '#5DC8D2',
+                    'Halo': 'rgba(93,200,210,0.18)'
+                }
+            },
+            crema: {
+                light: {
+                    'Fondo': '#f5efe3',
+                    'Borde': '#d8c7a3',
+                    'Texto': '#1f1a14',
+                    'Placeholder': '#7c6f60',
+                    'Focus': '#b88834',
+                    'Halo': 'rgba(184,136,52,0.20)'
+                },
+                dark: {
+                    'Fondo': '#241f1a',
+                    'Borde': '#5b4630',
+                    'Texto': '#f7efe4',
+                    'Placeholder': '#b8a895',
+                    'Focus': '#b88834',
+                    'Halo': 'rgba(184,136,52,0.20)'
+                }
+            },
+            blanco: {
+                light: {
+                    'Fondo': '#ffffff',
+                    'Borde': '#cbd5e1',
+                    'Texto': '#0f172a',
+                    'Placeholder': '#64748b',
+                    'Focus': '#b88834',
+                    'Halo': 'rgba(184,136,52,0.18)'
+                },
+                dark: {
+                    'Fondo': '#111827',
+                    'Borde': '#374151',
+                    'Texto': '#f9fafb',
+                    'Placeholder': '#9ca3af',
+                    'Focus': '#b88834',
+                    'Halo': 'rgba(184,136,52,0.18)'
+                }
+            }
+        };
+
+        function setTheme(theme) {
+            document.body.className = theme + '-mode';
+            document.getElementById('btn-light').classList.toggle('active', theme === 'light');
+            document.getElementById('btn-dark').classList.toggle('active', theme === 'dark');
+            updateColorInfo(theme);
+        }
+
+        function updateColorInfo(theme) {
+            Object.keys(palettes).forEach(palette => {
+                const container = document.getElementById(palette + '-colors');
+                const colors = palettes[palette][theme];
+                container.innerHTML = Object.entries(colors).map(([name, value]) => `
+                    <div class="color-item">
+                        <div class="color-swatch" style="background-color: ${value}"></div>
+                        <span>${name}: <code>${value}</code></span>
+                    </div>
+                `).join('');
+            });
+        }
+
+        // Inicializar
+        updateColorInfo('light');
+    </script>
+</body>
+</html>

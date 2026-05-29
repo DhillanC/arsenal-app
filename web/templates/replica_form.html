@@ -29,33 +29,36 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Nombre -->
-            <div class="space-y-2">
-                <label for="nombre" class="text-sm font-medium">Nombre <span class="text-red-500">*</span></label>
+            <div class="form-group">
+                <label for="nombre" class="form-label">Nombre <span class="text-red-500">*</span></label>
                 <input type="text" id="nombre" name="nombre" required
                        value="{{.Replica.Nombre}}"
-                       class="w-full">
+                       class="form-input"
+                       placeholder="Ej: M4A1">
             </div>
 
             <!-- Marca -->
-            <div class="space-y-2">
-                <label for="marca" class="text-sm font-medium">Marca</label>
+            <div class="form-group">
+                <label for="marca" class="form-label">Marca</label>
                 <input type="text" id="marca" name="marca"
                        value="{{.Replica.Marca}}"
-                       class="w-full">
+                       class="form-input"
+                       placeholder="Ej: Tokyo Marui">
             </div>
 
             <!-- Modelo -->
-            <div class="space-y-2">
-                <label for="modelo" class="text-sm font-medium">Modelo</label>
+            <div class="form-group">
+                <label for="modelo" class="form-label">Modelo</label>
                 <input type="text" id="modelo" name="modelo"
                        value="{{.Replica.Modelo}}"
-                       class="w-full">
+                       class="form-input"
+                       placeholder="Ej: RECCE">
             </div>
 
             <!-- Tipo -->
-            <div class="space-y-2">
-                <label for="tipo" class="text-sm font-medium">Tipo</label>
-                <select id="tipo" name="tipo" class="w-full">
+            <div class="form-group">
+                <label for="tipo" class="form-label">Tipo</label>
+                <select id="tipo" name="tipo" class="form-select">
                     <option value="">Seleccionar...</option>
                     <option value="AEG" {{if eq .Replica.Tipo "AEG"}}selected{{end}}>AEG</option>
                     <option value="GBB" {{if eq .Replica.Tipo "GBB"}}selected{{end}}>GBB</option>
@@ -65,41 +68,44 @@
             </div>
 
             <!-- Número de Serie -->
-            <div class="space-y-2">
-                <label for="numero_serie" class="text-sm font-medium">Número de Serie</label>
+            <div class="form-group">
+                <label for="numero_serie" class="form-label">Número de Serie</label>
                 <input type="text" id="numero_serie" name="numero_serie"
                        value="{{.Replica.NumeroSerie}}"
-                       class="w-full">
+                       class="form-input"
+                       placeholder="Ej: TM123456">
             </div>
 
             <!-- Fecha de Adquisición -->
-            <div class="space-y-2">
-                <label for="fecha_adquisicion" class="text-sm font-medium">Fecha de Adquisición</label>
+            <div class="form-group">
+                <label for="fecha_adquisicion" class="form-label">Fecha de Adquisición</label>
                 <input type="date" id="fecha_adquisicion" name="fecha_adquisicion"
                        value="{{.Replica.FechaAdquisicion.Format "2006-01-02"}}"
-                       class="w-full">
+                       class="form-input">
             </div>
 
             <!-- Proveedor -->
-            <div class="space-y-2">
-                <label for="proveedor" class="text-sm font-medium">Proveedor</label>
+            <div class="form-group">
+                <label for="proveedor" class="form-label">Proveedor</label>
                 <input type="text" id="proveedor" name="proveedor"
                        value="{{.Replica.Proveedor}}"
-                       class="w-full">
+                       class="form-input"
+                       placeholder="Ej: Evike">
             </div>
 
             <!-- Costo -->
-            <div class="space-y-2">
-                <label for="costo_adquisicion" class="text-sm font-medium">Costo ($)</label>
+            <div class="form-group">
+                <label for="costo_adquisicion" class="form-label">Costo ($)</label>
                 <input type="number" id="costo_adquisicion" name="costo_adquisicion" step="0.01" min="0"
                        value="{{.Replica.CostoAdquisicion}}"
-                       class="w-full">
+                       class="form-input"
+                       placeholder="0.00">
             </div>
 
             <!-- Estado -->
-            <div class="space-y-2">
-                <label for="estado" class="text-sm font-medium">Estado</label>
-                <select id="estado" name="estado" class="w-full">
+            <div class="form-group">
+                <label for="estado" class="form-label">Estado</label>
+                <select id="estado" name="estado" class="form-select">
                     <option value="activo" {{if eq .Replica.Estado "activo"}}selected{{end}}>Activo</option>
                     <option value="reparacion" {{if eq .Replica.Estado "reparacion"}}selected{{end}}>En Reparación</option>
                     <option value="vendido" {{if eq .Replica.Estado "vendido"}}selected{{end}}>Vendido</option>
@@ -108,58 +114,64 @@
             </div>
 
             <!-- FPS -->
-            <div class="space-y-2">
-                <label for="fps" class="text-sm font-medium">FPS</label>
+            <div class="form-group">
+                <label for="fps" class="form-label">FPS</label>
                 <input type="number" id="fps" name="fps" min="0"
                        value="{{.Replica.FPS}}"
-                       class="w-full">
+                       class="form-input"
+                       placeholder="Ej: 350">
             </div>
 
             <!-- Joules -->
-            <div class="space-y-2">
-                <label for="joules" class="text-sm font-medium">Joules</label>
+            <div class="form-group">
+                <label for="joules" class="form-label">Joules</label>
                 <input type="number" id="joules" name="joules" step="0.01" min="0"
                        value="{{.Replica.Joules}}"
-                       class="w-full">
+                       class="form-input"
+                       placeholder="Ej: 1.14">
             </div>
 
             <!-- Peso -->
-            <div class="space-y-2">
-                <label for="peso_gramos" class="text-sm font-medium">Peso (g)</label>
+            <div class="form-group">
+                <label for="peso_gramos" class="form-label">Peso (g)</label>
                 <input type="number" id="peso_gramos" name="peso_gramos" min="0"
                        value="{{.Replica.PesoGramos}}"
-                       class="w-full">
+                       class="form-input"
+                       placeholder="Ej: 2500">
             </div>
 
             <!-- Longitud -->
-            <div class="space-y-2">
-                <label for="longitud_mm" class="text-sm font-medium">Longitud (mm)</label>
+            <div class="form-group">
+                <label for="longitud_mm" class="form-label">Longitud (mm)</label>
                 <input type="number" id="longitud_mm" name="longitud_mm" min="0"
                        value="{{.Replica.LongitudMM}}"
-                       class="w-full">
+                       class="form-input"
+                       placeholder="Ej: 800">
             </div>
 
             <!-- Hop Up -->
-            <div class="space-y-2">
-                <label for="hop_up" class="text-sm font-medium">Hop Up</label>
+            <div class="form-group">
+                <label for="hop_up" class="form-label">Hop Up</label>
                 <input type="text" id="hop_up" name="hop_up"
                        value="{{.Replica.HopUp}}"
-                       class="w-full">
+                       class="form-input"
+                       placeholder="Ej: Ajustable">
             </div>
 
             <!-- Capacidad Cargador -->
-            <div class="space-y-2">
-                <label for="capacidad_cargador" class="text-sm font-medium">Capacidad Cargador</label>
+            <div class="form-group">
+                <label for="capacidad_cargador" class="form-label">Capacidad Cargador</label>
                 <input type="number" id="capacidad_cargador" name="capacidad_cargador" min="0"
                        value="{{.Replica.CapacidadCargador}}"
-                       class="w-full">
+                       class="form-input"
+                       placeholder="Ej: 120">
             </div>
         </div>
 
         <!-- Notas -->
-        <div class="space-y-2">
-            <label for="notas" class="text-sm font-medium">Notas</label>
-            <textarea id="notas" name="notas" rows="3" class="w-full">{{.Replica.Notas}}</textarea>
+        <div class="form-group">
+            <label for="notas" class="form-label">Notas</label>
+            <textarea id="notas" name="notas" rows="3" class="form-textarea" placeholder="Notas adicionales sobre la réplica...">{{.Replica.Notas}}</textarea>
         </div>
 
         <!-- Actions -->
