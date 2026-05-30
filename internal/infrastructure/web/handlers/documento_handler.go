@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"io"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -75,9 +76,9 @@ func (h *DocumentoHandler) Upload(c *gin.Context) {
 		return
 	}
 
-	// Leer archivo
-	fileBytes := make([]byte, header.Size)
-	_, err = file.Read(fileBytes)
+	// Leer archivo completo — io.ReadAll maneja el loop internamente y respeta
+	// MaxBytesReader que ya acotó el body a 10MB.
+	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error leyendo archivo"})
 		return
