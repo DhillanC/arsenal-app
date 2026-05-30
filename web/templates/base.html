@@ -1,6 +1,6 @@
 {{define "layout_start"}}
 <!DOCTYPE html>
-<html lang="es" class="{{if .DarkMode}}dark{{end}}">
+<html lang="es" class="{{if .DarkMode}}dark{{end}}" x-data="{ dark: {{if .DarkMode}}true{{else}}false{{end}} }" x-bind:class="dark ? 'dark' : ''">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,6 +17,16 @@
     
     <!-- Theme CSS -->
     <link rel="stylesheet" href="/static/css/styles.css">
+    
+    <!-- Dark Mode: leer localStorage antes de renderizar para evitar FOUC -->
+    <script>
+        (function() {
+            var theme = localStorage.getItem('arsenal.theme');
+            if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/static/manifest.json">
