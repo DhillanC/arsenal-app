@@ -84,6 +84,24 @@ func (h *ReplicaHandler) Create(c *gin.Context) {
 		return
 	}
 
+	// Validar tipo contra valores permitidos
+	if req.Tipo != "" {
+		validTipos := map[string]bool{"AEG": true, "GBB": true, "HPA": true, "Spring": true, "Otro": true}
+		if !validTipos[req.Tipo] {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "tipo inválido: debe ser AEG, GBB, HPA, Spring u Otro"})
+			return
+		}
+	}
+
+	// Validar estado contra valores permitidos
+	if req.Estado != "" {
+		validEstados := map[string]bool{"activo": true, "vendido": true, "reparacion": true, "prestado": true, "archivado": true}
+		if !validEstados[req.Estado] {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "estado inválido: debe ser activo, vendido, reparacion, prestado o archivado"})
+			return
+		}
+	}
+
 	var fechaAdq time.Time
 	if req.FechaAdquisicion != "" {
 		var err error
