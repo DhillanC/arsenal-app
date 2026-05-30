@@ -37,7 +37,7 @@ func (o *OCRClient) ExtractText(filePath string) (string, error) {
 
 	switch ext {
 	case ".pdf":
-		return "", fmt.Errorf("PDF OCR requiere conversión a imagen primero")
+		return o.extractFromPDF(filePath)
 	case ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff":
 		return o.extractFromImage(filePath)
 	default:
@@ -94,6 +94,44 @@ func (o *OCRClient) extractFromImage(filePath string) (string, error) {
 		return "", fmt.Errorf("tesseract no extrajo texto de imagen %s", format)
 	}
 	return text, nil
+}
+
+// extractFromPDF convierte PDF a imagen y luego extrae texto con Tesseract.
+func (o *OCRClient) extractFromPDF(filePath string) (string, error) {
+	// Verificar que pdftoppm está disponible
+	pdftoppm, err := exec.LookPath("pdftoppm")
+	if err != nil {
+		return "", fmt.Errorf("pdftoppm no está instalado (poppler-utils): %w", err)
+	}
+
+	// Crear directorio temporal para imágenes
+	tmpDir, err := os.MkdirTemp("", "arsenal-ocr-*")
+	if err != nil {
+		return "", fmt.Errorf("crear temp dir: %w", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Convertir PDF a PNG (primera página)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultOCRTimeout)
+	defer cancel()
+
+	outPrefix := filepath.Join(tmpDir, "page")
+	cmd := exec.CommandContext(ctx, pdftoppm, "-png", "-f", "1", "-l", "1", filePath, outPrefix)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("pdftoppm falló: %s", stderr.String())
+	}
+
+	// Buscar archivo generado
+	pngFile := outPrefix + "-1.png"
+	if _, err := os.Stat(pngFile); os.IsNotExist(err) {
+		return "", fmt.Errorf("pdftoppm no generó imagen")
+	}
+
+	// Extraer texto de la imagen
+	return o.extractFromImage(pngFile)
 }
 
 // Close libera recursos del cliente OCR
