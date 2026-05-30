@@ -43,7 +43,8 @@ func (s *DocumentoService) Create(ctx context.Context, documento *models.Documen
 		if shouldRunOCR(documento) {
 			text, err := extractOCRText(ruta)
 			if err != nil {
-				documento.OCRTexto = fmt.Sprintf("[OCR no disponible: %v]", err)
+				// Dejar OCRTexto vacío en caso de error para evitar matches espurios en búsquedas
+				documento.OCRTexto = ""
 			} else {
 				documento.OCRTexto = text
 			}
