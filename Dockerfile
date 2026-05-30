@@ -40,9 +40,6 @@ RUN mkdir -p /data /uploads && \
 # Copiar binario desde builder
 COPY --from=builder /app/bin/api /app/api
 
-# Copiar migraciones necesarias para el runtime
-COPY --from=builder --chown=arsenal:arsenal /app/internal/infrastructure/persistence/sqlite/migrations /app/internal/infrastructure/persistence/sqlite/migrations
-
 # Cambiar a usuario no-root
 USER arsenal
 
