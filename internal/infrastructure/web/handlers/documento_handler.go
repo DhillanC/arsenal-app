@@ -28,17 +28,6 @@ func NewDocumentoHandler(service inbound.DocumentoService) *DocumentoHandler {
 	return &DocumentoHandler{service: service}
 }
 
-// RegisterRoutes registra las rutas de documentos
-func (h *DocumentoHandler) RegisterRoutes(router *gin.RouterGroup) {
-	docs := router.Group("/documentos")
-	{
-		docs.POST("", h.Upload)
-		docs.GET("", h.ListByReplica)
-		docs.GET("/filter", h.ListByReplicaAndType)
-		docs.GET("/search", h.Search)
-	}
-}
-
 // Upload maneja la subida de documentos (multipart/form-data)
 func (h *DocumentoHandler) Upload(c *gin.Context) {
 	replicaID, err := strconv.Atoi(c.Param("id"))
