@@ -26,8 +26,13 @@
           hx-post="/api/v1/replicas"
           {{end}}
           hx-swap="none"
-          hx-on::after-request="if(event.detail.successful) window.location.href='/replicas'">
+          hx-on::after-request="if(event.detail.successful) { window.location.href='/replicas'; } else { document.getElementById('form-error').textContent = event.detail.xhr.responseText || 'Error al guardar'; document.getElementById('form-error').classList.remove('hidden'); }"
+          >
         
+        <!-- Error display -->
+        <div id="form-error" class="hidden p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Nombre -->
             <div class="space-y-2">
