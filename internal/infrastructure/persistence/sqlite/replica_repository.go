@@ -191,3 +191,40 @@ func (r *ReplicaRepository) Search(ctx context.Context, query string) ([]models.
 
 	return replicas, rows.Err()
 }
+// ListPaginated lista réplicas con paginación (limit/offset).
+// limit=0 significa sin límite (comportamiento anterior).
+func (r *ReplicaRepository) ListPaginated(ctx context.Context, limit, offset int) ([]models.Replica, error) {
+	query := `
+		SELECT id, nombre, marca, modelo, tipo, numero_serie, fecha_adquisicion,
+			proveedor, costo_adquisicion, estado, fps, joules, peso_gramos,
+			longitud_mm, hop_up, capacidad_cargador, notas, created_at, updated_at
+		FROM replicas 
+		WHERE estado != 'archivado'
+		ORDER BY created_at DESC
+		LIMIT ? OFFSET ?
+	`
+	rows, err := r.db.QueryContext(ctx, query, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("listar replicas: %w", err)
+	}
+	defer rows.Close()
+
+	var replicas []models.Replica
+	for rows.Next() {
+		var replica models.Replica
+		err := rows.Scan(
+			&replica.ID, &replica.Nombre, &replica.Marca, &replica.Modelo,
+			&replica.Tipo, &replica.NumeroSerie, &replica.FechaAdquisicion,
+			&replica.Proveedor, &replica.CostoAdquisicion, &replica.Estado,
+			&replica.FPS, &replica.Joules, &replica.PesoGramos,
+			&replica.LongitudMM, &replica.HopUp, &replica.CapacidadCargador,
+			&replica.Notas, &replica.CreatedAt, &replica.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan replica: %w", err)
+		}
+		replicas = append(replicas, replica)
+	}
+
+	return replicas, rows.Err()
+}
