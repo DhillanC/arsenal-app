@@ -1,4 +1,7 @@
 # Build stage
+# NOTA: No especificamos GOARCH para permitir build nativo en ARM64 (Apple Silicon)
+# Si necesitas imagen x86_64 para deploy en servidor genérico, usa:
+#   docker build --platform linux/amd64 .
 FROM golang:1.26-alpine AS builder
 
 WORKDIR /app
