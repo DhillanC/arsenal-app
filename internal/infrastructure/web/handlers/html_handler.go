@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -72,8 +73,13 @@ func (h *HTMLHandler) Dashboard(c *gin.Context) {
 
 	// Obtener actividades recientes
 	var actividadesRecientes []ActividadResumen
+	var actividadesErrors []string
 	for _, r := range replicas {
-		acts, _ := h.actividadService.ListByReplica(ctx, r.ID)
+		acts, err := h.actividadService.ListByReplica(ctx, r.ID)
+		if err != nil {
+			actividadesErrors = append(actividadesErrors, fmt.Sprintf("réplica %d: %v", r.ID, err))
+			continue
+		}
 		for _, a := range acts {
 			actividadesRecientes = append(actividadesRecientes, ActividadResumen{
 				Descripcion:   a.Descripcion,
@@ -93,6 +99,7 @@ func (h *HTMLHandler) Dashboard(c *gin.Context) {
 		"Title":                "Dashboard",
 		"Stats":                stats,
 		"ActividadesRecientes": actividadesRecientes,
+		"ActividadesErrors":    actividadesErrors,
 	})
 }
 
