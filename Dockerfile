@@ -29,7 +29,7 @@ FROM alpine:3.19
 
 # Crear usuario no-root para seguridad
 RUN adduser -D -u 1000 arsenal && \
-    apk add --no-cache ca-certificates sqlite-libs
+    apk add --no-cache ca-certificates sqlite-libs wget
 
 WORKDIR /app
 
