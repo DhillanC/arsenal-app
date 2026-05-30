@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -158,6 +160,63 @@ func (h *DocumentoHandler) Search(c *gin.Context) {
 		"count":   len(docs),
 		"results": docs,
 	})
+}
+
+// Download sirve un archivo de documento con validación de contención.
+// GET /api/v1/documentos/:id/file
+func (h *DocumentoHandler) Download(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID inválido"})
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	// Obtener metadatos del documento
+	doc, err := h.service.GetByID(ctx, id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "documento no encontrado"})
+		return
+	}
+
+	// Validar que RutaArchivo no sea vacío
+	if doc.RutaArchivo == "" {
+		c.JSON(http.StatusNotFound, gin.H{"error": "documento sin archivo"})
+		return
+	}
+
+	// Validar contención: el path debe estar dentro de UPLOAD_PATH
+	// (evita path traversal como ../../../etc/passwd)
+	absUploadPath, err := filepath.Abs(os.Getenv("UPLOAD_PATH"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "configuración inválida"})
+		return
+	}
+	if absUploadPath == "" {
+		absUploadPath, _ = filepath.Abs("./uploads")
+	}
+	absFilePath, err := filepath.Abs(doc.RutaArchivo)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ruta inválida"})
+		return
+	}
+	rel, err := filepath.Rel(absUploadPath, absFilePath)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "acceso denegado"})
+		return
+	}
+
+	// Verificar que el archivo existe
+	if _, err := os.Stat(absFilePath); os.IsNotExist(err) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "archivo no encontrado"})
+		return
+	}
+
+	// Servir archivo con nombre original
+	c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", doc.NombreArchivo))
+	c.Header("Content-Type", doc.MimeType)
+	c.File(absFilePath)
 }
 
 // isAllowedMimeType valida tipos MIME permitidos

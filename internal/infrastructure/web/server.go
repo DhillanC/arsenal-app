@@ -116,6 +116,8 @@ func NewHandler(
 
 		// Documentos handler
 		documentoHandler := handlers.NewDocumentoHandler(documentoService)
+		// Descarga directa con validación de contención (fuera del grupo /replicas)
+		router.GET("/api/v1/documentos/:id/file", documentoHandler.Download)
 		documentoRoutes := api.Group("/replicas/:id/documentos")
 		{
 			documentoRoutes.GET("", documentoHandler.ListByReplica)
