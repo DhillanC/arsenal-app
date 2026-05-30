@@ -99,3 +99,84 @@ func (h *StatsHandler) statsByEstado(ctx context.Context) ([]gin.H, error) {
 	}
 	return result, rows.Err()
 }
+
+// Export devuelve un backup JSON de todas las réplicas
+// GET /api/v1/export/json
+func (h *StatsHandler) ExportJSON(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	rows, err := h.db.QueryContext(ctx, `
+		SELECT id, nombre, marca, modelo, tipo, numero_serie, fecha_adquisicion,
+			proveedor, costo_adquisicion, estado, fps, joules, peso_gramos,
+			longitud_mm, hop_up, capacidad_cargador, notas, created_at, updated_at
+		FROM replicas WHERE estado != 'archivado'
+		ORDER BY id
+	`)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	var replicas []gin.H
+	for rows.Next() {
+		var r struct {
+			ID               int
+			Nombre           string
+			Marca            string
+			Modelo           string
+			Tipo             string
+			NumeroSerie      string
+			FechaAdquisicion time.Time
+			Proveedor        string
+			CostoAdquisicion float64
+			Estado           string
+			FPS              int
+			Joules           float64
+			PesoGramos       int
+			LongitudMM       int
+			HopUp            string
+			CapacidadCargador int
+			Notas            string
+			CreatedAt        time.Time
+			UpdatedAt        time.Time
+		}
+		if err := rows.Scan(
+			&r.ID, &r.Nombre, &r.Marca, &r.Modelo, &r.Tipo, &r.NumeroSerie,
+			&r.FechaAdquisicion, &r.Proveedor, &r.CostoAdquisicion, &r.Estado,
+			&r.FPS, &r.Joules, &r.PesoGramos, &r.LongitudMM, &r.HopUp,
+			&r.CapacidadCargador, &r.Notas, &r.CreatedAt, &r.UpdatedAt,
+		); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		replicas = append(replicas, gin.H{
+			"id":                r.ID,
+			"nombre":            r.Nombre,
+			"marca":             r.Marca,
+			"modelo":            r.Modelo,
+			"tipo":              r.Tipo,
+			"numero_serie":      r.NumeroSerie,
+			"fecha_adquisicion": r.FechaAdquisicion,
+			"proveedor":         r.Proveedor,
+			"costo_adquisicion": r.CostoAdquisicion,
+			"estado":            r.Estado,
+			"fps":               r.FPS,
+			"joules":            r.Joules,
+			"peso_gramos":       r.PesoGramos,
+			"longitud_mm":       r.LongitudMM,
+			"hop_up":            r.HopUp,
+			"capacidad_cargador": r.CapacidadCargador,
+			"notas":             r.Notas,
+			"created_at":        r.CreatedAt,
+			"updated_at":        r.UpdatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"export_date": time.Now().UTC(),
+		"version":     "1.0",
+		"replicas":    replicas,
+		"count":       len(replicas),
+	})
+}

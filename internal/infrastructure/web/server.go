@@ -130,6 +130,7 @@ func NewHandler(
 	// Stats endpoint (agregados SQL)
 	statsHandler := handlers.NewStatsHandler(config.DB)
 	api.GET("/stats/dashboard", statsHandler.DashboardStats)
+	api.GET("/export/json", statsHandler.ExportJSON)
 	
 	// Mantenimiento service and handler
 	mantenimientoRepo := sqlite.NewMantenimientoRepository(config.DB)
