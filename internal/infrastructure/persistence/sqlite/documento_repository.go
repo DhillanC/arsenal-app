@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/DhillanC/arsenal-app/internal/domain/models"
 	outbound "github.com/DhillanC/arsenal-app/internal/domain/ports/outbound"
@@ -208,16 +209,16 @@ func (r *DocumentoRepository) ListByActividad(ctx context.Context, actividadID i
 
 // SearchByOCR busca documentos por texto OCR (búsqueda simple con LIKE)
 func (r *DocumentoRepository) SearchByOCR(ctx context.Context, query string) ([]models.Documento, error) {
+	// Escapar caracteres LIKE para prevenir wildcard injection
+	searchTerm := "%" + strings.NewReplacer(`\`, `\\`, "%", `\%`, "_", `\_`).Replace(query) + "%"
 	sqlQuery := `
 		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
 			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento,
 			notas, created_at
 		FROM documentos
-		WHERE ocr_texto LIKE ? OR numero_documento LIKE ?
+		WHERE ocr_texto LIKE ? ESCAPE '\' OR numero_documento LIKE ? ESCAPE '\'
 		ORDER BY created_at DESC
 	`
-
-	searchTerm := "%" + query + "%"
 	rows, err := r.db.QueryContext(ctx, sqlQuery, searchTerm, searchTerm)
 	if err != nil {
 		return nil, fmt.Errorf("buscar documentos OCR: %w", err)

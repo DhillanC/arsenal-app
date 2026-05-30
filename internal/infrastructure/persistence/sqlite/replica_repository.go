@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/DhillanC/arsenal-app/internal/domain/models"
 	outbound "github.com/DhillanC/arsenal-app/internal/domain/ports/outbound"
@@ -149,17 +150,18 @@ func (r *ReplicaRepository) Delete(ctx context.Context, id int) error {
 
 // Search busca réplicas por número de serie o nombre (para trazabilidad DIAN)
 func (r *ReplicaRepository) Search(ctx context.Context, query string) ([]models.Replica, error) {
-	searchTerm := "%" + query + "%"
+	// Escapar caracteres LIKE para prevenir wildcard injection
+	searchTerm := "%" + strings.NewReplacer(`\`, `\\`, "%", `\%`, "_", `\_`).Replace(query) + "%"
 	sqlQuery := `
 		SELECT id, nombre, marca, modelo, tipo, numero_serie, fecha_adquisicion,
 			proveedor, costo_adquisicion, estado, fps, joules, peso_gramos,
 			longitud_mm, hop_up, capacidad_cargador, notas, created_at, updated_at
 		FROM replicas 
 		WHERE estado != 'archivado' AND (
-			nombre LIKE ? OR 
-			numero_serie LIKE ? OR 
-			marca LIKE ? OR
-			modelo LIKE ?
+			nombre LIKE ? ESCAPE '\' OR 
+			numero_serie LIKE ? ESCAPE '\' OR 
+			marca LIKE ? ESCAPE '\' OR
+			modelo LIKE ? ESCAPE '\'
 		)
 		ORDER BY created_at DESC
 	`
