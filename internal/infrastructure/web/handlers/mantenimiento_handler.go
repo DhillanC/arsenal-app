@@ -171,8 +171,16 @@ func (h *MantenimientoHandler) Update(c *gin.Context) {
 		return
 	}
 
+	// Obtener mantenimiento existente para preservar replica_id
+	existing, err := h.service.GetByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "mantenimiento no encontrado"})
+		return
+	}
+
 	m := &models.Mantenimiento{
 		ID:             id,
+		ReplicaID:      existing.ReplicaID, // Preservar replica_id original
 		TipoTarea:      req.TipoTarea,
 		FrecuenciaDias: req.FrecuenciaDias,
 		FrecuenciaBB:   req.FrecuenciaBB,
