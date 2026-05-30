@@ -34,6 +34,7 @@ type DocumentoRepository interface {
 	ListByReplica(ctx context.Context, replicaID int) ([]models.Documento, error)
 	ListByReplicaAndType(ctx context.Context, replicaID int, tipo string) ([]models.Documento, error)
 	ListByActividad(ctx context.Context, actividadID int) ([]models.Documento, error)
+	ListByActividades(ctx context.Context, actividadIDs []int) ([]models.Documento, error)
 	Update(ctx context.Context, documento *models.Documento) error
 	Delete(ctx context.Context, id int) error
 	SearchByOCR(ctx context.Context, query string) ([]models.Documento, error)

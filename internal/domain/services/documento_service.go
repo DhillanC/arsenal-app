@@ -74,6 +74,11 @@ func (s *DocumentoService) ListByActividad(ctx context.Context, actividadID int)
 	return s.repo.ListByActividad(ctx, actividadID)
 }
 
+// ListByActividades lista documentos asociados a múltiples actividades (batch).
+func (s *DocumentoService) ListByActividades(ctx context.Context, actividadIDs []int) ([]models.Documento, error) {
+	return s.repo.ListByActividades(ctx, actividadIDs)
+}
+
 // Update actualiza un documento
 func (s *DocumentoService) Update(ctx context.Context, documento *models.Documento) error {
 	if documento.ID == 0 {

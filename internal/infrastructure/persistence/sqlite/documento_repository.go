@@ -20,15 +20,13 @@ func NewDocumentoRepository(db *sql.DB) outbound.DocumentoRepository {
 	return &DocumentoRepository{db: db}
 }
 
-// Create inserta un nuevo documento
+// Create crea un nuevo documento
 func (r *DocumentoRepository) Create(ctx context.Context, documento *models.Documento) error {
 	query := `
-		INSERT INTO documentos (
-			replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
-			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento, notas
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO documentos (replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
+			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento, notas)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
-
 	result, err := r.db.ExecContext(ctx, query,
 		documento.ReplicaID, documento.ActividadID, documento.Tipo,
 		documento.NombreArchivo, documento.RutaArchivo, documento.MimeType,
@@ -36,18 +34,14 @@ func (r *DocumentoRepository) Create(ctx context.Context, documento *models.Docu
 		documento.NumeroDocumento, documento.Notas,
 	)
 	if err != nil {
-		return fmt.Errorf("insertar documento: %w", err)
+		return fmt.Errorf("crear documento: %w", err)
 	}
-
-	id, err := result.LastInsertId()
-	if err != nil {
-		return fmt.Errorf("obtener id: %w", err)
-	}
+	id, _ := result.LastInsertId()
 	documento.ID = int(id)
 	return nil
 }
 
-// GetByID obtiene un documento por su ID
+// GetByID obtiene un documento por ID
 func (r *DocumentoRepository) GetByID(ctx context.Context, id int) (*models.Documento, error) {
 	query := `
 		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
@@ -55,7 +49,6 @@ func (r *DocumentoRepository) GetByID(ctx context.Context, id int) (*models.Docu
 			notas, created_at
 		FROM documentos WHERE id = ?
 	`
-
 	var documento models.Documento
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&documento.ID, &documento.ReplicaID, &documento.ActividadID,
@@ -65,15 +58,15 @@ func (r *DocumentoRepository) GetByID(ctx context.Context, id int) (*models.Docu
 		&documento.Notas, &documento.CreatedAt,
 	)
 	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("documento no encontrado: %d", id)
+		return nil, fmt.Errorf("documento no encontrado")
 	}
 	if err != nil {
-		return nil, fmt.Errorf("consultar documento: %w", err)
+		return nil, fmt.Errorf("obtener documento: %w", err)
 	}
 	return &documento, nil
 }
 
-// ListByReplica devuelve documentos de una réplica
+// ListByReplica lista documentos de una réplica
 func (r *DocumentoRepository) ListByReplica(ctx context.Context, replicaID int) ([]models.Documento, error) {
 	query := `
 		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
@@ -81,10 +74,122 @@ func (r *DocumentoRepository) ListByReplica(ctx context.Context, replicaID int) 
 			notas, created_at
 		FROM documentos WHERE replica_id = ? ORDER BY created_at DESC
 	`
-
 	rows, err := r.db.QueryContext(ctx, query, replicaID)
 	if err != nil {
 		return nil, fmt.Errorf("listar documentos: %w", err)
+	}
+	defer rows.Close()
+
+	var documentos []models.Documento
+	for rows.Next() {
+		var documento models.Documento
+		err := rows.Scan(
+			&documento.ID, &documento.ReplicaID, &documento.ActividadID,
+			&documento.Tipo, &documento.NombreArchivo, &documento.RutaArchivo,
+			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto,
+			&documento.FechaDocumento, &documento.NumeroDocumento,
+			&documento.Notas, &documento.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan documento: %w", err)
+		}
+		documentos = append(documentos, documento)
+	}
+
+	return documentos, rows.Err()
+}
+
+// ListByReplicaAndType lista documentos de una réplica filtrados por tipo
+func (r *DocumentoRepository) ListByReplicaAndType(ctx context.Context, replicaID int, tipo string) ([]models.Documento, error) {
+	query := `
+		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
+			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento,
+			notas, created_at
+		FROM documentos WHERE replica_id = ? AND tipo = ? ORDER BY created_at DESC
+	`
+	rows, err := r.db.QueryContext(ctx, query, replicaID, tipo)
+	if err != nil {
+		return nil, fmt.Errorf("listar documentos por tipo: %w", err)
+	}
+	defer rows.Close()
+
+	var documentos []models.Documento
+	for rows.Next() {
+		var documento models.Documento
+		err := rows.Scan(
+			&documento.ID, &documento.ReplicaID, &documento.ActividadID,
+			&documento.Tipo, &documento.NombreArchivo, &documento.RutaArchivo,
+			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto,
+			&documento.FechaDocumento, &documento.NumeroDocumento,
+			&documento.Notas, &documento.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan documento: %w", err)
+		}
+		documentos = append(documentos, documento)
+	}
+
+	return documentos, rows.Err()
+}
+
+// ListByActividad lista documentos asociados a una actividad
+func (r *DocumentoRepository) ListByActividad(ctx context.Context, actividadID int) ([]models.Documento, error) {
+	query := `
+		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
+			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento,
+			notas, created_at
+		FROM documentos WHERE actividad_id = ? ORDER BY created_at DESC
+	`
+	rows, err := r.db.QueryContext(ctx, query, actividadID)
+	if err != nil {
+		return nil, fmt.Errorf("listar documentos por actividad: %w", err)
+	}
+	defer rows.Close()
+
+	var documentos []models.Documento
+	for rows.Next() {
+		var documento models.Documento
+		err := rows.Scan(
+			&documento.ID, &documento.ReplicaID, &documento.ActividadID,
+			&documento.Tipo, &documento.NombreArchivo, &documento.RutaArchivo,
+			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto,
+			&documento.FechaDocumento, &documento.NumeroDocumento,
+			&documento.Notas, &documento.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan documento: %w", err)
+		}
+		documentos = append(documentos, documento)
+	}
+
+	return documentos, rows.Err()
+}
+
+// ListByActividades lista documentos asociados a múltiples actividades (batch query).
+// Usa IN (?) en lugar de N queries individuales para evitar N+1.
+func (r *DocumentoRepository) ListByActividades(ctx context.Context, actividadIDs []int) ([]models.Documento, error) {
+	if len(actividadIDs) == 0 {
+		return []models.Documento{}, nil
+	}
+
+	// Construir placeholders para IN (?, ?, ...)
+	placeholders := make([]string, len(actividadIDs))
+	args := make([]interface{}, len(actividadIDs))
+	for i, id := range actividadIDs {
+		placeholders[i] = "?"
+		args[i] = id
+	}
+
+	query := fmt.Sprintf(`
+		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
+			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento,
+			notas, created_at
+		FROM documentos WHERE actividad_id IN (%s) ORDER BY created_at DESC
+	`, strings.Join(placeholders, ","))
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("listar documentos por actividades: %w", err)
 	}
 	defer rows.Close()
 
@@ -116,7 +221,6 @@ func (r *DocumentoRepository) Update(ctx context.Context, documento *models.Docu
 			fecha_documento = ?, numero_documento = ?, notas = ?
 		WHERE id = ?
 	`
-
 	_, err := r.db.ExecContext(ctx, query,
 		documento.ReplicaID, documento.ActividadID, documento.Tipo,
 		documento.NombreArchivo, documento.RutaArchivo, documento.MimeType,
@@ -131,80 +235,11 @@ func (r *DocumentoRepository) Update(ctx context.Context, documento *models.Docu
 
 // Delete elimina un documento
 func (r *DocumentoRepository) Delete(ctx context.Context, id int) error {
-	query := `DELETE FROM documentos WHERE id = ?`
-	_, err := r.db.ExecContext(ctx, query, id)
+	_, err := r.db.ExecContext(ctx, "DELETE FROM documentos WHERE id = ?", id)
 	if err != nil {
 		return fmt.Errorf("eliminar documento: %w", err)
 	}
 	return nil
-}
-
-// ListByReplicaAndType devuelve documentos de una réplica filtrados por tipo
-func (r *DocumentoRepository) ListByReplicaAndType(ctx context.Context, replicaID int, tipo string) ([]models.Documento, error) {
-	query := `
-		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
-			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento,
-			notas, created_at
-		FROM documentos WHERE replica_id = ? AND tipo = ? ORDER BY created_at DESC
-	`
-
-	rows, err := r.db.QueryContext(ctx, query, replicaID, tipo)
-	if err != nil {
-		return nil, fmt.Errorf("listar documentos por tipo: %w", err)
-	}
-	defer rows.Close()
-
-	var documentos []models.Documento
-	for rows.Next() {
-		var documento models.Documento
-		err := rows.Scan(
-			&documento.ID, &documento.ReplicaID, &documento.ActividadID,
-			&documento.Tipo, &documento.NombreArchivo, &documento.RutaArchivo,
-			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto,
-			&documento.FechaDocumento, &documento.NumeroDocumento,
-			&documento.Notas, &documento.CreatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("scan documento: %w", err)
-		}
-		documentos = append(documentos, documento)
-	}
-
-	return documentos, rows.Err()
-}
-
-// ListByActividad devuelve documentos asociados a una actividad
-func (r *DocumentoRepository) ListByActividad(ctx context.Context, actividadID int) ([]models.Documento, error) {
-	query := `
-		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
-			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento,
-			notas, created_at
-		FROM documentos WHERE actividad_id = ? ORDER BY created_at DESC
-	`
-
-	rows, err := r.db.QueryContext(ctx, query, actividadID)
-	if err != nil {
-		return nil, fmt.Errorf("listar documentos por actividad: %w", err)
-	}
-	defer rows.Close()
-
-	var documentos []models.Documento
-	for rows.Next() {
-		var documento models.Documento
-		err := rows.Scan(
-			&documento.ID, &documento.ReplicaID, &documento.ActividadID,
-			&documento.Tipo, &documento.NombreArchivo, &documento.RutaArchivo,
-			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto,
-			&documento.FechaDocumento, &documento.NumeroDocumento,
-			&documento.Notas, &documento.CreatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("scan documento: %w", err)
-		}
-		documentos = append(documentos, documento)
-	}
-
-	return documentos, rows.Err()
 }
 
 // SearchByOCR busca documentos por texto OCR (búsqueda simple con LIKE)
