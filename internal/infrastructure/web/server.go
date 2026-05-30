@@ -58,11 +58,19 @@ func NewHandler(
 		setupTemplates(router)
 	}
 
-	// Health-check enriquecido: DB, uploads writable, OCR disponible.
-	// Si la DB no responde a Ping en 2s, devuelve 503 — load balancer puede sacarnos del pool.
-	router.GET("/health", func(c *gin.Context) {
+	// Health-check endpoints (Kubernetes-style)
+	// /health/live — liveness: siempre 200 si el proceso responde
+	router.GET("/health/live", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":    "alive",
+			"timestamp": time.Now().UTC(),
+		})
+	})
+
+	// /health/ready — readiness: 200 solo si DB + uploads + OCR están OK
+	router.GET("/health/ready", func(c *gin.Context) {
 		checks := gin.H{
-			"status":    "ok",
+			"status":    "ready",
 			"timestamp": time.Now().UTC(),
 		}
 		status := http.StatusOK
@@ -72,7 +80,7 @@ func NewHandler(
 			ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
 			defer cancel()
 			if err := config.DB.PingContext(ctx); err != nil {
-				checks["status"] = "degraded"
+				checks["status"] = "not_ready"
 				checks["db"] = "unreachable"
 				checks["db_error"] = err.Error()
 				status = http.StatusServiceUnavailable
@@ -85,7 +93,7 @@ func NewHandler(
 		if config.UploadPath != "" {
 			testFile := filepath.Join(config.UploadPath, ".healthcheck")
 			if err := os.WriteFile(testFile, []byte("ok"), 0o644); err != nil {
-				checks["status"] = "degraded"
+				checks["status"] = "not_ready"
 				checks["uploads"] = "not_writable"
 				checks["uploads_error"] = err.Error()
 				status = http.StatusServiceUnavailable
@@ -100,9 +108,15 @@ func NewHandler(
 			checks["ocr"] = "ok"
 		} else {
 			checks["ocr"] = "not_available"
+			// OCR es opcional, no marca not_ready
 		}
 
 		c.JSON(status, checks)
+	})
+
+	// /health (legacy) — mantener compatibilidad, redirige a /health/ready
+	router.GET("/health", func(c *gin.Context) {
+		c.Redirect(http.StatusTemporaryRedirect, "/health/ready")
 	})
 
 	// API v1
