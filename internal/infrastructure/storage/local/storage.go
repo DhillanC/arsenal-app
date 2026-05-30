@@ -107,17 +107,21 @@ func (s *Storage) Save(file []byte, filename string, replicaID int) (string, err
 		return "", fmt.Errorf("escribir archivo: %w", err)
 	}
 
-	return path, nil
+	// Devolver path relativo a basePath, no absoluto (evita 404 + path leak)
+	relPath := filepath.Join(strconv.Itoa(replicaID), yearMonth, safe)
+	return relPath, nil
 }
 
-// Get lee un archivo del filesystem
-func (s *Storage) Get(path string) ([]byte, error) {
-	return os.ReadFile(path)
+// Get lee un archivo del filesystem usando path relativo a basePath
+func (s *Storage) Get(relPath string) ([]byte, error) {
+	absPath := filepath.Join(s.basePath, relPath)
+	return os.ReadFile(absPath)
 }
 
-// Delete elimina un archivo del filesystem
-func (s *Storage) Delete(path string) error {
-	return os.Remove(path)
+// Delete elimina un archivo del filesystem usando path relativo a basePath
+func (s *Storage) Delete(relPath string) error {
+	absPath := filepath.Join(s.basePath, relPath)
+	return os.Remove(absPath)
 }
 
 func randomHex(n int) (string, error) {
