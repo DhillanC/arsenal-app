@@ -142,7 +142,7 @@ func (h *HTMLHandler) ReplicaDetail(c *gin.Context) {
 	mantenimientos, _ := h.mantenimientoService.ListByReplica(ctx, id)
 
 	// Construir timeline
-	timeline := buildHTMLTimeline(actividades, documentos, h.documentoService)
+	timeline := buildHTMLTimeline(actividades, documentos)
 
 	c.HTML(http.StatusOK, "replica_detail.html", gin.H{
 		"Title":          replica.Nombre,
@@ -313,7 +313,7 @@ func calculateDashboardStats(replicas []models.Replica) DashboardStats {
 }
 
 // buildHTMLTimeline construye el timeline con actividades y documentos
-func buildHTMLTimeline(actividades []models.Actividad, documentos []models.Documento, docService inbound.DocumentoService) []HTMLTimelineItem {
+func buildHTMLTimeline(actividades []models.Actividad, documentos []models.Documento) []HTMLTimelineItem {
 	var timeline []HTMLTimelineItem
 
 	for _, act := range actividades {
