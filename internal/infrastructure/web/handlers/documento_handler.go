@@ -18,6 +18,10 @@ import (
 // maxUploadBytes es el cap real del request body para subidas.
 // ParseMultipartForm(N) sin MaxBytesReader es solo umbral de memoria — el body
 // completo puede ser arbitrariamente grande y Gin lo spilea a disco.
+// NOTA: Para archivos > 10MB o streaming, considerar:
+//   1. io.Copy directo a archivo en vez de cargar todo a memoria
+//   2. Upload en chunks con resumable.js o similar
+//   3. S3/GCS presigned URLs para uploads directos
 const maxUploadBytes = 10 << 20
 
 // DocumentoHandler maneja las peticiones HTTP para documentos
