@@ -82,9 +82,22 @@ func (s *DocumentoService) Update(ctx context.Context, documento *models.Documen
 	return s.repo.Update(ctx, documento)
 }
 
-// Delete elimina un documento
+// Delete elimina un documento y su archivo asociado
 func (s *DocumentoService) Delete(ctx context.Context, id int) error {
-	// TODO: Eliminar archivo del storage también
+	// Obtener documento para saber qué archivo borrar
+	doc, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("obtener documento: %w", err)
+	}
+
+	// Borrar archivo del storage si existe
+	if doc.RutaArchivo != "" {
+		if err := s.storage.Delete(doc.RutaArchivo); err != nil {
+			// Loguear pero no fallar si el archivo ya no existe
+			fmt.Printf("advertencia: no se pudo borrar archivo %s: %v\n", doc.RutaArchivo, err)
+		}
+	}
+
 	return s.repo.Delete(ctx, id)
 }
 
