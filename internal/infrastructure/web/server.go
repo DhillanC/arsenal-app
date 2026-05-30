@@ -6,11 +6,13 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	inbound "github.com/DhillanC/arsenal-app/internal/domain/ports/inbound"
 	"github.com/DhillanC/arsenal-app/internal/domain/services"
+	"github.com/DhillanC/arsenal-app/internal/infrastructure/ocr"
 	"github.com/DhillanC/arsenal-app/internal/infrastructure/persistence/sqlite"
 	"github.com/DhillanC/arsenal-app/internal/infrastructure/web/handlers"
 	"github.com/gin-gonic/gin"
@@ -56,26 +58,51 @@ func NewHandler(
 		setupTemplates(router)
 	}
 
-	// Health-check con verificación de DB.
+	// Health-check enriquecido: DB, uploads writable, OCR disponible.
 	// Si la DB no responde a Ping en 2s, devuelve 503 — load balancer puede sacarnos del pool.
 	router.GET("/health", func(c *gin.Context) {
+		checks := gin.H{
+			"status":    "ok",
+			"timestamp": time.Now().UTC(),
+		}
+		status := http.StatusOK
+
+		// Check DB
 		if config.DB != nil {
 			ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
 			defer cancel()
 			if err := config.DB.PingContext(ctx); err != nil {
-				c.JSON(http.StatusServiceUnavailable, gin.H{
-					"status": "degraded",
-					"db":     "unreachable",
-					"error":  err.Error(),
-				})
-				return
+				checks["status"] = "degraded"
+				checks["db"] = "unreachable"
+				checks["db_error"] = err.Error()
+				status = http.StatusServiceUnavailable
+			} else {
+				checks["db"] = "ok"
 			}
 		}
-		c.JSON(http.StatusOK, gin.H{
-			"status":    "ok",
-			"db":        "ok",
-			"timestamp": time.Now().UTC(),
-		})
+
+		// Check uploads writable
+		if config.UploadPath != "" {
+			testFile := filepath.Join(config.UploadPath, ".healthcheck")
+			if err := os.WriteFile(testFile, []byte("ok"), 0o644); err != nil {
+				checks["status"] = "degraded"
+				checks["uploads"] = "not_writable"
+				checks["uploads_error"] = err.Error()
+				status = http.StatusServiceUnavailable
+			} else {
+				os.Remove(testFile)
+				checks["uploads"] = "ok"
+			}
+		}
+
+		// Check OCR disponible
+		if ocr.IsAvailable() {
+			checks["ocr"] = "ok"
+		} else {
+			checks["ocr"] = "not_available"
+		}
+
+		c.JSON(status, checks)
 	})
 
 	// API v1
