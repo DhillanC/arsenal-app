@@ -233,7 +233,10 @@ func (h *MantenimientoHandler) MarcarCompletado(c *gin.Context) {
 	var req struct {
 		FechaCompletado string `json:"fecha_completado" form:"fecha_completado"`
 	}
-	_ = c.ShouldBind(&req)
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	var fecha *time.Time
 	if req.FechaCompletado != "" {
