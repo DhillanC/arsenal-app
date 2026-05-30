@@ -35,6 +35,9 @@ func NewDB(dbPath string) (*DB, error) {
 
 	// SQLite solo permite un escritor a la vez; serializar evita errores
 	// de "database is locked" en cargas de escritura concurrentes.
+	// NOTA: Esto serializa TODAS las operaciones (lecturas + escrituras).
+	// Para alta carga de lectura, considerar crear un segundo handle
+	// de solo lectura (mode=ro) con pool ≥ 4.
 	conn.SetMaxOpenConns(1)
 
 	if err := conn.Ping(); err != nil {
