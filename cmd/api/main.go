@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,8 +18,9 @@ import (
 )
 
 func main() {
+	initLogger()
 	if err := run(); err != nil {
-		log.Printf("fatal: %v", err)
+		slog.Error("fatal", "error", err)
 		os.Exit(1)
 	}
 }
@@ -74,7 +75,7 @@ func run() error {
 
 	serverErr := make(chan error, 1)
 	go func() {
-		log.Printf("Arsenal App iniciado en http://localhost:%s (CORS=%v)", appPort, allowedOrigins)
+		slog.Info("Arsenal App iniciado", "port", appPort, "cors", allowedOrigins)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			serverErr <- err
 		}
@@ -85,7 +86,7 @@ func run() error {
 
 	select {
 	case <-ctx.Done():
-		log.Println("Apagado solicitado, drenando conexiones...")
+		slog.Info("Apagado solicitado, drenando conexiones...")
 	case err := <-serverErr:
 		return fmt.Errorf("servidor: %w", err)
 	}
@@ -97,7 +98,7 @@ func run() error {
 		return fmt.Errorf("graceful shutdown: %w", err)
 	}
 
-	log.Println("Servidor detenido limpiamente")
+	slog.Info("Servidor detenido limpiamente")
 	return nil
 }
 
