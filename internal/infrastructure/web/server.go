@@ -127,6 +127,10 @@ func NewHandler(
 		api.GET("/documentos/search", documentoHandler.Search)
 	}
 
+	// Stats endpoint (agregados SQL)
+	statsHandler := handlers.NewStatsHandler(config.DB)
+	api.GET("/stats/dashboard", statsHandler.DashboardStats)
+	
 	// Mantenimiento service and handler
 	mantenimientoRepo := sqlite.NewMantenimientoRepository(config.DB)
 	mantenimientoService := services.NewMantenimientoService(mantenimientoRepo)
