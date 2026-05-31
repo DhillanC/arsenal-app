@@ -137,9 +137,21 @@ func (h *HTMLHandler) ReplicaDetail(c *gin.Context) {
 		return
 	}
 
-	actividades, _ := h.actividadService.ListByReplica(ctx, id)
-	documentos, _ := h.documentoService.ListByReplica(ctx, id)
-	mantenimientos, _ := h.mantenimientoService.ListByReplica(ctx, id)
+	actividades, err := h.actividadService.ListByReplica(ctx, id)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": fmt.Sprintf("Error cargando actividades: %v", err)})
+		return
+	}
+	documentos, err := h.documentoService.ListByReplica(ctx, id)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": fmt.Sprintf("Error cargando documentos: %v", err)})
+		return
+	}
+	mantenimientos, err := h.mantenimientoService.ListByReplica(ctx, id)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": fmt.Sprintf("Error cargando mantenimientos: %v", err)})
+		return
+	}
 
 	// Construir timeline
 	timeline := buildHTMLTimeline(actividades, documentos)
