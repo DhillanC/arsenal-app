@@ -45,7 +45,8 @@ func (h *ReplicaHandler) Search(c *gin.Context) {
 	c.JSON(http.StatusOK, replicas)
 }
 
-// List devuelve todas las réplicas
+// List devuelve todas las réplicas. Si la petición viene de HTMX, devuelve
+// HTML parcial en lugar de JSON para evitar insertar JSON crudo en el DOM.
 func (h *ReplicaHandler) List(c *gin.Context) {
 	ctx := c.Request.Context()
 	replicas, err := h.service.List(ctx)
@@ -53,6 +54,19 @@ func (h *ReplicaHandler) List(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Detectar HTMX request
+	if c.GetHeader("HX-Request") == "true" {
+		stats := calculateDashboardStats(replicas)
+		c.HTML(http.StatusOK, "replica_list.html", gin.H{
+			"Title":    "Mis Rplicas",
+			"Replicas": replicas,
+			"Stats":    stats,
+			"DarkMode": isDarkMode(c),
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, replicas)
 }
 
