@@ -53,6 +53,13 @@ func NewHandler(
 	router.Use(gin.Recovery())
 	router.Use(CORSMiddleware(config.AllowedOrigins))
 
+	// Audit logging (solo si hay DB)
+	if config.DB != nil {
+		auditRepo := sqlite.NewAuditLogRepository(config.DB)
+		auditService := services.NewAuditLogService(auditRepo)
+		router.Use(AuditMiddleware(auditService, DefaultAuditConfig()))
+	}
+
 	// Setup HTML templates (solo si se solicita explícitamente)
 	if config.EnableTemplates {
 		setupTemplates(router)
@@ -170,7 +177,7 @@ func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
 
-		if len(allowedOrigins) == 0 || contains(allowedOrigins, origin) {
+		if len(allowedOrigins) == 0 || stringSliceContains(allowedOrigins, origin) {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 
@@ -187,7 +194,7 @@ func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
 	}
 }
 
-func contains(slice []string, item string) bool {
+func stringSliceContains(slice []string, item string) bool {
 	for _, s := range slice {
 		if s == item {
 			return true
