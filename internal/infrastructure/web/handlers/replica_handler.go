@@ -45,11 +45,22 @@ func (h *ReplicaHandler) Search(c *gin.Context) {
 	c.JSON(http.StatusOK, replicas)
 }
 
-// List devuelve todas las réplicas. Si la petición viene de HTMX, devuelve
-// HTML parcial en lugar de JSON para evitar insertar JSON crudo en el DOM.
+// List devuelve réplicas. Soporta paginación via ?limit=20&offset=0.
+// Si la petición viene de HTMX, devuelve HTML parcial en lugar de JSON.
 func (h *ReplicaHandler) List(c *gin.Context) {
 	ctx := c.Request.Context()
-	replicas, err := h.service.List(ctx)
+
+	var replicas []models.Replica
+	var err error
+
+	// Usar paginación si se solicita explícitamente
+	if c.Query("limit") != "" || c.Query("offset") != "" {
+		limit, offset := PaginationParams(c)
+		replicas, err = h.service.ListPaginated(ctx, limit, offset)
+	} else {
+		replicas, err = h.service.List(ctx)
+	}
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

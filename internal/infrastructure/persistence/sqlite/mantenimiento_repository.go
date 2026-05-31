@@ -12,12 +12,16 @@ import (
 
 // MantenimientoRepository implementa outbound.MantenimientoRepository
 type MantenimientoRepository struct {
-	db *sql.DB
+	readDB  *sql.DB
+	writeDB *sql.DB
 }
 
 // NewMantenimientoRepository crea un nuevo repositorio de mantenimiento
-func NewMantenimientoRepository(db *sql.DB) outbound.MantenimientoRepository {
-	return &MantenimientoRepository{db: db}
+func NewMantenimientoRepository(db *DB) outbound.MantenimientoRepository {
+	return &MantenimientoRepository{
+		readDB:  db.ReadConn,
+		writeDB: db.WriteConn,
+	}
 }
 
 // Create inserta un nuevo registro de mantenimiento
@@ -26,7 +30,7 @@ func (r *MantenimientoRepository) Create(ctx context.Context, m *models.Mantenim
 		INSERT INTO mantenimiento (replica_id, tipo_tarea, frecuencia_dias, frecuencia_bb, ultima_fecha, proxima_fecha, completado, notas)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	result, err := r.db.ExecContext(ctx, query,
+	result, err := r.writeDB.ExecContext(ctx, query,
 		m.ReplicaID, m.TipoTarea, m.FrecuenciaDias, m.FrecuenciaBB,
 		m.UltimaFecha, m.ProximaFecha, m.Completado, m.Notas,
 	)
@@ -48,7 +52,7 @@ func (r *MantenimientoRepository) GetByID(ctx context.Context, id int) (*models.
 		FROM mantenimiento WHERE id = ?
 	`
 	var m models.Mantenimiento
-	err := r.db.QueryRowContext(ctx, query, id).Scan(
+	err := r.readDB.QueryRowContext(ctx, query, id).Scan(
 		&m.ID, &m.ReplicaID, &m.TipoTarea, &m.FrecuenciaDias, &m.FrecuenciaBB,
 		&m.UltimaFecha, &m.ProximaFecha, &m.Completado, &m.Notas,
 	)
@@ -67,7 +71,7 @@ func (r *MantenimientoRepository) ListByReplica(ctx context.Context, replicaID i
 		SELECT id, replica_id, tipo_tarea, frecuencia_dias, frecuencia_bb, ultima_fecha, proxima_fecha, completado, notas
 		FROM mantenimiento WHERE replica_id = ? ORDER BY proxima_fecha ASC
 	`
-	rows, err := r.db.QueryContext(ctx, query, replicaID)
+	rows, err := r.readDB.QueryContext(ctx, query, replicaID)
 	if err != nil {
 		return nil, fmt.Errorf("listar mantenimientos: %w", err)
 	}
@@ -93,7 +97,7 @@ func (r *MantenimientoRepository) ListProximos(ctx context.Context, dias int) ([
 		WHERE completado = 0 AND (proxima_fecha IS NULL OR proxima_fecha <= date('now', '+' || ? || ' days'))
 		ORDER BY proxima_fecha ASC
 	`
-	rows, err := r.db.QueryContext(ctx, query, dias)
+	rows, err := r.readDB.QueryContext(ctx, query, dias)
 	if err != nil {
 		return nil, fmt.Errorf("listar mantenimientos próximos: %w", err)
 	}
@@ -119,7 +123,7 @@ func (r *MantenimientoRepository) Update(ctx context.Context, m *models.Mantenim
 			ultima_fecha = ?, proxima_fecha = ?, completado = ?, notas = ?
 		WHERE id = ?
 	`
-	_, err := r.db.ExecContext(ctx, query,
+	_, err := r.writeDB.ExecContext(ctx, query,
 		m.ReplicaID, m.TipoTarea, m.FrecuenciaDias, m.FrecuenciaBB,
 		m.UltimaFecha, m.ProximaFecha, m.Completado, m.Notas, m.ID,
 	)
@@ -132,7 +136,7 @@ func (r *MantenimientoRepository) Update(ctx context.Context, m *models.Mantenim
 // Delete elimina un mantenimiento
 func (r *MantenimientoRepository) Delete(ctx context.Context, id int) error {
 	query := `DELETE FROM mantenimiento WHERE id = ?`
-	_, err := r.db.ExecContext(ctx, query, id)
+	_, err := r.writeDB.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("eliminar mantenimiento: %w", err)
 	}
@@ -164,7 +168,7 @@ func (r *MantenimientoRepository) MarcarCompletado(ctx context.Context, id int, 
 			completado = 1, ultima_fecha = ?, proxima_fecha = ?
 		WHERE id = ?
 	`
-	_, err = r.db.ExecContext(ctx, query, now, proximaFecha, id)
+	_, err = r.writeDB.ExecContext(ctx, query, now, proximaFecha, id)
 	if err != nil {
 		return fmt.Errorf("marcar completado: %w", err)
 	}

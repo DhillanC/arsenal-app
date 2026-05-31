@@ -26,7 +26,7 @@ func TestReplicaRepository(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 	
-	repo := sqlite.NewReplicaRepository(db.Conn)
+	repo := sqlite.NewReplicaRepository(db)
 	ctx := context.Background()
 	
 	t.Run("Create", func(t *testing.T) {
@@ -136,12 +136,12 @@ func TestActividadRepository(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 	
-	repo := sqlite.NewActividadRepository(db.Conn)
+	repo := sqlite.NewActividadRepository(db)
 	ctx := context.Background()
 	
 	t.Run("Create and ListByReplica", func(t *testing.T) {
 		// Primero crear una réplica
-		replicaRepo := sqlite.NewReplicaRepository(db.Conn)
+		replicaRepo := sqlite.NewReplicaRepository(db)
 		replica := &models.Replica{
 			Nombre:           "HK416 A5",
 			Tipo:             "AEG",
@@ -175,12 +175,12 @@ func TestDocumentoRepository(t *testing.T) {
 	db := setupTestDB(t)
 	defer db.Close()
 	
-	repo := sqlite.NewDocumentoRepository(db.Conn)
+	repo := sqlite.NewDocumentoRepository(db)
 	ctx := context.Background()
 	
 	t.Run("Create and SearchByOCR", func(t *testing.T) {
 		// Primero crear una réplica
-		replicaRepo := sqlite.NewReplicaRepository(db.Conn)
+		replicaRepo := sqlite.NewReplicaRepository(db)
 		replica := &models.Replica{
 			Nombre:           "HK416 A5",
 			Tipo:             "AEG",
@@ -198,7 +198,7 @@ func TestDocumentoRepository(t *testing.T) {
 			MimeType:        "application/pdf",
 			TamanoBytes:     1024,
 			OCRTexto:        "Factura de compra HK416 A5",
-			NumeroDocumento: "3BAQ13218",
+			NumeroDocumento: "FAC-001",
 		}
 		
 		err = repo.Create(ctx, doc)
@@ -209,7 +209,7 @@ func TestDocumentoRepository(t *testing.T) {
 		results, err := repo.SearchByOCR(ctx, "HK416")
 		require.NoError(t, err)
 		assert.Len(t, results, 1)
-		assert.Equal(t, "factura", results[0].Tipo)
+		assert.Equal(t, "factura.pdf", results[0].NombreArchivo)
 	})
 }
 

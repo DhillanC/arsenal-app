@@ -2,7 +2,6 @@ package web
 
 import (
 	"context"
-	"database/sql"
 	"html/template"
 	"net/http"
 	"os"
@@ -30,8 +29,8 @@ func setupTemplates(router *gin.Engine) {
 type Config struct {
 	Port           string
 	AllowedOrigins []string
-	// DB se usa para el health-check; si es nil, /health no verifica DB.
-	DB *sql.DB
+	// DB se usa para el health-check y audit logging.
+	DB *sqlite.DB
 	// EnableTemplates carga templates HTML para frontend
 	EnableTemplates bool
 	// UploadPath expone los documentos cargados para el frontend HTML.
@@ -86,7 +85,7 @@ func NewHandler(
 		if config.DB != nil {
 			ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
 			defer cancel()
-			if err := config.DB.PingContext(ctx); err != nil {
+			if err := config.DB.WriteConn.PingContext(ctx); err != nil {
 				checks["status"] = "not_ready"
 				checks["db"] = "unreachable"
 				checks["db_error"] = err.Error()

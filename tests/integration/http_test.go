@@ -23,15 +23,15 @@ func setupHTTPTest(t *testing.T, origins []string) (http.Handler, *sqlite.DB) {
 	require.NoError(t, err)
 	require.NoError(t, db.RunMigrations())
 
-	replicaService := services.NewReplicaService(sqlite.NewReplicaRepository(db.Conn))
-	actividadService := services.NewActividadService(sqlite.NewActividadRepository(db.Conn))
+	replicaService := services.NewReplicaService(sqlite.NewReplicaRepository(db))
+	actividadService := services.NewActividadService(sqlite.NewActividadRepository(db))
 	storage := local.NewStorage(t.TempDir())
-	documentoService := services.NewDocumentoService(sqlite.NewDocumentoRepository(db.Conn), storage)
+	documentoService := services.NewDocumentoService(sqlite.NewDocumentoRepository(db), storage)
 
 	handler := web.NewHandler(web.Config{
 		Port:           "8080",
 		AllowedOrigins: origins,
-		DB:             db.Conn,
+		DB:             db,
 	}, replicaService, actividadService, documentoService)
 	return handler, db
 }

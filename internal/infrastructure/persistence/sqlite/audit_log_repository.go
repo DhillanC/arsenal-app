@@ -11,12 +11,16 @@ import (
 
 // AuditLogRepository implementa outbound.AuditLogRepository con SQLite
 type AuditLogRepository struct {
-	db *sql.DB
+	readDB  *sql.DB
+	writeDB *sql.DB
 }
 
 // NewAuditLogRepository crea un nuevo repositorio de auditoría
-func NewAuditLogRepository(db *sql.DB) *AuditLogRepository {
-	return &AuditLogRepository{db: db}
+func NewAuditLogRepository(db *DB) *AuditLogRepository {
+	return &AuditLogRepository{
+		readDB:  db.ReadConn,
+		writeDB: db.WriteConn,
+	}
 }
 
 // Create inserta un nuevo registro de auditoría
@@ -25,7 +29,7 @@ func (r *AuditLogRepository) Create(ctx context.Context, log *models.AuditLog) e
 		INSERT INTO audit_log (ts, action, entity, entity_id, user_id, details_json, ip_address, user_agent)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	_, err := r.db.ExecContext(ctx, query,
+	_, err := r.writeDB.ExecContext(ctx, query,
 		log.Ts,
 		log.Action,
 		log.Entity,
@@ -49,7 +53,7 @@ func (r *AuditLogRepository) ListByEntity(ctx context.Context, entity string, en
 		WHERE entity = ? AND entity_id = ?
 		ORDER BY ts DESC
 	`
-	rows, err := r.db.QueryContext(ctx, query, entity, entityID)
+	rows, err := r.readDB.QueryContext(ctx, query, entity, entityID)
 	if err != nil {
 		return nil, fmt.Errorf("listar audit_log por entidad: %w", err)
 	}
@@ -69,7 +73,7 @@ func (r *AuditLogRepository) ListRecent(ctx context.Context, limit int) ([]model
 		ORDER BY ts DESC
 		LIMIT ?
 	`
-	rows, err := r.db.QueryContext(ctx, query, limit)
+	rows, err := r.readDB.QueryContext(ctx, query, limit)
 	if err != nil {
 		return nil, fmt.Errorf("listar audit_log recientes: %w", err)
 	}

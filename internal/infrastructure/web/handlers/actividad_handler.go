@@ -40,7 +40,7 @@ func (h *ActividadHandler) RegisterRoutes(router *gin.RouterGroup) {
 	router.DELETE("/actividades/:actividad_id", h.Delete)
 }
 
-// ListByReplica lista actividades de una réplica
+// ListByReplica lista actividades de una réplica. Soporta paginación via ?limit=20&offset=0.
 func (h *ActividadHandler) ListByReplica(c *gin.Context) {
 	ctx := c.Request.Context()
 	replicaID, err := strconv.Atoi(c.Param("id"))
@@ -49,7 +49,13 @@ func (h *ActividadHandler) ListByReplica(c *gin.Context) {
 		return
 	}
 
-	actividades, err := h.service.ListByReplica(ctx, replicaID)
+	var actividades []models.Actividad
+	if c.Query("limit") != "" || c.Query("offset") != "" {
+		limit, offset := PaginationParams(c)
+		actividades, err = h.service.ListByReplicaPaginated(ctx, replicaID, limit, offset)
+	} else {
+		actividades, err = h.service.ListByReplica(ctx, replicaID)
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

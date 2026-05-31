@@ -108,7 +108,14 @@ func (h *DocumentoHandler) ListByReplica(c *gin.Context) {
 		return
 	}
 
-	docs, err := h.service.ListByReplica(c.Request.Context(), replicaID)
+	ctx := c.Request.Context()
+	var docs []models.Documento
+	if c.Query("limit") != "" || c.Query("offset") != "" {
+		limit, offset := PaginationParams(c)
+		docs, err = h.service.ListByReplicaPaginated(ctx, replicaID, limit, offset)
+	} else {
+		docs, err = h.service.ListByReplica(ctx, replicaID)
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

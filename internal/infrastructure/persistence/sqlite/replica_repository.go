@@ -12,12 +12,16 @@ import (
 
 // ReplicaRepository implementa outbound.ReplicaRepository
 type ReplicaRepository struct {
-	db *sql.DB
+	readDB  *sql.DB
+	writeDB *sql.DB
 }
 
 // NewReplicaRepository crea un nuevo repositorio
-func NewReplicaRepository(db *sql.DB) outbound.ReplicaRepository {
-	return &ReplicaRepository{db: db}
+func NewReplicaRepository(db *DB) outbound.ReplicaRepository {
+	return &ReplicaRepository{
+		readDB:  db.ReadConn,
+		writeDB: db.WriteConn,
+	}
 }
 
 // Create inserta una nueva réplica
@@ -30,7 +34,7 @@ func (r *ReplicaRepository) Create(ctx context.Context, replica *models.Replica)
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	result, err := r.db.ExecContext(ctx, query,
+	result, err := r.writeDB.ExecContext(ctx, query,
 		replica.Nombre, replica.Marca, replica.Modelo, replica.Tipo,
 		replica.NumeroSerie, replica.FechaAdquisicion, replica.Proveedor,
 		replica.CostoAdquisicion, replica.Estado, replica.FPS, replica.Joules,
@@ -59,7 +63,7 @@ func (r *ReplicaRepository) GetByID(ctx context.Context, id int) (*models.Replic
 	`
 
 	var replica models.Replica
-	err := r.db.QueryRowContext(ctx, query, id).Scan(
+	err := r.readDB.QueryRowContext(ctx, query, id).Scan(
 		&replica.ID, &replica.Nombre, &replica.Marca, &replica.Modelo,
 		&replica.Tipo, &replica.NumeroSerie, &replica.FechaAdquisicion,
 		&replica.Proveedor, &replica.CostoAdquisicion, &replica.Estado,
@@ -87,7 +91,7 @@ func (r *ReplicaRepository) List(ctx context.Context) ([]models.Replica, error) 
 		ORDER BY created_at DESC
 	`
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.readDB.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("listar replicas: %w", err)
 	}
@@ -125,7 +129,7 @@ func (r *ReplicaRepository) Update(ctx context.Context, replica *models.Replica)
 		WHERE id = ?
 	`
 
-	_, err := r.db.ExecContext(ctx, query,
+	_, err := r.writeDB.ExecContext(ctx, query,
 		replica.Nombre, replica.Marca, replica.Modelo, replica.Tipo,
 		replica.NumeroSerie, replica.FechaAdquisicion, replica.Proveedor,
 		replica.CostoAdquisicion, replica.Estado, replica.FPS, replica.Joules,
@@ -141,7 +145,7 @@ func (r *ReplicaRepository) Update(ctx context.Context, replica *models.Replica)
 // Delete elimina una réplica (soft delete cambiando estado)
 func (r *ReplicaRepository) Delete(ctx context.Context, id int) error {
 	query := `UPDATE replicas SET estado = 'archivado', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-	_, err := r.db.ExecContext(ctx, query, id)
+	_, err := r.writeDB.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("eliminar replica: %w", err)
 	}
@@ -166,7 +170,7 @@ func (r *ReplicaRepository) Search(ctx context.Context, query string) ([]models.
 		ORDER BY created_at DESC
 	`
 
-	rows, err := r.db.QueryContext(ctx, sqlQuery, searchTerm, searchTerm, searchTerm, searchTerm)
+	rows, err := r.readDB.QueryContext(ctx, sqlQuery, searchTerm, searchTerm, searchTerm, searchTerm)
 	if err != nil {
 		return nil, fmt.Errorf("buscar replicas: %w", err)
 	}
@@ -191,6 +195,7 @@ func (r *ReplicaRepository) Search(ctx context.Context, query string) ([]models.
 
 	return replicas, rows.Err()
 }
+
 // ListPaginated lista réplicas con paginación (limit/offset).
 // limit=0 significa sin límite (comportamiento anterior).
 func (r *ReplicaRepository) ListPaginated(ctx context.Context, limit, offset int) ([]models.Replica, error) {
@@ -203,9 +208,9 @@ func (r *ReplicaRepository) ListPaginated(ctx context.Context, limit, offset int
 		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?
 	`
-	rows, err := r.db.QueryContext(ctx, query, limit, offset)
+	rows, err := r.readDB.QueryContext(ctx, query, limit, offset)
 	if err != nil {
-		return nil, fmt.Errorf("listar replicas: %w", err)
+		return nil, fmt.Errorf("listar replicas paginadas: %w", err)
 	}
 	defer rows.Close()
 

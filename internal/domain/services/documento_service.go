@@ -64,6 +64,11 @@ func (s *DocumentoService) ListByReplica(ctx context.Context, replicaID int) ([]
 	return s.repo.ListByReplica(ctx, replicaID)
 }
 
+// ListByReplicaPaginated lista documentos de una réplica con paginación
+func (s *DocumentoService) ListByReplicaPaginated(ctx context.Context, replicaID int, limit, offset int) ([]models.Documento, error) {
+	return s.repo.ListByReplicaPaginated(ctx, replicaID, limit, offset)
+}
+
 // ListByReplicaAndType lista documentos de una réplica filtrados por tipo
 func (s *DocumentoService) ListByReplicaAndType(ctx context.Context, replicaID int, tipo string) ([]models.Documento, error) {
 	return s.repo.ListByReplicaAndType(ctx, replicaID, tipo)

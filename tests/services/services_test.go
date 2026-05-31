@@ -21,10 +21,10 @@ func setupServiceTest(t *testing.T) (inbound.ReplicaService, inbound.ActividadSe
 	require.NoError(t, err)
 	require.NoError(t, db.RunMigrations())
 
-	replicaRepo := sqlite.NewReplicaRepository(db.Conn)
-	actividadRepo := sqlite.NewActividadRepository(db.Conn)
-	documentoRepo := sqlite.NewDocumentoRepository(db.Conn)
-	mantenimientoRepo := sqlite.NewMantenimientoRepository(db.Conn)
+	replicaRepo := sqlite.NewReplicaRepository(db)
+	actividadRepo := sqlite.NewActividadRepository(db)
+	documentoRepo := sqlite.NewDocumentoRepository(db)
+	mantenimientoRepo := sqlite.NewMantenimientoRepository(db)
 	storage := local.NewStorage(t.TempDir())
 
 	replicaService := services.NewReplicaService(replicaRepo)

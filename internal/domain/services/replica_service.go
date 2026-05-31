@@ -40,6 +40,11 @@ func (s *ReplicaService) List(ctx context.Context) ([]models.Replica, error) {
 	return s.repo.List(ctx)
 }
 
+// ListPaginated lista réplicas con paginación
+func (s *ReplicaService) ListPaginated(ctx context.Context, limit, offset int) ([]models.Replica, error) {
+	return s.repo.ListPaginated(ctx, limit, offset)
+}
+
 // Update actualiza una réplica
 func (s *ReplicaService) Update(ctx context.Context, replica *models.Replica) error {
 	if replica.ID == 0 {

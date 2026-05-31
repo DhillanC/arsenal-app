@@ -43,9 +43,9 @@ func run() error {
 		return fmt.Errorf("migraciones: %w", err)
 	}
 
-	replicaRepo := sqlite.NewReplicaRepository(db.Conn)
-	actividadRepo := sqlite.NewActividadRepository(db.Conn)
-	documentoRepo := sqlite.NewDocumentoRepository(db.Conn)
+	replicaRepo := sqlite.NewReplicaRepository(db)
+	actividadRepo := sqlite.NewActividadRepository(db)
+	documentoRepo := sqlite.NewDocumentoRepository(db)
 
 	replicaService := services.NewReplicaService(replicaRepo)
 	actividadService := services.NewActividadService(actividadRepo)
@@ -56,7 +56,7 @@ func run() error {
 	config := web.Config{
 		Port:            appPort,
 		AllowedOrigins:  allowedOrigins,
-		DB:              db.Conn,
+		DB:              db,
 		EnableTemplates: true,
 		UploadPath:      uploadPath,
 	}

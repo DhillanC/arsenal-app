@@ -2,20 +2,20 @@ package handlers
 
 import (
 	"context"
-	"database/sql"
 	"net/http"
 	"time"
 
+	"github.com/DhillanC/arsenal-app/internal/infrastructure/persistence/sqlite"
 	"github.com/gin-gonic/gin"
 )
 
 // StatsHandler maneja peticiones de estadísticas agregadas
 type StatsHandler struct {
-	db *sql.DB
+	db *sqlite.DB
 }
 
 // NewStatsHandler crea un nuevo handler de stats
-func NewStatsHandler(db *sql.DB) *StatsHandler {
+func NewStatsHandler(db *sqlite.DB) *StatsHandler {
 	return &StatsHandler{db: db}
 }
 
@@ -40,7 +40,7 @@ func (h *StatsHandler) DashboardStats(c *gin.Context) {
 
 	// Valor total del inventario
 	var valorTotal float64
-	err = h.db.QueryRowContext(ctx, `
+	err = h.db.ReadConn.QueryRowContext(ctx, `
 		SELECT COALESCE(SUM(costo_adquisicion), 0) FROM replicas WHERE estado != 'archivado'
 	`).Scan(&valorTotal)
 	if err != nil {
@@ -57,7 +57,7 @@ func (h *StatsHandler) DashboardStats(c *gin.Context) {
 }
 
 func (h *StatsHandler) statsByTipo(ctx context.Context) ([]gin.H, error) {
-	rows, err := h.db.QueryContext(ctx, `
+	rows, err := h.db.ReadConn.QueryContext(ctx, `
 		SELECT tipo, COUNT(*) as count, COALESCE(SUM(costo_adquisicion), 0) as valor
 		FROM replicas WHERE estado != 'archivado' GROUP BY tipo
 	`)
@@ -80,7 +80,7 @@ func (h *StatsHandler) statsByTipo(ctx context.Context) ([]gin.H, error) {
 }
 
 func (h *StatsHandler) statsByEstado(ctx context.Context) ([]gin.H, error) {
-	rows, err := h.db.QueryContext(ctx, `
+	rows, err := h.db.ReadConn.QueryContext(ctx, `
 		SELECT estado, COUNT(*) as count FROM replicas WHERE estado != 'archivado' GROUP BY estado
 	`)
 	if err != nil {
@@ -105,7 +105,7 @@ func (h *StatsHandler) statsByEstado(ctx context.Context) ([]gin.H, error) {
 func (h *StatsHandler) ExportJSON(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	rows, err := h.db.QueryContext(ctx, `
+	rows, err := h.db.ReadConn.QueryContext(ctx, `
 		SELECT id, nombre, marca, modelo, tipo, numero_serie, fecha_adquisicion,
 			proveedor, costo_adquisicion, estado, fps, joules, peso_gramos,
 			longitud_mm, hop_up, capacidad_cargador, notas, created_at, updated_at
@@ -121,25 +121,25 @@ func (h *StatsHandler) ExportJSON(c *gin.Context) {
 	var replicas []gin.H
 	for rows.Next() {
 		var r struct {
-			ID               int
-			Nombre           string
-			Marca            string
-			Modelo           string
-			Tipo             string
-			NumeroSerie      string
-			FechaAdquisicion time.Time
-			Proveedor        string
-			CostoAdquisicion float64
-			Estado           string
-			FPS              int
-			Joules           float64
-			PesoGramos       int
-			LongitudMM       int
-			HopUp            string
+			ID                int
+			Nombre            string
+			Marca             string
+			Modelo            string
+			Tipo              string
+			NumeroSerie       string
+			FechaAdquisicion  time.Time
+			Proveedor         string
+			CostoAdquisicion  float64
+			Estado            string
+			FPS               int
+			Joules            float64
+			PesoGramos        int
+			LongitudMM        int
+			HopUp             string
 			CapacidadCargador int
-			Notas            string
-			CreatedAt        time.Time
-			UpdatedAt        time.Time
+			Notas             string
+			CreatedAt         time.Time
+			UpdatedAt         time.Time
 		}
 		if err := rows.Scan(
 			&r.ID, &r.Nombre, &r.Marca, &r.Modelo, &r.Tipo, &r.NumeroSerie,
