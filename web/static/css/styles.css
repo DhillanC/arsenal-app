@@ -134,6 +134,155 @@ html.dark .card {
 /* Muted foreground (used in footer and metadata text) */
 .text-muted-foreground { color: var(--muted-fg); }
 
+/* Form inputs — accessible neutral professional palette */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="search"],
+input[type="file"],
+select,
+textarea {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  background-color: #f3f4f6;
+  color: #111827;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+input[type="text"]::placeholder,
+input[type="number"]::placeholder,
+input[type="date"]::placeholder,
+input[type="search"]::placeholder,
+textarea::placeholder {
+  color: #6b7280;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="search"]:focus,
+input[type="file"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px rgba(184, 136, 52, 0.18);
+  background-color: #ffffff;
+}
+
+/* Dark mode form inputs */
+html.dark input[type="text"],
+html.dark input[type="number"],
+html.dark input[type="date"],
+html.dark input[type="search"],
+html.dark input[type="file"],
+html.dark select,
+html.dark textarea {
+  border-color: #4b5563;
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+html.dark input[type="text"]::placeholder,
+html.dark input[type="number"]::placeholder,
+html.dark input[type="date"]::placeholder,
+html.dark input[type="search"]::placeholder,
+html.dark textarea::placeholder {
+  color: #9ca3af;
+}
+
+html.dark input[type="text"]:focus,
+html.dark input[type="number"]:focus,
+html.dark input[type="date"]:focus,
+html.dark input[type="search"]:focus,
+html.dark input[type="file"]:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  background-color: #111827;
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px rgba(184, 136, 52, 0.25);
+}
+
+/* Disabled / readonly states */
+input[disabled],
+select[disabled],
+textarea[disabled],
+input[readonly],
+textarea[readonly] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Error state */
+input.error,
+select.error,
+textarea.error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+html.dark input.error,
+html.dark select.error,
+html.dark textarea.error {
+  border-color: #f87171;
+  background-color: #450a0a;
+}
+
+/* Success state */
+input.success,
+select.success,
+textarea.success {
+  border-color: #22c55e;
+  background-color: #f0fdf4;
+}
+html.dark input.success,
+html.dark select.success,
+html.dark textarea.success {
+  border-color: #4ade80;
+  background-color: #052e16;
+}
+
+/* File input specific styling */
+input[type="file"] {
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+}
+input[type="file"]::file-selector-button {
+  margin-right: 0.75rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid transparent;
+  background: var(--gold-primary);
+  color: var(--near-black);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+input[type="file"]::file-selector-button:hover {
+  background: var(--gold-medium);
+}
+html.dark input[type="file"]::file-selector-button {
+  background: var(--gold-primary);
+  color: var(--near-black);
+}
+
+/* Select dropdown arrow */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+html.dark select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
 /* Optional decorative background grid — referenced in commit msg, not in templates,
    but cheap to include. Apply by adding .grid-pattern to a container. */
 .grid-pattern {
