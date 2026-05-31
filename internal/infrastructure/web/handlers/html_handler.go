@@ -60,6 +60,7 @@ func (h *HTMLHandler) RegisterHTMLRoutes(router *gin.Engine) {
 // Dashboard muestra el dashboard principal
 func (h *HTMLHandler) Dashboard(c *gin.Context) {
 	ctx := c.Request.Context()
+	darkMode := isDarkMode(c)
 
 	// Obtener réplicas
 	replicas, err := h.replicaService.List(ctx)
@@ -100,12 +101,14 @@ func (h *HTMLHandler) Dashboard(c *gin.Context) {
 		"Stats":                stats,
 		"ActividadesRecientes": actividadesRecientes,
 		"ActividadesErrors":    actividadesErrors,
+		"DarkMode":             darkMode,
 	})
 }
 
 // ReplicaList muestra la lista de réplicas
 func (h *HTMLHandler) ReplicaList(c *gin.Context) {
 	ctx := c.Request.Context()
+	darkMode := isDarkMode(c)
 
 	replicas, err := h.replicaService.List(ctx)
 	if err != nil {
@@ -119,12 +122,14 @@ func (h *HTMLHandler) ReplicaList(c *gin.Context) {
 		"Title":    "Mis Réplicas",
 		"Replicas": replicas,
 		"Stats":    stats,
+		"DarkMode": darkMode,
 	})
 }
 
 // ReplicaDetail muestra la ficha de una réplica
 func (h *HTMLHandler) ReplicaDetail(c *gin.Context) {
 	ctx := c.Request.Context()
+	darkMode := isDarkMode(c)
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "error.html", gin.H{"error": "ID inválido"})
@@ -162,21 +167,25 @@ func (h *HTMLHandler) ReplicaDetail(c *gin.Context) {
 		"Timeline":       timeline,
 		"Documentos":     documentos,
 		"Mantenimientos": mantenimientos,
+		"DarkMode":       darkMode,
 	})
 }
 
 // ReplicaCreateForm muestra el formulario de creación
 func (h *HTMLHandler) ReplicaCreateForm(c *gin.Context) {
+	darkMode := isDarkMode(c)
 	c.HTML(http.StatusOK, "replica_form.html", gin.H{
 		"Title":    "Nueva Réplica",
 		"EditMode": false,
 		"Replica":  models.Replica{Estado: "activo"},
+		"DarkMode": darkMode,
 	})
 }
 
 // ReplicaEditForm muestra el formulario de edición
 func (h *HTMLHandler) ReplicaEditForm(c *gin.Context) {
 	ctx := c.Request.Context()
+	darkMode := isDarkMode(c)
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "error.html", gin.H{"error": "ID inválido"})
@@ -185,7 +194,7 @@ func (h *HTMLHandler) ReplicaEditForm(c *gin.Context) {
 
 	replica, err := h.replicaService.GetByID(ctx, id)
 	if err != nil {
-		c.HTML(http.StatusNotFound, "error.html", gin.H{"error": "Rplica no encontrada"})
+		c.HTML(http.StatusNotFound, "error.html", gin.H{"error": "Réplica no encontrada"})
 		return
 	}
 
@@ -193,11 +202,13 @@ func (h *HTMLHandler) ReplicaEditForm(c *gin.Context) {
 		"Title":    "Editar " + replica.Nombre,
 		"EditMode": true,
 		"Replica":  replica,
+		"DarkMode": darkMode,
 	})
 }
 
 // DocumentList muestra la lista de documentos
 func (h *HTMLHandler) DocumentList(c *gin.Context) {
+	darkMode := isDarkMode(c)
 	replicas, err := h.replicaService.List(c.Request.Context())
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
@@ -207,12 +218,14 @@ func (h *HTMLHandler) DocumentList(c *gin.Context) {
 	c.HTML(http.StatusOK, "document_list.html", gin.H{
 		"Title":    "Documentos",
 		"Replicas": replicas,
+		"DarkMode": darkMode,
 	})
 }
 
 // MantenimientoList muestra los mantenimientos próximos.
 func (h *HTMLHandler) MantenimientoList(c *gin.Context) {
 	ctx := c.Request.Context()
+	darkMode := isDarkMode(c)
 
 	mantenimientos, err := h.mantenimientoService.ListProximos(ctx, 90)
 	if err != nil {
@@ -235,6 +248,7 @@ func (h *HTMLHandler) MantenimientoList(c *gin.Context) {
 		"Title":          "Mantenimiento",
 		"Mantenimientos": mantenimientos,
 		"ReplicaNames":   replicaNames,
+		"DarkMode":       darkMode,
 	})
 }
 
@@ -279,7 +293,19 @@ type HTMLTimelineItem struct {
 	Documentos       []models.Documento
 }
 
-// calculateDashboardStats calcula las estadísticas
+// isDarkMode lee la preferencia de tema desde cookie o header
+func isDarkMode(c *gin.Context) bool {
+	// Leer cookie de tema
+	if cookie, err := c.Cookie("arsenal_theme"); err == nil {
+		return cookie == "dark"
+	}
+	// Fallback a header (para HTMX requests)
+	if c.GetHeader("X-Arsenal-Theme") == "dark" {
+		return true
+	}
+	return false
+}
+
 func calculateDashboardStats(replicas []models.Replica) DashboardStats {
 	stats := DashboardStats{}
 
