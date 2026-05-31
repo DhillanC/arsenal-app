@@ -60,9 +60,11 @@ func AuditMiddleware(auditService *services.AuditLogService, config AuditConfig)
 		// Capturar body para extraer detalles (solo para POST/PUT/PATCH)
 		var bodyBytes []byte
 		if c.Request.Method == "POST" || c.Request.Method == "PUT" || c.Request.Method == "PATCH" {
-			bodyBytes, _ = c.GetRawData()
-			// Restaurar body para que los handlers puedan leerlo
-			c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			if c.Request.Body != nil {
+				bodyBytes, _ = io.ReadAll(c.Request.Body)
+				// Restaurar body para que los handlers puedan leerlo
+				c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+			}
 		}
 
 		// Ejecutar el handler
