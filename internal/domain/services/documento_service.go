@@ -46,6 +46,8 @@ func (s *DocumentoService) Create(ctx context.Context, documento *models.Documen
 		// Marcar para OCR async si aplica
 		if shouldRunOCR(documento) {
 			documento.OCRStatus = "pending"
+		} else {
+			documento.OCRStatus = "completed" // OCR desactivado o no aplica
 		}
 	}
 
