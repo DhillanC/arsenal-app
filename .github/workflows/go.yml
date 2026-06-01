@@ -43,9 +43,11 @@ jobs:
         OCR_ENABLED: false
 
     - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v6
+      uses: golangci/golangci-lint-action@v9
       with:
-        version: latest
+        # v9 instala golangci-lint v2.x compilado con Go reciente. La acción v6
+        # forzaba v1.x (built con Go 1.24) e incompatible con go.mod 1.26.
+        version: v2.12.2
         args: --timeout=5m
 
     - name: Upload coverage
