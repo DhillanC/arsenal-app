@@ -29,33 +29,34 @@ type Replica struct {
 
 // Actividad representa un evento en la vida de una réplica
 type Actividad struct {
-	ID              int       `json:"id" db:"id"`
-	ReplicaID       int       `json:"replica_id" db:"replica_id"`
-	Fecha           time.Time `json:"fecha" db:"fecha"`
-	Tipo            string    `json:"tipo" db:"tipo"` // compra, venta, mantenimiento, reparacion, modificacion, uso, importacion, documentacion
-	Descripcion     string    `json:"descripcion" db:"descripcion"`
-	ProveedorTecnico string   `json:"proveedor_tecnico" db:"proveedor_tecnico"`
-	Costo           float64   `json:"costo" db:"costo"`
-	KilometrajeBB   int       `json:"kilometraje_bb" db:"kilometraje_bb"`
-	Ubicacion       string    `json:"ubicacion" db:"ubicacion"`
-	CreatedAt       time.Time `json:"created_at" db:"created_at"`
+	ID               int       `json:"id" db:"id"`
+	ReplicaID        int       `json:"replica_id" db:"replica_id"`
+	Fecha            time.Time `json:"fecha" db:"fecha"`
+	Tipo             string    `json:"tipo" db:"tipo"` // compra, venta, mantenimiento, reparacion, modificacion, uso, importacion, documentacion
+	Descripcion      string    `json:"descripcion" db:"descripcion"`
+	ProveedorTecnico string    `json:"proveedor_tecnico" db:"proveedor_tecnico"`
+	Costo            float64   `json:"costo" db:"costo"`
+	KilometrajeBB    int       `json:"kilometraje_bb" db:"kilometraje_bb"`
+	Ubicacion        string    `json:"ubicacion" db:"ubicacion"`
+	CreatedAt        time.Time `json:"created_at" db:"created_at"`
 }
 
 // Documento representa un archivo asociado a una réplica o actividad
 type Documento struct {
-	ID             int       `json:"id" db:"id"`
-	ReplicaID      *int      `json:"replica_id,omitempty" db:"replica_id"`
-	ActividadID    *int      `json:"actividad_id,omitempty" db:"actividad_id"`
-	Tipo           string    `json:"tipo" db:"tipo"` // factura, manual, manifiesto_dian, declaracion_dian, foto, video, otro
-	NombreArchivo  string    `json:"nombre_archivo" db:"nombre_archivo"`
-	RutaArchivo    string    `json:"ruta_archivo" db:"ruta_archivo"`
-	MimeType       string    `json:"mime_type" db:"mime_type"`
-	TamanoBytes    int64     `json:"tamano_bytes" db:"tamano_bytes"`
-	OCRTexto       string    `json:"ocr_texto,omitempty" db:"ocr_texto"`
-	FechaDocumento *time.Time `json:"fecha_documento,omitempty" db:"fecha_documento"`
-	NumeroDocumento string   `json:"numero_documento" db:"numero_documento"`
-	Notas          string    `json:"notas" db:"notas"`
-	CreatedAt      time.Time `json:"created_at" db:"created_at"`
+	ID              int        `json:"id" db:"id"`
+	ReplicaID       *int       `json:"replica_id,omitempty" db:"replica_id"`
+	ActividadID     *int       `json:"actividad_id,omitempty" db:"actividad_id"`
+	Tipo            string     `json:"tipo" db:"tipo"` // factura, manual, manifiesto_dian, declaracion_dian, foto, video, otro
+	NombreArchivo   string     `json:"nombre_archivo" db:"nombre_archivo"`
+	RutaArchivo     string     `json:"ruta_archivo" db:"ruta_archivo"`
+	MimeType        string     `json:"mime_type" db:"mime_type"`
+	TamanoBytes     int64      `json:"tamano_bytes" db:"tamano_bytes"`
+	OCRTexto        string     `json:"ocr_texto,omitempty" db:"ocr_texto"`
+	OCRStatus       string     `json:"ocr_status,omitempty" db:"ocr_status"`
+	FechaDocumento  *time.Time `json:"fecha_documento,omitempty" db:"fecha_documento"`
+	NumeroDocumento string     `json:"numero_documento" db:"numero_documento"`
+	Notas           string     `json:"notas" db:"notas"`
+	CreatedAt       time.Time  `json:"created_at" db:"created_at"`
 }
 
 // Mantenimiento representa una tarea de mantenimiento programada

@@ -260,3 +260,24 @@ func isAllowedExtension(ext string) bool {
 	}
 	return false
 }
+
+// GetOCRStatus devuelve el estado del OCR de un documento
+func (h *DocumentoHandler) GetOCRStatus(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID inválido"})
+		return
+	}
+
+	doc, err := h.service.GetByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "documento no encontrado"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":         doc.ID,
+		"ocr_status": doc.OCRStatus,
+		"ocr_texto":  doc.OCRTexto,
+	})
+}

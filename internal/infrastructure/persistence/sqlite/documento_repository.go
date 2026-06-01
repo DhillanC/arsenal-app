@@ -28,13 +28,13 @@ func NewDocumentoRepository(db *DB) outbound.DocumentoRepository {
 func (r *DocumentoRepository) Create(ctx context.Context, documento *models.Documento) error {
 	query := `
 		INSERT INTO documentos (replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
-			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento, notas)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			mime_type, tamano_bytes, ocr_texto, ocr_status, fecha_documento, numero_documento, notas)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 	result, err := r.writeDB.ExecContext(ctx, query,
 		documento.ReplicaID, documento.ActividadID, documento.Tipo,
 		documento.NombreArchivo, documento.RutaArchivo, documento.MimeType,
-		documento.TamanoBytes, documento.OCRTexto, documento.FechaDocumento,
+		documento.TamanoBytes, documento.OCRTexto, documento.OCRStatus, documento.FechaDocumento,
 		documento.NumeroDocumento, documento.Notas,
 	)
 	if err != nil {
@@ -49,7 +49,7 @@ func (r *DocumentoRepository) Create(ctx context.Context, documento *models.Docu
 func (r *DocumentoRepository) GetByID(ctx context.Context, id int) (*models.Documento, error) {
 	query := `
 		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
-			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento,
+			mime_type, tamano_bytes, ocr_texto, ocr_status, fecha_documento, numero_documento,
 			notas, created_at
 		FROM documentos WHERE id = ?
 	`
@@ -57,7 +57,7 @@ func (r *DocumentoRepository) GetByID(ctx context.Context, id int) (*models.Docu
 	err := r.readDB.QueryRowContext(ctx, query, id).Scan(
 		&documento.ID, &documento.ReplicaID, &documento.ActividadID,
 		&documento.Tipo, &documento.NombreArchivo, &documento.RutaArchivo,
-		&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto,
+		&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto, &documento.OCRStatus,
 		&documento.FechaDocumento, &documento.NumeroDocumento,
 		&documento.Notas, &documento.CreatedAt,
 	)
@@ -74,7 +74,7 @@ func (r *DocumentoRepository) GetByID(ctx context.Context, id int) (*models.Docu
 func (r *DocumentoRepository) ListByReplica(ctx context.Context, replicaID int) ([]models.Documento, error) {
 	query := `
 		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
-			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento,
+			mime_type, tamano_bytes, ocr_texto, ocr_status, fecha_documento, numero_documento,
 			notas, created_at
 		FROM documentos WHERE replica_id = ? ORDER BY created_at DESC
 	`
@@ -90,7 +90,7 @@ func (r *DocumentoRepository) ListByReplica(ctx context.Context, replicaID int) 
 		err := rows.Scan(
 			&documento.ID, &documento.ReplicaID, &documento.ActividadID,
 			&documento.Tipo, &documento.NombreArchivo, &documento.RutaArchivo,
-			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto,
+			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto, &documento.OCRStatus,
 			&documento.FechaDocumento, &documento.NumeroDocumento,
 			&documento.Notas, &documento.CreatedAt,
 		)
@@ -108,7 +108,7 @@ func (r *DocumentoRepository) ListByReplica(ctx context.Context, replicaID int) 
 func (r *DocumentoRepository) ListByReplicaPaginated(ctx context.Context, replicaID int, limit, offset int) ([]models.Documento, error) {
 	query := `
 		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
-			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento,
+			mime_type, tamano_bytes, ocr_texto, ocr_status, fecha_documento, numero_documento,
 			notas, created_at
 		FROM documentos WHERE replica_id = ? ORDER BY created_at DESC
 		LIMIT ? OFFSET ?
@@ -125,7 +125,7 @@ func (r *DocumentoRepository) ListByReplicaPaginated(ctx context.Context, replic
 		err := rows.Scan(
 			&documento.ID, &documento.ReplicaID, &documento.ActividadID,
 			&documento.Tipo, &documento.NombreArchivo, &documento.RutaArchivo,
-			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto,
+			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto, &documento.OCRStatus,
 			&documento.FechaDocumento, &documento.NumeroDocumento,
 			&documento.Notas, &documento.CreatedAt,
 		)
@@ -142,7 +142,7 @@ func (r *DocumentoRepository) ListByReplicaPaginated(ctx context.Context, replic
 func (r *DocumentoRepository) ListByReplicaAndType(ctx context.Context, replicaID int, tipo string) ([]models.Documento, error) {
 	query := `
 		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
-			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento,
+			mime_type, tamano_bytes, ocr_texto, ocr_status, fecha_documento, numero_documento,
 			notas, created_at
 		FROM documentos WHERE replica_id = ? AND tipo = ? ORDER BY created_at DESC
 	`
@@ -158,7 +158,7 @@ func (r *DocumentoRepository) ListByReplicaAndType(ctx context.Context, replicaI
 		err := rows.Scan(
 			&documento.ID, &documento.ReplicaID, &documento.ActividadID,
 			&documento.Tipo, &documento.NombreArchivo, &documento.RutaArchivo,
-			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto,
+			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto, &documento.OCRStatus,
 			&documento.FechaDocumento, &documento.NumeroDocumento,
 			&documento.Notas, &documento.CreatedAt,
 		)
@@ -175,7 +175,7 @@ func (r *DocumentoRepository) ListByReplicaAndType(ctx context.Context, replicaI
 func (r *DocumentoRepository) ListByActividad(ctx context.Context, actividadID int) ([]models.Documento, error) {
 	query := `
 		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
-			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento,
+			mime_type, tamano_bytes, ocr_texto, ocr_status, fecha_documento, numero_documento,
 			notas, created_at
 		FROM documentos WHERE actividad_id = ? ORDER BY created_at DESC
 	`
@@ -191,7 +191,7 @@ func (r *DocumentoRepository) ListByActividad(ctx context.Context, actividadID i
 		err := rows.Scan(
 			&documento.ID, &documento.ReplicaID, &documento.ActividadID,
 			&documento.Tipo, &documento.NombreArchivo, &documento.RutaArchivo,
-			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto,
+			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto, &documento.OCRStatus,
 			&documento.FechaDocumento, &documento.NumeroDocumento,
 			&documento.Notas, &documento.CreatedAt,
 		)
@@ -221,7 +221,7 @@ func (r *DocumentoRepository) ListByActividades(ctx context.Context, actividadID
 
 	query := fmt.Sprintf(`
 		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
-			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento,
+			mime_type, tamano_bytes, ocr_texto, ocr_status, fecha_documento, numero_documento,
 			notas, created_at
 		FROM documentos WHERE actividad_id IN (%s) ORDER BY created_at DESC
 	`, strings.Join(placeholders, ","))
@@ -238,7 +238,7 @@ func (r *DocumentoRepository) ListByActividades(ctx context.Context, actividadID
 		err := rows.Scan(
 			&documento.ID, &documento.ReplicaID, &documento.ActividadID,
 			&documento.Tipo, &documento.NombreArchivo, &documento.RutaArchivo,
-			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto,
+			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto, &documento.OCRStatus,
 			&documento.FechaDocumento, &documento.NumeroDocumento,
 			&documento.Notas, &documento.CreatedAt,
 		)
@@ -251,19 +251,29 @@ func (r *DocumentoRepository) ListByActividades(ctx context.Context, actividadID
 	return documentos, rows.Err()
 }
 
+// UpdateOCRStatus actualiza el estado y texto OCR de un documento
+func (r *DocumentoRepository) UpdateOCRStatus(ctx context.Context, id int, status, text string) error {
+	query := `UPDATE documentos SET ocr_status = ?, ocr_texto = ? WHERE id = ?`
+	_, err := r.writeDB.ExecContext(ctx, query, status, text, id)
+	if err != nil {
+		return fmt.Errorf("actualizar OCR status: %w", err)
+	}
+	return nil
+}
+
 // Update actualiza un documento
 func (r *DocumentoRepository) Update(ctx context.Context, documento *models.Documento) error {
 	query := `
 		UPDATE documentos SET
 			replica_id = ?, actividad_id = ?, tipo = ?, nombre_archivo = ?,
-			ruta_archivo = ?, mime_type = ?, tamano_bytes = ?, ocr_texto = ?,
+			ruta_archivo = ?, mime_type = ?, tamano_bytes = ?, ocr_texto = ?, ocr_status = ?,
 			fecha_documento = ?, numero_documento = ?, notas = ?
 		WHERE id = ?
 	`
 	_, err := r.writeDB.ExecContext(ctx, query,
 		documento.ReplicaID, documento.ActividadID, documento.Tipo,
 		documento.NombreArchivo, documento.RutaArchivo, documento.MimeType,
-		documento.TamanoBytes, documento.OCRTexto, documento.FechaDocumento,
+		documento.TamanoBytes, documento.OCRTexto, documento.OCRStatus, documento.FechaDocumento,
 		documento.NumeroDocumento, documento.Notas, documento.ID,
 	)
 	if err != nil {
@@ -287,7 +297,7 @@ func (r *DocumentoRepository) SearchByOCR(ctx context.Context, query string) ([]
 	searchTerm := "%" + strings.NewReplacer(`\`, `\\`, "%", `\%`, "_", `\_`).Replace(query) + "%"
 	sqlQuery := `
 		SELECT id, replica_id, actividad_id, tipo, nombre_archivo, ruta_archivo,
-			mime_type, tamano_bytes, ocr_texto, fecha_documento, numero_documento,
+			mime_type, tamano_bytes, ocr_texto, ocr_status, fecha_documento, numero_documento,
 			notas, created_at
 		FROM documentos
 		WHERE ocr_texto LIKE ? ESCAPE '\' OR numero_documento LIKE ? ESCAPE '\'
@@ -305,7 +315,7 @@ func (r *DocumentoRepository) SearchByOCR(ctx context.Context, query string) ([]
 		err := rows.Scan(
 			&documento.ID, &documento.ReplicaID, &documento.ActividadID,
 			&documento.Tipo, &documento.NombreArchivo, &documento.RutaArchivo,
-			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto,
+			&documento.MimeType, &documento.TamanoBytes, &documento.OCRTexto, &documento.OCRStatus,
 			&documento.FechaDocumento, &documento.NumeroDocumento,
 			&documento.Notas, &documento.CreatedAt,
 		)

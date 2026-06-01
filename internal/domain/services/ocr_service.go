@@ -42,7 +42,7 @@ func (s *OCRService) ProcessDocument(doc *models.Documento, filePath string) err
 	}
 
 	// Limpiar y truncar si es muy largo
-	text = cleanOCRText(text)
+	text = CleanOCRText(text)
 	if len(text) > 10000 {
 		text = text[:10000] + "... [truncado]"
 	}
@@ -73,8 +73,8 @@ func (s *OCRService) Close() error {
 	return nil
 }
 
-// cleanOCRText limpia el texto extraído
-func cleanOCRText(text string) string {
+// CleanOCRText limpia el texto extraído (exported para uso compartido)
+func CleanOCRText(text string) string {
 	// Eliminar espacios múltiples
 	text = strings.Join(strings.Fields(text), " ")
 	// Eliminar caracteres de control
