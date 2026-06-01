@@ -36,6 +36,8 @@ jobs:
 
     - name: Test
       run: go test -v ./... -race -coverprofile=coverage.out
+      env:
+        OCR_ENABLED: false
 
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v6
