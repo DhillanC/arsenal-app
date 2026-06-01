@@ -27,11 +27,11 @@ func NewMantenimientoRepository(db *DB) outbound.MantenimientoRepository {
 // Create inserta un nuevo registro de mantenimiento
 func (r *MantenimientoRepository) Create(ctx context.Context, m *models.Mantenimiento) error {
 	query := `
-		INSERT INTO mantenimiento (replica_id, tipo_tarea, frecuencia_dias, frecuencia_bb, ultima_fecha, proxima_fecha, completado, notas)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO mantenimiento (replica_id, tipo_tarea, frecuencia_dias, ultima_fecha, proxima_fecha, completado, notas)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 	result, err := r.writeDB.ExecContext(ctx, query,
-		m.ReplicaID, m.TipoTarea, m.FrecuenciaDias, m.FrecuenciaBB,
+		m.ReplicaID, m.TipoTarea, m.FrecuenciaDias,
 		m.UltimaFecha, m.ProximaFecha, m.Completado, m.Notas,
 	)
 	if err != nil {
@@ -48,12 +48,12 @@ func (r *MantenimientoRepository) Create(ctx context.Context, m *models.Mantenim
 // GetByID obtiene un mantenimiento por ID
 func (r *MantenimientoRepository) GetByID(ctx context.Context, id int) (*models.Mantenimiento, error) {
 	query := `
-		SELECT id, replica_id, tipo_tarea, frecuencia_dias, frecuencia_bb, ultima_fecha, proxima_fecha, completado, notas
+		SELECT id, replica_id, tipo_tarea, frecuencia_dias, ultima_fecha, proxima_fecha, completado, notas
 		FROM mantenimiento WHERE id = ?
 	`
 	var m models.Mantenimiento
 	err := r.readDB.QueryRowContext(ctx, query, id).Scan(
-		&m.ID, &m.ReplicaID, &m.TipoTarea, &m.FrecuenciaDias, &m.FrecuenciaBB,
+		&m.ID, &m.ReplicaID, &m.TipoTarea, &m.FrecuenciaDias,
 		&m.UltimaFecha, &m.ProximaFecha, &m.Completado, &m.Notas,
 	)
 	if err == sql.ErrNoRows {
@@ -68,7 +68,7 @@ func (r *MantenimientoRepository) GetByID(ctx context.Context, id int) (*models.
 // ListByReplica lista mantenimientos de una réplica
 func (r *MantenimientoRepository) ListByReplica(ctx context.Context, replicaID int) ([]models.Mantenimiento, error) {
 	query := `
-		SELECT id, replica_id, tipo_tarea, frecuencia_dias, frecuencia_bb, ultima_fecha, proxima_fecha, completado, notas
+		SELECT id, replica_id, tipo_tarea, frecuencia_dias, ultima_fecha, proxima_fecha, completado, notas
 		FROM mantenimiento WHERE replica_id = ? ORDER BY proxima_fecha ASC
 	`
 	rows, err := r.readDB.QueryContext(ctx, query, replicaID)
@@ -80,7 +80,7 @@ func (r *MantenimientoRepository) ListByReplica(ctx context.Context, replicaID i
 	var mantenimientos []models.Mantenimiento
 	for rows.Next() {
 		var m models.Mantenimiento
-		if err := rows.Scan(&m.ID, &m.ReplicaID, &m.TipoTarea, &m.FrecuenciaDias, &m.FrecuenciaBB,
+		if err := rows.Scan(&m.ID, &m.ReplicaID, &m.TipoTarea, &m.FrecuenciaDias,
 			&m.UltimaFecha, &m.ProximaFecha, &m.Completado, &m.Notas); err != nil {
 			return nil, fmt.Errorf("scan mantenimiento: %w", err)
 		}
@@ -92,7 +92,7 @@ func (r *MantenimientoRepository) ListByReplica(ctx context.Context, replicaID i
 // ListProximos lista mantenimientos próximos a vencer
 func (r *MantenimientoRepository) ListProximos(ctx context.Context, dias int) ([]models.Mantenimiento, error) {
 	query := `
-		SELECT id, replica_id, tipo_tarea, frecuencia_dias, frecuencia_bb, ultima_fecha, proxima_fecha, completado, notas
+		SELECT id, replica_id, tipo_tarea, frecuencia_dias, ultima_fecha, proxima_fecha, completado, notas
 		FROM mantenimiento
 		WHERE completado = 0 AND (proxima_fecha IS NULL OR proxima_fecha <= date('now', '+' || ? || ' days'))
 		ORDER BY proxima_fecha ASC
@@ -106,7 +106,7 @@ func (r *MantenimientoRepository) ListProximos(ctx context.Context, dias int) ([
 	var mantenimientos []models.Mantenimiento
 	for rows.Next() {
 		var m models.Mantenimiento
-		if err := rows.Scan(&m.ID, &m.ReplicaID, &m.TipoTarea, &m.FrecuenciaDias, &m.FrecuenciaBB,
+		if err := rows.Scan(&m.ID, &m.ReplicaID, &m.TipoTarea, &m.FrecuenciaDias,
 			&m.UltimaFecha, &m.ProximaFecha, &m.Completado, &m.Notas); err != nil {
 			return nil, fmt.Errorf("scan mantenimiento: %w", err)
 		}
@@ -119,12 +119,12 @@ func (r *MantenimientoRepository) ListProximos(ctx context.Context, dias int) ([
 func (r *MantenimientoRepository) Update(ctx context.Context, m *models.Mantenimiento) error {
 	query := `
 		UPDATE mantenimiento SET
-			replica_id = ?, tipo_tarea = ?, frecuencia_dias = ?, frecuencia_bb = ?,
+			replica_id = ?, tipo_tarea = ?, frecuencia_dias = ?,
 			ultima_fecha = ?, proxima_fecha = ?, completado = ?, notas = ?
 		WHERE id = ?
 	`
 	_, err := r.writeDB.ExecContext(ctx, query,
-		m.ReplicaID, m.TipoTarea, m.FrecuenciaDias, m.FrecuenciaBB,
+		m.ReplicaID, m.TipoTarea, m.FrecuenciaDias,
 		m.UltimaFecha, m.ProximaFecha, m.Completado, m.Notas, m.ID,
 	)
 	if err != nil {

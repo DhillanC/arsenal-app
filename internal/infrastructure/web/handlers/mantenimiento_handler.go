@@ -64,7 +64,6 @@ func (h *MantenimientoHandler) Create(c *gin.Context) {
 	var req struct {
 		TipoTarea      string `json:"tipo_tarea" form:"tipo_tarea" binding:"required"`
 		FrecuenciaDias int    `json:"frecuencia_dias" form:"frecuencia_dias"`
-		FrecuenciaBB   int    `json:"frecuencia_bb" form:"frecuencia_bb"`
 		UltimaFecha    string `json:"ultima_fecha" form:"ultima_fecha"`
 		ProximaFecha   string `json:"proxima_fecha" form:"proxima_fecha"`
 		Notas          string `json:"notas" form:"notas"`
@@ -79,7 +78,6 @@ func (h *MantenimientoHandler) Create(c *gin.Context) {
 		ReplicaID:      replicaID,
 		TipoTarea:      req.TipoTarea,
 		FrecuenciaDias: req.FrecuenciaDias,
-		FrecuenciaBB:   req.FrecuenciaBB,
 		Notas:          req.Notas,
 	}
 
@@ -159,7 +157,6 @@ func (h *MantenimientoHandler) Update(c *gin.Context) {
 	var req struct {
 		TipoTarea      string `json:"tipo_tarea" form:"tipo_tarea"`
 		FrecuenciaDias int    `json:"frecuencia_dias" form:"frecuencia_dias"`
-		FrecuenciaBB   int    `json:"frecuencia_bb" form:"frecuencia_bb"`
 		UltimaFecha    string `json:"ultima_fecha" form:"ultima_fecha"`
 		ProximaFecha   string `json:"proxima_fecha" form:"proxima_fecha"`
 		Completado     bool   `json:"completado" form:"completado"`
@@ -183,7 +180,6 @@ func (h *MantenimientoHandler) Update(c *gin.Context) {
 		ReplicaID:      existing.ReplicaID, // Preservar replica_id original
 		TipoTarea:      req.TipoTarea,
 		FrecuenciaDias: req.FrecuenciaDias,
-		FrecuenciaBB:   req.FrecuenciaBB,
 		Completado:     req.Completado,
 		Notas:          req.Notas,
 	}

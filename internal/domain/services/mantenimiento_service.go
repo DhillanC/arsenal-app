@@ -28,12 +28,6 @@ func (s *MantenimientoService) Create(ctx context.Context, m *models.Mantenimien
 	if m.ReplicaID == 0 {
 		return fmt.Errorf("replica_id es requerido")
 	}
-	// BB-count scheduling no está implementado: el contador de BBs disparadas
-	// no se registra en ninguna parte del sistema, por lo que aceptar un valor
-	// sin lógica que lo consuma sería silent-ignore. Rechazamos explícitamente.
-	if m.FrecuenciaBB > 0 && m.FrecuenciaDias == 0 {
-		return fmt.Errorf("frecuencia_bb no implementado: usar frecuencia_dias")
-	}
 
 	if m.FrecuenciaDias > 0 && m.UltimaFecha != nil {
 		next := m.UltimaFecha.AddDate(0, 0, m.FrecuenciaDias)
@@ -65,9 +59,6 @@ func (s *MantenimientoService) ListProximos(ctx context.Context, dias int) ([]mo
 func (s *MantenimientoService) Update(ctx context.Context, m *models.Mantenimiento) error {
 	if m.ID == 0 {
 		return fmt.Errorf("id es requerido")
-	}
-	if m.FrecuenciaBB > 0 && m.FrecuenciaDias == 0 {
-		return fmt.Errorf("frecuencia_bb no implementado: usar frecuencia_dias")
 	}
 
 	if m.FrecuenciaDias > 0 && m.UltimaFecha != nil {
