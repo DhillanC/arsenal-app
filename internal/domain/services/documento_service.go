@@ -138,20 +138,19 @@ func (s *DocumentoService) WaitForOCR() {
 func (s *DocumentoService) processOCRAsync(id int, filePath string) {
 	ctx := context.Background()
 
+	// Verificar Tesseract primero para evitar actualizar DB si no está disponible
+	client, err := ocr.NewOCRClient()
+	if err != nil {
+		fmt.Printf("[OCR] tesseract no disponible para doc %d: %v\n", id, err)
+		return
+	}
+	defer client.Close()
+
 	// Actualizar estado a "processing"
 	if err := s.repo.UpdateOCRStatus(ctx, id, "processing", ""); err != nil {
 		fmt.Printf("[OCR] error marcando processing para doc %d: %v\n", id, err)
 		return
 	}
-
-	// Extraer texto
-	client, err := ocr.NewOCRClient()
-	if err != nil {
-		s.repo.UpdateOCRStatus(ctx, id, "failed", "")
-		fmt.Printf("[OCR] error inicializando cliente para doc %d: %v\n", id, err)
-		return
-	}
-	defer client.Close()
 
 	text, err := client.ExtractText(filePath)
 	if err != nil {
