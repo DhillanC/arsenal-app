@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
+	"sync"
 
 	"github.com/DhillanC/arsenal-app/internal/domain/models"
 	inbound "github.com/DhillanC/arsenal-app/internal/domain/ports/inbound"
@@ -15,6 +17,7 @@ import (
 type DocumentoService struct {
 	repo    outbound.DocumentoRepository
 	storage outbound.Storage
+	ocrWg   sync.WaitGroup // Para esperar OCR en tests
 }
 
 // NewDocumentoService crea un nuevo servicio
@@ -40,18 +43,27 @@ func (s *DocumentoService) Create(ctx context.Context, documento *models.Documen
 		documento.RutaArchivo = ruta
 		documento.TamanoBytes = int64(len(file))
 
+		// Marcar para OCR async si aplica
 		if shouldRunOCR(documento) {
-			text, err := extractOCRText(ruta)
-			if err != nil {
-				// Dejar OCRTexto vacío en caso de error para evitar matches espurios en búsquedas
-				documento.OCRTexto = ""
-			} else {
-				documento.OCRTexto = text
-			}
+			documento.OCRStatus = "pending"
 		}
 	}
 
-	return s.repo.Create(ctx, documento)
+	// Guardar documento inmediatamente (sin esperar OCR)
+	if err := s.repo.Create(ctx, documento); err != nil {
+		return err
+	}
+
+	// Lanzar OCR en background si aplica
+	if documento.OCRStatus == "pending" {
+		s.ocrWg.Add(1)
+		go func() {
+			defer s.ocrWg.Done()
+			s.processOCRAsync(documento.ID, documento.RutaArchivo)
+		}()
+	}
+
+	return nil
 }
 
 // GetByID obtiene un documento por ID
@@ -116,12 +128,67 @@ func (s *DocumentoService) SearchByOCR(ctx context.Context, query string) ([]mod
 	return s.repo.SearchByOCR(ctx, query)
 }
 
+// WaitForOCR espera a que terminen todos los jobs OCR pendientes.
+// Útil en tests para evitar que la DB se cierre antes de que termine el OCR async.
+func (s *DocumentoService) WaitForOCR() {
+	s.ocrWg.Wait()
+}
+
+// processOCRAsync procesa OCR en background y actualiza el documento
+func (s *DocumentoService) processOCRAsync(id int, filePath string) {
+	ctx := context.Background()
+
+	// Actualizar estado a "processing"
+	if err := s.repo.UpdateOCRStatus(ctx, id, "processing", ""); err != nil {
+		fmt.Printf("[OCR] error marcando processing para doc %d: %v\n", id, err)
+		return
+	}
+
+	// Extraer texto
+	client, err := ocr.NewOCRClient()
+	if err != nil {
+		s.repo.UpdateOCRStatus(ctx, id, "failed", "")
+		fmt.Printf("[OCR] error inicializando cliente para doc %d: %v\n", id, err)
+		return
+	}
+	defer client.Close()
+
+	text, err := client.ExtractText(filePath)
+	if err != nil {
+		s.repo.UpdateOCRStatus(ctx, id, "failed", "")
+		fmt.Printf("[OCR] error extrayendo texto para doc %d: %v\n", id, err)
+		return
+	}
+
+	// Limpiar y truncar
+	text = CleanOCRText(text)
+	if len(text) > 10000 {
+		text = text[:10000] + "... [truncado]"
+	}
+
+	// Guardar resultado
+	if err := s.repo.UpdateOCRStatus(ctx, id, "completed", text); err != nil {
+		fmt.Printf("[OCR] error guardando resultado para doc %d: %v\n", id, err)
+		return
+	}
+
+	fmt.Printf("[OCR] completado para doc %d (%d chars)\n", id, len(text))
+}
+
+func cleanOCRText(text string) string {
+	// Eliminar espacios múltiples
+	text = strings.Join(strings.Fields(text), " ")
+	// Eliminar caracteres de control
+	text = strings.ReplaceAll(text, "\x00", "")
+	return strings.TrimSpace(text)
+}
+
 func shouldRunOCR(documento *models.Documento) bool {
 	if os.Getenv("OCR_ENABLED") == "false" {
 		return false
 	}
 	switch documento.MimeType {
-	case "image/jpeg", "image/png", "image/gif":
+	case "image/jpeg", "image/png", "image/gif", "application/pdf":
 		return true
 	default:
 		return false

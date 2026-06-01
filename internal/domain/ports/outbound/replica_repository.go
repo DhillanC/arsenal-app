@@ -41,6 +41,7 @@ type DocumentoRepository interface {
 	Update(ctx context.Context, documento *models.Documento) error
 	Delete(ctx context.Context, id int) error
 	SearchByOCR(ctx context.Context, query string) ([]models.Documento, error)
+	UpdateOCRStatus(ctx context.Context, id int, status, text string) error
 }
 
 // Storage define las operaciones de almacenamiento de archivos
