@@ -101,9 +101,14 @@ CREATE TABLE IF NOT EXISTS replica_sesion (
 -- Índices para búsquedas comunes
 CREATE INDEX IF NOT EXISTS idx_replicas_estado ON replicas(estado);
 CREATE INDEX IF NOT EXISTS idx_replicas_marca ON replicas(marca);
+CREATE INDEX IF NOT EXISTS idx_replicas_tipo ON replicas(tipo); -- Para stats/dashboard GROUP BY tipo
+CREATE INDEX IF NOT EXISTS idx_replicas_estado_tipo ON replicas(estado, tipo); -- Para dashboard stats combinados
 CREATE INDEX IF NOT EXISTS idx_actividades_replica ON actividades(replica_id);
 CREATE INDEX IF NOT EXISTS idx_actividades_fecha ON actividades(fecha);
+CREATE INDEX IF NOT EXISTS idx_actividades_replica_fecha ON actividades(replica_id, fecha DESC); -- Para timeline ordenado
 CREATE INDEX IF NOT EXISTS idx_documentos_replica ON documentos(replica_id);
+CREATE INDEX IF NOT EXISTS idx_documentos_actividad ON documentos(actividad_id); -- Para N+1 fix (ListByActividades)
 CREATE INDEX IF NOT EXISTS idx_documentos_ocr ON documentos(ocr_texto); -- FTS en futuro
+CREATE INDEX IF NOT EXISTS idx_documentos_tipo ON documentos(tipo); -- Para filtros por tipo
 CREATE INDEX IF NOT EXISTS idx_mantenimiento_replica ON mantenimiento(replica_id);
 CREATE INDEX IF NOT EXISTS idx_mantenimiento_proxima ON mantenimiento(proxima_fecha);

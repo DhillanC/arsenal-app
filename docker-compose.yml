@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: builder
     container_name: arsenal-app
     ports:
       - "8080:8080"
@@ -36,9 +35,3 @@ services:
         reservations:
           cpus: '0.25'
           memory: 128M
-
-volumes:
-  data:
-    driver: local
-  uploads:
-    driver: local

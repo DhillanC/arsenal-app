@@ -243,6 +243,145 @@ chmod 644 ~/arsenal-data/audit.log
 3. Revisar audit log de las últimas 24h
 4. Cambiar credenciales de sistema
 
+## Diagramas de Flujo de Procesos
+
+### Flujo: Subida de Documento
+
+```mermaid
+flowchart TD
+    User([Usuario]) -->|POST /api/v1/replicas/:id/documentos| Handler[DocumentoHandler]
+    Handler -->|Valida| Validation{MIME type OK?}
+    Validation -->|No| Error400[400 Bad Request]
+    Validation -->|Sí| SizeCheck{Tamaño <= 10MB?}
+    SizeCheck -->|No| Error413[413 Payload Too Large]
+    SizeCheck -->|Sí| Sanitize[Sanitiza filename]
+    Sanitize -->|Rechaza ../ abs NUL| Error400
+    Sanitize -->|Acepta| Save[Guarda en filesystem]
+    Save -->|Ruta relativa| DB[(SQLite)]
+    Save -->|Si es imagen| OCR[Tesseract OCR]
+    OCR -->|Texto extraído| DB
+    DB -->|201 Created| Handler
+    Handler -->|JSON + Location| User
+```
+
+### Flujo: Mantenimiento Programado
+
+```mermaid
+flowchart TD
+    User([Usuario]) -->|POST /api/v1/mantenimiento/:id/completar| Handler[MantenimientoHandler]
+    Handler -->|Busca| Service[MantenimientoService]
+    Service -->|Lee| DB[(SQLite)]
+    DB -->|Datos actuales| Service
+    Service -->|Calcula| NextDate[Próxima fecha = hoy + frecuencia_dias]
+    NextDate -->|Actualiza| DB
+    DB -->|200 OK| Handler
+    Handler -->|JSON con próxima fecha| User
+```
+
+### Flujo: Health Check
+
+```mermaid
+flowchart TD
+    Client([Monitor/Load Balancer]) -->|GET /health| Handler[HealthHandler]
+    Handler -->|PingContext(2s)| DB[(SQLite)]
+    DB -->|OK| Handler
+    Handler -->|200 + status: healthy| Client
+    DB -.->|Timeout/Error| Handler
+    Handler -->|503 + status: unhealthy| Client
+```
+
+## Diagrama de Secuencia: Request Completo
+
+```mermaid
+sequenceDiagram
+    participant Client as Cliente/HTMX
+    participant Gin as Gin Router
+    participant MW as Middleware
+    participant Handler as HTTP Handler
+    participant Service as Domain Service
+    participant Repo as Repository
+    participant DB as SQLite
+
+    Client->>Gin: GET /api/v1/replicas
+    Gin->>MW: Logging + CORS + Recovery
+    MW->>Handler: ReplicaHandler.List()
+    Handler->>Service: replicaService.List()
+    Service->>Repo: FindAll()
+    Repo->>DB: SELECT * FROM replicas
+    DB-->>Repo: []Replica
+    Repo-->>Service: []Replica
+    Service-->>Handler: []Replica
+    Handler-->>MW: JSON 200
+    MW-->>Gin: Response
+    Gin-->>Client: [ {...}, {...} ]
+```
+
+## Diagrama ER (Entidad-Relación)
+
+```mermaid
+erDiagram
+    REPLICA ||--o{ ACTIVIDAD : tiene
+    REPLICA ||--o{ DOCUMENTO : tiene
+    REPLICA ||--o{ MANTENIMIENTO : programa
+    REPLICA ||--o{ PIEZA : usa
+    ACTIVIDAD ||--o{ DOCUMENTO : adjunta
+    SESION_CAMPO ||--o{ REPLICA_SESION : registra
+    REPLICA ||--o{ REPLICA_SESION : participa
+
+    REPLICA {
+        int id PK
+        string nombre
+        string marca
+        string modelo
+        string tipo
+        string numero_serie
+        date fecha_adquisicion
+        real costo_adquisicion
+        string estado
+        int fps
+        real joules
+        int peso_gramos
+        int longitud_mm
+        text notas
+    }
+
+    ACTIVIDAD {
+        int id PK
+        int replica_id FK
+        date fecha
+        string tipo
+        text descripcion
+        real costo
+        int kilometraje_bb
+        string ubicacion
+    }
+
+    DOCUMENTO {
+        int id PK
+        int replica_id FK
+        int actividad_id FK
+        string tipo
+        string nombre_archivo
+        string ruta_archivo
+        string mime_type
+        int tamano_bytes
+        text ocr_texto
+        date fecha_documento
+        string numero_documento
+    }
+
+    MANTENIMIENTO {
+        int id PK
+        int replica_id FK
+        string tipo_tarea
+        int frecuencia_dias
+        int frecuencia_bb
+        date ultima_fecha
+        date proxima_fecha
+        boolean completado
+    }
+```
+
 ---
 
 *Documento vivo - actualizar con cada fase*

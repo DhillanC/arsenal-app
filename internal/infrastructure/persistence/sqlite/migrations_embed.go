@@ -32,7 +32,7 @@ func (db *DB) RunMigrations() error {
 			return fmt.Errorf("leer migración %s: %w", entry.Name(), err)
 		}
 
-		if _, err := db.Conn.Exec(string(content)); err != nil {
+		if _, err := db.WriteConn.Exec(string(content)); err != nil {
 			return fmt.Errorf("ejecutar migración %s: %w", entry.Name(), err)
 		}
 	}

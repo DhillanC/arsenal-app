@@ -2,13 +2,16 @@ package web
 
 import (
 	"context"
-	"database/sql"
+	"html/template"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	inbound "github.com/DhillanC/arsenal-app/internal/domain/ports/inbound"
 	"github.com/DhillanC/arsenal-app/internal/domain/services"
+	"github.com/DhillanC/arsenal-app/internal/infrastructure/ocr"
 	"github.com/DhillanC/arsenal-app/internal/infrastructure/persistence/sqlite"
 	"github.com/DhillanC/arsenal-app/internal/infrastructure/web/handlers"
 	"github.com/gin-gonic/gin"
@@ -16,6 +19,9 @@ import (
 
 // HTMLConfig configura las vistas HTML
 func setupTemplates(router *gin.Engine) {
+	router.SetFuncMap(template.FuncMap{
+		"documentURL": documentURL,
+	})
 	router.LoadHTMLGlob("web/templates/*")
 }
 
@@ -23,10 +29,12 @@ func setupTemplates(router *gin.Engine) {
 type Config struct {
 	Port           string
 	AllowedOrigins []string
-	// DB se usa para el health-check; si es nil, /health no verifica DB.
-	DB *sql.DB
+	// DB se usa para el health-check y audit logging.
+	DB *sqlite.DB
 	// EnableTemplates carga templates HTML para frontend
 	EnableTemplates bool
+	// UploadPath expone los documentos cargados para el frontend HTML.
+	UploadPath string
 }
 
 // NewHandler creates a Gin engine with all routes configured
@@ -44,31 +52,77 @@ func NewHandler(
 	router.Use(gin.Recovery())
 	router.Use(CORSMiddleware(config.AllowedOrigins))
 
+	// Audit logging (solo si hay DB)
+	if config.DB != nil {
+		auditRepo := sqlite.NewAuditLogRepository(config.DB)
+		auditService := services.NewAuditLogService(auditRepo)
+		router.Use(AuditMiddleware(auditService, DefaultAuditConfig()))
+	}
+
 	// Setup HTML templates (solo si se solicita explícitamente)
 	if config.EnableTemplates {
 		setupTemplates(router)
 	}
 
-	// Health-check con verificación de DB.
-	// Si la DB no responde a Ping en 2s, devuelve 503 — load balancer puede sacarnos del pool.
-	router.GET("/health", func(c *gin.Context) {
+	// Health-check endpoints (Kubernetes-style)
+	// /health/live — liveness: siempre 200 si el proceso responde
+	router.GET("/health/live", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":    "alive",
+			"timestamp": time.Now().UTC(),
+		})
+	})
+
+	// /health/ready — readiness: 200 solo si DB + uploads + OCR están OK
+	router.GET("/health/ready", func(c *gin.Context) {
+		checks := gin.H{
+			"status":    "ready",
+			"timestamp": time.Now().UTC(),
+		}
+		status := http.StatusOK
+
+		// Check DB
 		if config.DB != nil {
 			ctx, cancel := context.WithTimeout(c.Request.Context(), 2*time.Second)
 			defer cancel()
-			if err := config.DB.PingContext(ctx); err != nil {
-				c.JSON(http.StatusServiceUnavailable, gin.H{
-					"status": "degraded",
-					"db":     "unreachable",
-					"error":  err.Error(),
-				})
-				return
+			if err := config.DB.WriteConn.PingContext(ctx); err != nil {
+				checks["status"] = "not_ready"
+				checks["db"] = "unreachable"
+				checks["db_error"] = err.Error()
+				status = http.StatusServiceUnavailable
+			} else {
+				checks["db"] = "ok"
 			}
 		}
-		c.JSON(http.StatusOK, gin.H{
-			"status":    "ok",
-			"db":        "ok",
-			"timestamp": time.Now().UTC(),
-		})
+
+		// Check uploads writable
+		if config.UploadPath != "" {
+			testFile := filepath.Join(config.UploadPath, ".healthcheck")
+			if err := os.WriteFile(testFile, []byte("ok"), 0o644); err != nil {
+				checks["status"] = "not_ready"
+				checks["uploads"] = "not_writable"
+				checks["uploads_error"] = err.Error()
+				status = http.StatusServiceUnavailable
+			} else {
+				os.Remove(testFile)
+				checks["uploads"] = "ok"
+			}
+		}
+
+		// Check OCR disponible
+		if ocr.IsAvailable() {
+			checks["ocr"] = "ok"
+		} else {
+			checks["ocr"] = "not_available"
+			// OCR es opcional, no marca not_ready
+		}
+
+		c.JSON(status, checks)
+	})
+
+	// /health (legacy) — mantener compatibilidad, redirige a /health/ready
+	router.GET("/health", func(c *gin.Context) {
+		c.Redirect(http.StatusTemporaryRedirect, "/health/ready")
 	})
 
 	// API v1
@@ -82,6 +136,8 @@ func NewHandler(
 
 		// Documentos handler
 		documentoHandler := handlers.NewDocumentoHandler(documentoService)
+		// Descarga directa con validación de contención (fuera del grupo /replicas)
+		router.GET("/api/v1/documentos/:id/file", documentoHandler.Download)
 		documentoRoutes := api.Group("/replicas/:id/documentos")
 		{
 			documentoRoutes.GET("", documentoHandler.ListByReplica)
@@ -91,6 +147,11 @@ func NewHandler(
 		api.GET("/documentos/search", documentoHandler.Search)
 	}
 
+	// Stats endpoint (agregados SQL)
+	statsHandler := handlers.NewStatsHandler(config.DB)
+	api.GET("/stats/dashboard", statsHandler.DashboardStats)
+	api.GET("/export/json", statsHandler.ExportJSON)
+	
 	// Mantenimiento service and handler
 	mantenimientoRepo := sqlite.NewMantenimientoRepository(config.DB)
 	mantenimientoService := services.NewMantenimientoService(mantenimientoRepo)
@@ -99,7 +160,7 @@ func NewHandler(
 
 	// HTML Frontend routes
 	if config.EnableTemplates {
-		htmlHandler := handlers.NewHTMLHandler(replicaService, actividadService, documentoService)
+		htmlHandler := handlers.NewHTMLHandler(replicaService, actividadService, documentoService, mantenimientoService, config.UploadPath)
 		htmlHandler.RegisterHTMLRoutes(router)
 	}
 
@@ -115,7 +176,7 @@ func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
 
-		if len(allowedOrigins) == 0 || contains(allowedOrigins, origin) {
+		if len(allowedOrigins) == 0 || stringSliceContains(allowedOrigins, origin) {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 		}
 
@@ -132,11 +193,27 @@ func CORSMiddleware(allowedOrigins []string) gin.HandlerFunc {
 	}
 }
 
-func contains(slice []string, item string) bool {
+func stringSliceContains(slice []string, item string) bool {
 	for _, s := range slice {
 		if s == item {
 			return true
 		}
 	}
 	return false
+}
+
+func documentURL(path string) string {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return "#"
+	}
+	if strings.HasPrefix(path, "/uploads/") {
+		return path
+	}
+	if idx := strings.Index(path, "/uploads/"); idx >= 0 {
+		return path[idx:]
+	}
+	path = strings.TrimPrefix(path, "./")
+	path = strings.TrimPrefix(path, "uploads/")
+	return "/uploads/" + strings.TrimLeft(path, "/")
 }

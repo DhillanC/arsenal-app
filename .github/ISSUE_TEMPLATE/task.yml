@@ -3,6 +3,20 @@ description: Track maintenance, setup, documentation, refactoring, or project wo
 title: "[Task]: "
 labels: ["technical debt"]
 body:
+  - type: dropdown
+    id: task-type
+    attributes:
+      label: Task type
+      description: Choose the closest category.
+      options:
+        - Implementation
+        - Refactor
+        - Documentation
+        - Infrastructure
+        - QA
+        - Research
+    validations:
+      required: true
   - type: textarea
     id: task
     attributes:
@@ -29,6 +43,22 @@ body:
         - [ ] The result has been checked or reviewed
     validations:
       required: true
+  - type: textarea
+    id: affected-files
+    attributes:
+      label: Expected affected areas
+      description: List likely files, packages, routes, templates, or workflows.
+      placeholder: internal/infrastructure/web, web/templates, .github/workflows, etc.
+    validations:
+      required: false
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks
+      description: Note migration, compatibility, data, or rollout risks.
+      placeholder: No known risks.
+    validations:
+      required: false
   - type: textarea
     id: notes
     attributes:

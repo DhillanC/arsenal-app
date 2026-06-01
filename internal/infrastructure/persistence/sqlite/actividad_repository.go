@@ -11,12 +11,16 @@ import (
 
 // ActividadRepository implementa outbound.ActividadRepository
 type ActividadRepository struct {
-	db *sql.DB
+	readDB  *sql.DB
+	writeDB *sql.DB
 }
 
 // NewActividadRepository crea un nuevo repositorio
-func NewActividadRepository(db *sql.DB) outbound.ActividadRepository {
-	return &ActividadRepository{db: db}
+func NewActividadRepository(db *DB) outbound.ActividadRepository {
+	return &ActividadRepository{
+		readDB:  db.ReadConn,
+		writeDB: db.WriteConn,
+	}
 }
 
 // Create inserta una nueva actividad
@@ -28,7 +32,7 @@ func (r *ActividadRepository) Create(ctx context.Context, actividad *models.Acti
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	result, err := r.db.ExecContext(ctx, query,
+	result, err := r.writeDB.ExecContext(ctx, query,
 		actividad.ReplicaID, actividad.Fecha, actividad.Tipo,
 		actividad.Descripcion, actividad.ProveedorTecnico,
 		actividad.Costo, actividad.KilometrajeBB, actividad.Ubicacion,
@@ -54,7 +58,7 @@ func (r *ActividadRepository) GetByID(ctx context.Context, id int) (*models.Acti
 	`
 
 	var actividad models.Actividad
-	err := r.db.QueryRowContext(ctx, query, id).Scan(
+	err := r.readDB.QueryRowContext(ctx, query, id).Scan(
 		&actividad.ID, &actividad.ReplicaID, &actividad.Fecha, &actividad.Tipo,
 		&actividad.Descripcion, &actividad.ProveedorTecnico,
 		&actividad.Costo, &actividad.KilometrajeBB, &actividad.Ubicacion,
@@ -77,9 +81,43 @@ func (r *ActividadRepository) ListByReplica(ctx context.Context, replicaID int) 
 		FROM actividades WHERE replica_id = ? ORDER BY fecha DESC
 	`
 
-	rows, err := r.db.QueryContext(ctx, query, replicaID)
+	rows, err := r.readDB.QueryContext(ctx, query, replicaID)
 	if err != nil {
 		return nil, fmt.Errorf("listar actividades: %w", err)
+	}
+	defer rows.Close()
+
+	var actividades []models.Actividad
+	for rows.Next() {
+		var actividad models.Actividad
+		err := rows.Scan(
+			&actividad.ID, &actividad.ReplicaID, &actividad.Fecha, &actividad.Tipo,
+			&actividad.Descripcion, &actividad.ProveedorTecnico,
+			&actividad.Costo, &actividad.KilometrajeBB, &actividad.Ubicacion,
+			&actividad.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan actividad: %w", err)
+		}
+		actividades = append(actividades, actividad)
+	}
+
+	return actividades, rows.Err()
+}
+
+// ListByReplicaPaginated devuelve actividades de una réplica con paginación.
+// limit=0 significa sin límite.
+func (r *ActividadRepository) ListByReplicaPaginated(ctx context.Context, replicaID int, limit, offset int) ([]models.Actividad, error) {
+	query := `
+		SELECT id, replica_id, fecha, tipo, descripcion, proveedor_tecnico,
+			costo, kilometraje_bb, ubicacion, created_at
+		FROM actividades WHERE replica_id = ? ORDER BY fecha DESC
+		LIMIT ? OFFSET ?
+	`
+
+	rows, err := r.readDB.QueryContext(ctx, query, replicaID, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("listar actividades paginadas: %w", err)
 	}
 	defer rows.Close()
 
@@ -110,7 +148,7 @@ func (r *ActividadRepository) Update(ctx context.Context, actividad *models.Acti
 		WHERE id = ?
 	`
 
-	_, err := r.db.ExecContext(ctx, query,
+	_, err := r.writeDB.ExecContext(ctx, query,
 		actividad.ReplicaID, actividad.Fecha, actividad.Tipo,
 		actividad.Descripcion, actividad.ProveedorTecnico,
 		actividad.Costo, actividad.KilometrajeBB, actividad.Ubicacion,
@@ -125,7 +163,7 @@ func (r *ActividadRepository) Update(ctx context.Context, actividad *models.Acti
 // Delete elimina una actividad
 func (r *ActividadRepository) Delete(ctx context.Context, id int) error {
 	query := `DELETE FROM actividades WHERE id = ?`
-	_, err := r.db.ExecContext(ctx, query, id)
+	_, err := r.writeDB.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("eliminar actividad: %w", err)
 	}

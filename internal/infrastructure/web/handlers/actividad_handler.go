@@ -40,7 +40,7 @@ func (h *ActividadHandler) RegisterRoutes(router *gin.RouterGroup) {
 	router.DELETE("/actividades/:actividad_id", h.Delete)
 }
 
-// ListByReplica lista actividades de una réplica
+// ListByReplica lista actividades de una réplica. Soporta paginación via ?limit=20&offset=0.
 func (h *ActividadHandler) ListByReplica(c *gin.Context) {
 	ctx := c.Request.Context()
 	replicaID, err := strconv.Atoi(c.Param("id"))
@@ -49,7 +49,13 @@ func (h *ActividadHandler) ListByReplica(c *gin.Context) {
 		return
 	}
 
-	actividades, err := h.service.ListByReplica(ctx, replicaID)
+	var actividades []models.Actividad
+	if c.Query("limit") != "" || c.Query("offset") != "" {
+		limit, offset := PaginationParams(c)
+		actividades, err = h.service.ListByReplicaPaginated(ctx, replicaID, limit, offset)
+	} else {
+		actividades, err = h.service.ListByReplica(ctx, replicaID)
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -223,6 +229,29 @@ func (h *ActividadHandler) Timeline(c *gin.Context) {
 
 	// Construir timeline con documentos
 	timeline := make([]TimelineItem, 0, len(actividades))
+	
+	// Obtener documentos de todas las actividades en una sola query (evita N+1)
+	actividadIDs := make([]int, len(actividades))
+	for i, act := range actividades {
+		actividadIDs[i] = act.ID
+	}
+	
+	var docsByActividad map[int][]models.Documento
+	if len(actividadIDs) > 0 {
+		allDocs, err := h.documentoService.ListByActividades(ctx, actividadIDs)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		// Agrupar documentos por actividad_id
+		docsByActividad = make(map[int][]models.Documento)
+		for _, doc := range allDocs {
+			if doc.ActividadID != nil {
+				docsByActividad[*doc.ActividadID] = append(docsByActividad[*doc.ActividadID], doc)
+			}
+		}
+	}
+	
 	for _, act := range actividades {
 		item := TimelineItem{
 			ID:               act.ID,
@@ -233,17 +262,8 @@ func (h *ActividadHandler) Timeline(c *gin.Context) {
 			Costo:            act.Costo,
 			KilometrajeBB:    act.KilometrajeBB,
 			Ubicacion:        act.Ubicacion,
-			Documentos:       []models.Documento{},
+			Documentos:       docsByActividad[act.ID],
 		}
-
-		// Obtener documentos de la actividad
-		docs, err := h.documentoService.ListByActividad(ctx, act.ID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		item.Documentos = docs
-
 		timeline = append(timeline, item)
 	}
 

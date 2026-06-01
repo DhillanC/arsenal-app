@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/DhillanC/arsenal-app/internal/domain/models"
 	outbound "github.com/DhillanC/arsenal-app/internal/domain/ports/outbound"
@@ -11,12 +12,16 @@ import (
 
 // ReplicaRepository implementa outbound.ReplicaRepository
 type ReplicaRepository struct {
-	db *sql.DB
+	readDB  *sql.DB
+	writeDB *sql.DB
 }
 
 // NewReplicaRepository crea un nuevo repositorio
-func NewReplicaRepository(db *sql.DB) outbound.ReplicaRepository {
-	return &ReplicaRepository{db: db}
+func NewReplicaRepository(db *DB) outbound.ReplicaRepository {
+	return &ReplicaRepository{
+		readDB:  db.ReadConn,
+		writeDB: db.WriteConn,
+	}
 }
 
 // Create inserta una nueva réplica
@@ -29,7 +34,7 @@ func (r *ReplicaRepository) Create(ctx context.Context, replica *models.Replica)
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	result, err := r.db.ExecContext(ctx, query,
+	result, err := r.writeDB.ExecContext(ctx, query,
 		replica.Nombre, replica.Marca, replica.Modelo, replica.Tipo,
 		replica.NumeroSerie, replica.FechaAdquisicion, replica.Proveedor,
 		replica.CostoAdquisicion, replica.Estado, replica.FPS, replica.Joules,
@@ -58,7 +63,7 @@ func (r *ReplicaRepository) GetByID(ctx context.Context, id int) (*models.Replic
 	`
 
 	var replica models.Replica
-	err := r.db.QueryRowContext(ctx, query, id).Scan(
+	err := r.readDB.QueryRowContext(ctx, query, id).Scan(
 		&replica.ID, &replica.Nombre, &replica.Marca, &replica.Modelo,
 		&replica.Tipo, &replica.NumeroSerie, &replica.FechaAdquisicion,
 		&replica.Proveedor, &replica.CostoAdquisicion, &replica.Estado,
@@ -86,7 +91,7 @@ func (r *ReplicaRepository) List(ctx context.Context) ([]models.Replica, error) 
 		ORDER BY created_at DESC
 	`
 
-	rows, err := r.db.QueryContext(ctx, query)
+	rows, err := r.readDB.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("listar replicas: %w", err)
 	}
@@ -124,7 +129,7 @@ func (r *ReplicaRepository) Update(ctx context.Context, replica *models.Replica)
 		WHERE id = ?
 	`
 
-	_, err := r.db.ExecContext(ctx, query,
+	_, err := r.writeDB.ExecContext(ctx, query,
 		replica.Nombre, replica.Marca, replica.Modelo, replica.Tipo,
 		replica.NumeroSerie, replica.FechaAdquisicion, replica.Proveedor,
 		replica.CostoAdquisicion, replica.Estado, replica.FPS, replica.Joules,
@@ -140,7 +145,7 @@ func (r *ReplicaRepository) Update(ctx context.Context, replica *models.Replica)
 // Delete elimina una réplica (soft delete cambiando estado)
 func (r *ReplicaRepository) Delete(ctx context.Context, id int) error {
 	query := `UPDATE replicas SET estado = 'archivado', updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-	_, err := r.db.ExecContext(ctx, query, id)
+	_, err := r.writeDB.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("eliminar replica: %w", err)
 	}
@@ -149,22 +154,23 @@ func (r *ReplicaRepository) Delete(ctx context.Context, id int) error {
 
 // Search busca réplicas por número de serie o nombre (para trazabilidad DIAN)
 func (r *ReplicaRepository) Search(ctx context.Context, query string) ([]models.Replica, error) {
-	searchTerm := "%" + query + "%"
+	// Escapar caracteres LIKE para prevenir wildcard injection
+	searchTerm := "%" + strings.NewReplacer(`\`, `\\`, "%", `\%`, "_", `\_`).Replace(query) + "%"
 	sqlQuery := `
 		SELECT id, nombre, marca, modelo, tipo, numero_serie, fecha_adquisicion,
 			proveedor, costo_adquisicion, estado, fps, joules, peso_gramos,
 			longitud_mm, hop_up, capacidad_cargador, notas, created_at, updated_at
 		FROM replicas 
 		WHERE estado != 'archivado' AND (
-			nombre LIKE ? OR 
-			numero_serie LIKE ? OR 
-			marca LIKE ? OR
-			modelo LIKE ?
+			nombre LIKE ? ESCAPE '\' OR 
+			numero_serie LIKE ? ESCAPE '\' OR 
+			marca LIKE ? ESCAPE '\' OR
+			modelo LIKE ? ESCAPE '\'
 		)
 		ORDER BY created_at DESC
 	`
 
-	rows, err := r.db.QueryContext(ctx, sqlQuery, searchTerm, searchTerm, searchTerm, searchTerm)
+	rows, err := r.readDB.QueryContext(ctx, sqlQuery, searchTerm, searchTerm, searchTerm, searchTerm)
 	if err != nil {
 		return nil, fmt.Errorf("buscar replicas: %w", err)
 	}
@@ -180,6 +186,44 @@ func (r *ReplicaRepository) Search(ctx context.Context, query string) ([]models.
 			&replica.FPS, &replica.Joules, &replica.PesoGramos, &replica.LongitudMM,
 			&replica.HopUp, &replica.CapacidadCargador, &replica.Notas,
 			&replica.CreatedAt, &replica.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scan replica: %w", err)
+		}
+		replicas = append(replicas, replica)
+	}
+
+	return replicas, rows.Err()
+}
+
+// ListPaginated lista réplicas con paginación (limit/offset).
+// limit=0 significa sin límite (comportamiento anterior).
+func (r *ReplicaRepository) ListPaginated(ctx context.Context, limit, offset int) ([]models.Replica, error) {
+	query := `
+		SELECT id, nombre, marca, modelo, tipo, numero_serie, fecha_adquisicion,
+			proveedor, costo_adquisicion, estado, fps, joules, peso_gramos,
+			longitud_mm, hop_up, capacidad_cargador, notas, created_at, updated_at
+		FROM replicas 
+		WHERE estado != 'archivado'
+		ORDER BY created_at DESC
+		LIMIT ? OFFSET ?
+	`
+	rows, err := r.readDB.QueryContext(ctx, query, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("listar replicas paginadas: %w", err)
+	}
+	defer rows.Close()
+
+	var replicas []models.Replica
+	for rows.Next() {
+		var replica models.Replica
+		err := rows.Scan(
+			&replica.ID, &replica.Nombre, &replica.Marca, &replica.Modelo,
+			&replica.Tipo, &replica.NumeroSerie, &replica.FechaAdquisicion,
+			&replica.Proveedor, &replica.CostoAdquisicion, &replica.Estado,
+			&replica.FPS, &replica.Joules, &replica.PesoGramos,
+			&replica.LongitudMM, &replica.HopUp, &replica.CapacidadCargador,
+			&replica.Notas, &replica.CreatedAt, &replica.UpdatedAt,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("scan replica: %w", err)

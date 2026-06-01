@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -15,6 +18,10 @@ import (
 // maxUploadBytes es el cap real del request body para subidas.
 // ParseMultipartForm(N) sin MaxBytesReader es solo umbral de memoria — el body
 // completo puede ser arbitrariamente grande y Gin lo spilea a disco.
+// NOTA: Para archivos > 10MB o streaming, considerar:
+//   1. io.Copy directo a archivo en vez de cargar todo a memoria
+//   2. Upload en chunks con resumable.js o similar
+//   3. S3/GCS presigned URLs para uploads directos
 const maxUploadBytes = 10 << 20
 
 // DocumentoHandler maneja las peticiones HTTP para documentos
@@ -25,17 +32,6 @@ type DocumentoHandler struct {
 // NewDocumentoHandler crea un nuevo handler
 func NewDocumentoHandler(service inbound.DocumentoService) *DocumentoHandler {
 	return &DocumentoHandler{service: service}
-}
-
-// RegisterRoutes registra las rutas de documentos
-func (h *DocumentoHandler) RegisterRoutes(router *gin.RouterGroup) {
-	docs := router.Group("/documentos")
-	{
-		docs.POST("", h.Upload)
-		docs.GET("", h.ListByReplica)
-		docs.GET("/filter", h.ListByReplicaAndType)
-		docs.GET("/search", h.Search)
-	}
 }
 
 // Upload maneja la subida de documentos (multipart/form-data)
@@ -75,9 +71,9 @@ func (h *DocumentoHandler) Upload(c *gin.Context) {
 		return
 	}
 
-	// Leer archivo
-	fileBytes := make([]byte, header.Size)
-	_, err = file.Read(fileBytes)
+	// Leer archivo completo — io.ReadAll maneja el loop internamente y respeta
+	// MaxBytesReader que ya acotó el body a 10MB.
+	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error leyendo archivo"})
 		return
@@ -112,7 +108,14 @@ func (h *DocumentoHandler) ListByReplica(c *gin.Context) {
 		return
 	}
 
-	docs, err := h.service.ListByReplica(c.Request.Context(), replicaID)
+	ctx := c.Request.Context()
+	var docs []models.Documento
+	if c.Query("limit") != "" || c.Query("offset") != "" {
+		limit, offset := PaginationParams(c)
+		docs, err = h.service.ListByReplicaPaginated(ctx, replicaID, limit, offset)
+	} else {
+		docs, err = h.service.ListByReplica(ctx, replicaID)
+	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -168,6 +171,63 @@ func (h *DocumentoHandler) Search(c *gin.Context) {
 		"count":   len(docs),
 		"results": docs,
 	})
+}
+
+// Download sirve un archivo de documento con validación de contención.
+// GET /api/v1/documentos/:id/file
+func (h *DocumentoHandler) Download(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID inválido"})
+		return
+	}
+
+	ctx := c.Request.Context()
+
+	// Obtener metadatos del documento
+	doc, err := h.service.GetByID(ctx, id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "documento no encontrado"})
+		return
+	}
+
+	// Validar que RutaArchivo no sea vacío
+	if doc.RutaArchivo == "" {
+		c.JSON(http.StatusNotFound, gin.H{"error": "documento sin archivo"})
+		return
+	}
+
+	// Validar contención: el path debe estar dentro de UPLOAD_PATH
+	// (evita path traversal como ../../../etc/passwd)
+	absUploadPath, err := filepath.Abs(os.Getenv("UPLOAD_PATH"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "configuración inválida"})
+		return
+	}
+	if absUploadPath == "" {
+		absUploadPath, _ = filepath.Abs("./uploads")
+	}
+	absFilePath, err := filepath.Abs(doc.RutaArchivo)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "ruta inválida"})
+		return
+	}
+	rel, err := filepath.Rel(absUploadPath, absFilePath)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		c.JSON(http.StatusForbidden, gin.H{"error": "acceso denegado"})
+		return
+	}
+
+	// Verificar que el archivo existe
+	if _, err := os.Stat(absFilePath); os.IsNotExist(err) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "archivo no encontrado"})
+		return
+	}
+
+	// Servir archivo con nombre original
+	c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", doc.NombreArchivo))
+	c.Header("Content-Type", doc.MimeType)
+	c.File(absFilePath)
 }
 
 // isAllowedMimeType valida tipos MIME permitidos

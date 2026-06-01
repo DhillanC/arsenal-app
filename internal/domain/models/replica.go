@@ -64,7 +64,6 @@ type Mantenimiento struct {
 	ReplicaID      int        `json:"replica_id" db:"replica_id"`
 	TipoTarea      string     `json:"tipo_tarea" db:"tipo_tarea"`
 	FrecuenciaDias int        `json:"frecuencia_dias" db:"frecuencia_dias"`
-	FrecuenciaBB   int        `json:"frecuencia_bb" db:"frecuencia_bb"`
 	UltimaFecha    *time.Time `json:"ultima_fecha,omitempty" db:"ultima_fecha"`
 	ProximaFecha   *time.Time `json:"proxima_fecha,omitempty" db:"proxima_fecha"`
 	Completado     bool       `json:"completado" db:"completado"`

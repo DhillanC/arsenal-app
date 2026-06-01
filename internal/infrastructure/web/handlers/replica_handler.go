@@ -45,49 +45,96 @@ func (h *ReplicaHandler) Search(c *gin.Context) {
 	c.JSON(http.StatusOK, replicas)
 }
 
-// List devuelve todas las réplicas
+// List devuelve réplicas. Soporta paginación via ?limit=20&offset=0.
+// Si la petición viene de HTMX, devuelve HTML parcial en lugar de JSON.
 func (h *ReplicaHandler) List(c *gin.Context) {
 	ctx := c.Request.Context()
-	replicas, err := h.service.List(ctx)
+
+	var replicas []models.Replica
+	var err error
+
+	// Usar paginación si se solicita explícitamente
+	if c.Query("limit") != "" || c.Query("offset") != "" {
+		limit, offset := PaginationParams(c)
+		replicas, err = h.service.ListPaginated(ctx, limit, offset)
+	} else {
+		replicas, err = h.service.List(ctx)
+	}
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Detectar HTMX request
+	if c.GetHeader("HX-Request") == "true" {
+		stats := calculateDashboardStats(replicas)
+		c.HTML(http.StatusOK, "replica_list.html", gin.H{
+			"Title":    "Mis Rplicas",
+			"Replicas": replicas,
+			"Stats":    stats,
+			"DarkMode": isDarkMode(c),
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, replicas)
 }
 
 // Create crea una nueva réplica
 func (h *ReplicaHandler) Create(c *gin.Context) {
 	ctx := c.Request.Context()
-	
+
 	var req struct {
-		Nombre            string    `json:"nombre" binding:"required"`
-		Marca             string    `json:"marca"`
-		Modelo            string    `json:"modelo"`
-		Tipo              string    `json:"tipo"`
-		NumeroSerie       string    `json:"numero_serie"`
-		FechaAdquisicion  string    `json:"fecha_adquisicion"`
-		Proveedor         string    `json:"proveedor"`
-		CostoAdquisicion  float64   `json:"costo_adquisicion"`
-		Estado            string    `json:"estado"`
-		FPS               int       `json:"fps"`
-		Joules            float64   `json:"joules"`
-		PesoGramos        int       `json:"peso_gramos"`
-		LongitudMM        int       `json:"longitud_mm"`
-		HopUp             string    `json:"hop_up"`
-		CapacidadCargador int       `json:"capacidad_cargador"`
-		Notas             string    `json:"notas"`
+		Nombre            string  `json:"nombre" form:"nombre" binding:"required"`
+		Marca             string  `json:"marca" form:"marca"`
+		Modelo            string  `json:"modelo" form:"modelo"`
+		Tipo              string  `json:"tipo" form:"tipo"`
+		NumeroSerie       string  `json:"numero_serie" form:"numero_serie"`
+		FechaAdquisicion  string  `json:"fecha_adquisicion" form:"fecha_adquisicion"`
+		Proveedor         string  `json:"proveedor" form:"proveedor"`
+		CostoAdquisicion  float64 `json:"costo_adquisicion" form:"costo_adquisicion"`
+		Estado            string  `json:"estado" form:"estado"`
+		FPS               int     `json:"fps" form:"fps"`
+		Joules            float64 `json:"joules" form:"joules"`
+		PesoGramos        int     `json:"peso_gramos" form:"peso_gramos"`
+		LongitudMM        int     `json:"longitud_mm" form:"longitud_mm"`
+		HopUp             string  `json:"hop_up" form:"hop_up"`
+		CapacidadCargador int     `json:"capacidad_cargador" form:"capacidad_cargador"`
+		Notas             string  `json:"notas" form:"notas"`
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	fechaAdq, err := time.Parse("2006-01-02", req.FechaAdquisicion)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "fecha_adquisicion inválida, formato esperado: YYYY-MM-DD"})
-		return
+	// Validar tipo contra valores permitidos
+	if req.Tipo != "" {
+		validTipos := map[string]bool{"AEG": true, "GBB": true, "HPA": true, "Spring": true, "Otro": true}
+		if !validTipos[req.Tipo] {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "tipo inválido: debe ser AEG, GBB, HPA, Spring u Otro"})
+			return
+		}
+	}
+
+	// Validar estado contra valores permitidos
+	if req.Estado != "" {
+		validEstados := map[string]bool{"activo": true, "vendido": true, "reparacion": true, "prestado": true, "archivado": true}
+		if !validEstados[req.Estado] {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "estado inválido: debe ser activo, vendido, reparacion, prestado o archivado"})
+			return
+		}
+	}
+
+	var fechaAdq time.Time
+	if req.FechaAdquisicion != "" {
+		var err error
+		fechaAdq, err = time.Parse("2006-01-02", req.FechaAdquisicion)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "fecha_adquisicion inválida, formato esperado: YYYY-MM-DD"})
+			return
+		}
 	}
 
 	replica := &models.Replica{
@@ -145,33 +192,37 @@ func (h *ReplicaHandler) Update(c *gin.Context) {
 	}
 
 	var req struct {
-		Nombre            string    `json:"nombre"`
-		Marca             string    `json:"marca"`
-		Modelo            string    `json:"modelo"`
-		Tipo              string    `json:"tipo"`
-		NumeroSerie       string    `json:"numero_serie"`
-		FechaAdquisicion  string    `json:"fecha_adquisicion"`
-		Proveedor         string    `json:"proveedor"`
-		CostoAdquisicion  float64   `json:"costo_adquisicion"`
-		Estado            string    `json:"estado"`
-		FPS               int       `json:"fps"`
-		Joules            float64   `json:"joules"`
-		PesoGramos        int       `json:"peso_gramos"`
-		LongitudMM        int       `json:"longitud_mm"`
-		HopUp             string    `json:"hop_up"`
-		CapacidadCargador int       `json:"capacidad_cargador"`
-		Notas             string    `json:"notas"`
+		Nombre            string  `json:"nombre" form:"nombre"`
+		Marca             string  `json:"marca" form:"marca"`
+		Modelo            string  `json:"modelo" form:"modelo"`
+		Tipo              string  `json:"tipo" form:"tipo"`
+		NumeroSerie       string  `json:"numero_serie" form:"numero_serie"`
+		FechaAdquisicion  string  `json:"fecha_adquisicion" form:"fecha_adquisicion"`
+		Proveedor         string  `json:"proveedor" form:"proveedor"`
+		CostoAdquisicion  float64 `json:"costo_adquisicion" form:"costo_adquisicion"`
+		Estado            string  `json:"estado" form:"estado"`
+		FPS               int     `json:"fps" form:"fps"`
+		Joules            float64 `json:"joules" form:"joules"`
+		PesoGramos        int     `json:"peso_gramos" form:"peso_gramos"`
+		LongitudMM        int     `json:"longitud_mm" form:"longitud_mm"`
+		HopUp             string  `json:"hop_up" form:"hop_up"`
+		CapacidadCargador int     `json:"capacidad_cargador" form:"capacidad_cargador"`
+		Notas             string  `json:"notas" form:"notas"`
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	fechaAdq, err := time.Parse("2006-01-02", req.FechaAdquisicion)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "fecha_adquisicion inválida, formato esperado: YYYY-MM-DD"})
-		return
+	var fechaAdq time.Time
+	if req.FechaAdquisicion != "" {
+		var err error
+		fechaAdq, err = time.Parse("2006-01-02", req.FechaAdquisicion)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "fecha_adquisicion inválida, formato esperado: YYYY-MM-DD"})
+			return
+		}
 	}
 
 	replica := &models.Replica{

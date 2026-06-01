@@ -1,4 +1,7 @@
 # Build stage
+# NOTA: No especificamos GOARCH para permitir build nativo en ARM64 (Apple Silicon)
+# Si necesitas imagen x86_64 para deploy en servidor genérico, usa:
+#   docker build --platform linux/amd64 .
 FROM golang:1.26-alpine AS builder
 
 WORKDIR /app
@@ -29,7 +32,7 @@ FROM alpine:3.19
 
 # Crear usuario no-root para seguridad
 RUN adduser -D -u 1000 arsenal && \
-    apk add --no-cache ca-certificates sqlite-libs
+    apk add --no-cache ca-certificates sqlite-libs wget
 
 WORKDIR /app
 
@@ -39,9 +42,6 @@ RUN mkdir -p /data /uploads && \
 
 # Copiar binario desde builder
 COPY --from=builder /app/bin/api /app/api
-
-# Copiar migraciones necesarias para el runtime
-COPY --from=builder --chown=arsenal:arsenal /app/internal/infrastructure/persistence/sqlite/migrations /app/internal/infrastructure/persistence/sqlite/migrations
 
 # Cambiar a usuario no-root
 USER arsenal

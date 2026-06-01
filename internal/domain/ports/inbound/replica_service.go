@@ -12,6 +12,7 @@ type ReplicaService interface {
 	Create(ctx context.Context, replica *models.Replica) error
 	GetByID(ctx context.Context, id int) (*models.Replica, error)
 	List(ctx context.Context) ([]models.Replica, error)
+	ListPaginated(ctx context.Context, limit, offset int) ([]models.Replica, error)
 	Update(ctx context.Context, replica *models.Replica) error
 	Delete(ctx context.Context, id int) error
 	Search(ctx context.Context, query string) ([]models.Replica, error)
@@ -22,6 +23,7 @@ type ActividadService interface {
 	Create(ctx context.Context, actividad *models.Actividad) error
 	GetByID(ctx context.Context, id int) (*models.Actividad, error)
 	ListByReplica(ctx context.Context, replicaID int) ([]models.Actividad, error)
+	ListByReplicaPaginated(ctx context.Context, replicaID int, limit, offset int) ([]models.Actividad, error)
 	Update(ctx context.Context, actividad *models.Actividad) error
 	Delete(ctx context.Context, id int) error
 }
@@ -31,8 +33,10 @@ type DocumentoService interface {
 	Create(ctx context.Context, documento *models.Documento, file []byte) error
 	GetByID(ctx context.Context, id int) (*models.Documento, error)
 	ListByReplica(ctx context.Context, replicaID int) ([]models.Documento, error)
+	ListByReplicaPaginated(ctx context.Context, replicaID int, limit, offset int) ([]models.Documento, error)
 	ListByReplicaAndType(ctx context.Context, replicaID int, tipo string) ([]models.Documento, error)
 	ListByActividad(ctx context.Context, actividadID int) ([]models.Documento, error)
+	ListByActividades(ctx context.Context, actividadIDs []int) ([]models.Documento, error)
 	Update(ctx context.Context, documento *models.Documento) error
 	Delete(ctx context.Context, id int) error
 	SearchByOCR(ctx context.Context, query string) ([]models.Documento, error)

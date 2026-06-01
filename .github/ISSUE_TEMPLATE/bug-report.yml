@@ -8,7 +8,19 @@ body:
     attributes:
       label: Summary
       description: Describe the problem clearly.
-      placeholder: The project board does not update when a linked pull request is merged.
+      placeholder: Uploading a document from a replica detail page returns an error.
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How much does this affect usage?
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
     validations:
       required: true
   - type: textarea
@@ -41,5 +53,13 @@ body:
     attributes:
       label: Evidence and context
       description: Add screenshots, logs, environment details, or related links.
+    validations:
+      required: false
+  - type: textarea
+    id: suspected-area
+    attributes:
+      label: Suspected area
+      description: Optional hint about the affected module, route, template, or workflow.
+      placeholder: web/templates/replica_detail.html, documento handler, SQLite migration, etc.
     validations:
       required: false

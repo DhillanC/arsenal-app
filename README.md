@@ -3,7 +3,7 @@
 App de gestión de réplicas airsoft - Inventario, mantenimiento, documentación DIAN y registro de uso.
 
 **Arquitectura:** Hexagonal (Ports & Adapters)  
-**Stack:** Go 1.21+ + SQLite + Gin + HTMX + Tailwind CSS
+**Stack:** Go 1.26+ + SQLite + Gin + HTMX + Tailwind CSS
 **Deploy:** Docker + Docker Compose  
 
 ## Arquitectura Hexagonal
@@ -98,7 +98,9 @@ make test
 - [ ] JWT Authentication
 - [ ] Rate limiting
 - [ ] Audit logging
+- [ ] **Análisis de seguridad v1** — revisión post-Fase 5, antes de implementar auth
 - [ ] Backup JSON / Export CSV
+- [ ] **Análisis de seguridad v2 (final)** — revisión completa post-MVP, antes de release público
 - [ ] CI/CD GitHub Actions
 
 ---

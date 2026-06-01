@@ -1,4 +1,5 @@
-{{define "content"}}
+{{define "replica_detail.html"}}
+{{template "layout_start" .}}
 <div class="space-y-6">
     <!-- Breadcrumb -->
     <nav class="flex items-center space-x-2 text-sm text-muted-foreground">
@@ -97,7 +98,7 @@
                             {{if .Documentos}}
                             <div class="mt-3 flex flex-wrap gap-2">
                                 {{range .Documentos}}
-                                <a href="/uploads/{{.RutaArchivo}}" target="_blank" class="inline-flex items-center space-x-1 text-sm px-2 py-1 rounded bg-gold-primary/10 hover:bg-gold-primary/20">
+                                <a href="{{documentURL .RutaArchivo}}" target="_blank" class="inline-flex items-center space-x-1 text-sm px-2 py-1 rounded bg-gold-primary/10 hover:bg-gold-primary/20">
                                     <i data-lucide="paperclip" class="w-3 h-3"></i>
                                     <span>{{.NombreArchivo}}</span>
                                 </a>
@@ -122,14 +123,45 @@
             <div id="tab-documentos" class="tab-content hidden">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="font-semibold">Documentos</h3>
-                    <button class="btn-primary inline-flex items-center space-x-2">
-                        <i data-lucide="upload" class="w-4 h-4"></i>
-                        <span>Subir</span>
-                    </button>
                 </div>
+                <form class="card mb-4 space-y-4"
+                      hx-post="/api/v1/replicas/{{.Replica.ID}}/documentos"
+                      hx-encoding="multipart/form-data"
+                      hx-swap="none"
+                      hx-on::after-request="if(event.detail.successful) window.location.reload()">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm font-medium" for="tipo">Tipo</label>
+                            <select id="tipo" name="tipo" class="w-full mt-1" required>
+                                <option value="factura">Factura</option>
+                                <option value="manual">Manual</option>
+                                <option value="manifiesto_dian">Manifiesto DIAN</option>
+                                <option value="declaracion_dian">Declaración DIAN</option>
+                                <option value="foto">Foto</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium" for="numero_documento">Número</label>
+                            <input id="numero_documento" name="numero_documento" type="text" class="w-full mt-1">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium" for="file">Archivo</label>
+                        <input id="file" name="file" type="file" class="w-full mt-1" required>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium" for="notas">Notas</label>
+                        <textarea id="notas" name="notas" rows="2" class="w-full mt-1"></textarea>
+                    </div>
+                    <button class="btn-primary" type="submit">
+                        <i data-lucide="upload" class="w-4 h-4"></i>
+                        <span>Subir documento</span>
+                    </button>
+                </form>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {{range .Documentos}}
-                    <div class="card">
+                    <a href="{{documentURL .RutaArchivo}}" target="_blank" class="card hover:bg-gold-primary/5 transition-colors">
                         <div class="flex items-start space-x-3">
                             <i data-lucide="file" class="w-8 h-8 text-gold-primary"></i>
                             <div class="flex-1 min-w-0">
@@ -137,7 +169,7 @@
                                 <p class="text-sm text-muted-foreground">{{.Tipo}}</p>
                             </div>
                         </div>
-                    </div>
+                    </a>
                     {{else}}
                     <div class="col-span-full text-center py-8 text-muted-foreground">
                         <p>No hay documentos</p>
@@ -148,9 +180,61 @@
 
             <!-- Tab Content: Mantenimiento -->
             <div id="tab-mantenimiento" class="tab-content hidden">
-                <div class="text-center py-8 text-muted-foreground">
-                    <i data-lucide="wrench" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
-                    <p>Próximamente: Calendario de mantenimiento</p>
+                <div class="space-y-4">
+                    <form class="card space-y-4"
+                          hx-post="/api/v1/replicas/{{.Replica.ID}}/mantenimiento"
+                          hx-swap="none"
+                          hx-on::after-request="if(event.detail.successful) window.location.reload()">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="text-sm font-medium" for="tipo_tarea">Tarea</label>
+                                <input id="tipo_tarea" name="tipo_tarea" type="text" class="w-full mt-1" required placeholder="Lubricación">
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium" for="frecuencia_dias">Cada días</label>
+                                <input id="frecuencia_dias" name="frecuencia_dias" type="number" min="1" class="w-full mt-1">
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium" for="ultima_fecha">Última fecha</label>
+                                <input id="ultima_fecha" name="ultima_fecha" type="date" class="w-full mt-1">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium" for="notas_mantenimiento">Notas</label>
+                            <textarea id="notas_mantenimiento" name="notas" rows="2" class="w-full mt-1"></textarea>
+                        </div>
+                        <button class="btn-primary" type="submit">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Agregar tarea</span>
+                        </button>
+                    </form>
+
+                    {{range .Mantenimientos}}
+                    <div class="card flex items-start justify-between gap-4">
+                        <div>
+                            <h4 class="font-semibold">{{.TipoTarea}}</h4>
+                            <p class="text-sm text-muted-foreground">
+                                {{if .ProximaFecha}}Próxima: {{.ProximaFecha.Format "2006-01-02"}}{{else}}Sin próxima fecha{{end}}
+                                {{if .FrecuenciaDias}} · cada {{.FrecuenciaDias}} días{{end}}
+                            </p>
+                            {{if .Notas}}<p class="text-sm mt-2">{{.Notas}}</p>{{end}}
+                        </div>
+                        {{if not .Completado}}
+                        <button class="btn-secondary"
+                                hx-post="/api/v1/mantenimiento/{{.ID}}/completar"
+                                hx-swap="none"
+                                hx-on::after-request="if(event.detail.successful) window.location.reload()">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            <span>Completar</span>
+                        </button>
+                        {{end}}
+                    </div>
+                    {{else}}
+                    <div class="text-center py-8 text-muted-foreground">
+                        <i data-lucide="wrench" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                        <p>No hay tareas de mantenimiento</p>
+                    </div>
+                    {{end}}
                 </div>
             </div>
         </div>
@@ -176,13 +260,5 @@ function showTab(tabName) {
 }
 </script>
 
-<style>
-.tab-btn {
-    @apply px-4 py-2 text-sm font-medium text-muted-foreground border-b-2 border-transparent;
-    @apply hover:text-gold-primary transition-colors;
-}
-.tab-btn.active {
-    @apply text-gold-primary border-gold-primary;
-}
-</style>
+{{template "layout_end" .}}
 {{end}}

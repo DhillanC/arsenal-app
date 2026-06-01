@@ -1,14 +1,14 @@
 name: Feature Request
-description: Suggest a new capability or improvement.
+description: Shape a product feature before implementation.
 title: "[Feature]: "
-labels: ["enhancement"]
+labels: ["enhancement", "feature"]
 body:
   - type: textarea
     id: summary
     attributes:
       label: Summary
-      description: Describe the feature or improvement.
-      placeholder: Add a project board guide for new repositories.
+      description: Describe the feature in one or two paragraphs.
+      placeholder: Add a maintenance calendar that shows upcoming work per replica.
     validations:
       required: true
   - type: textarea
@@ -20,10 +20,33 @@ body:
     validations:
       required: true
   - type: textarea
+    id: users
+    attributes:
+      label: Users and scenarios
+      description: Who uses this, and in what situation?
+      placeholder: |
+        - Owner reviewing replicas before a game day
+        - Admin checking pending maintenance
+    validations:
+      required: true
+  - type: textarea
     id: solution
     attributes:
       label: Proposed solution
-      description: Describe the preferred approach.
+      description: Describe the preferred behavior and UI/API shape.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Clarify what is included and excluded.
+      value: |
+        Included:
+        - ...
+
+        Not included:
+        - ...
     validations:
       required: true
   - type: dropdown
@@ -31,6 +54,17 @@ body:
     attributes:
       label: Priority
       description: How important is this improvement?
+      options:
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk
+      description: Expected implementation or product risk.
       options:
         - Low
         - Medium
@@ -48,6 +82,14 @@ body:
         Then [the expected outcome is observed]
     validations:
       required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and blockers
+      description: List data, design, API, migration, or decision dependencies.
+      placeholder: No known blockers.
+    validations:
+      required: false
   - type: textarea
     id: notes
     attributes:

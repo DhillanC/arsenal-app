@@ -43,7 +43,8 @@ func (s *DocumentoService) Create(ctx context.Context, documento *models.Documen
 		if shouldRunOCR(documento) {
 			text, err := extractOCRText(ruta)
 			if err != nil {
-				documento.OCRTexto = fmt.Sprintf("[OCR no disponible: %v]", err)
+				// Dejar OCRTexto vacío en caso de error para evitar matches espurios en búsquedas
+				documento.OCRTexto = ""
 			} else {
 				documento.OCRTexto = text
 			}
@@ -63,6 +64,11 @@ func (s *DocumentoService) ListByReplica(ctx context.Context, replicaID int) ([]
 	return s.repo.ListByReplica(ctx, replicaID)
 }
 
+// ListByReplicaPaginated lista documentos de una réplica con paginación
+func (s *DocumentoService) ListByReplicaPaginated(ctx context.Context, replicaID int, limit, offset int) ([]models.Documento, error) {
+	return s.repo.ListByReplicaPaginated(ctx, replicaID, limit, offset)
+}
+
 // ListByReplicaAndType lista documentos de una réplica filtrados por tipo
 func (s *DocumentoService) ListByReplicaAndType(ctx context.Context, replicaID int, tipo string) ([]models.Documento, error) {
 	return s.repo.ListByReplicaAndType(ctx, replicaID, tipo)
@@ -73,6 +79,11 @@ func (s *DocumentoService) ListByActividad(ctx context.Context, actividadID int)
 	return s.repo.ListByActividad(ctx, actividadID)
 }
 
+// ListByActividades lista documentos asociados a múltiples actividades (batch).
+func (s *DocumentoService) ListByActividades(ctx context.Context, actividadIDs []int) ([]models.Documento, error) {
+	return s.repo.ListByActividades(ctx, actividadIDs)
+}
+
 // Update actualiza un documento
 func (s *DocumentoService) Update(ctx context.Context, documento *models.Documento) error {
 	if documento.ID == 0 {
@@ -81,9 +92,22 @@ func (s *DocumentoService) Update(ctx context.Context, documento *models.Documen
 	return s.repo.Update(ctx, documento)
 }
 
-// Delete elimina un documento
+// Delete elimina un documento y su archivo asociado
 func (s *DocumentoService) Delete(ctx context.Context, id int) error {
-	// TODO: Eliminar archivo del storage también
+	// Obtener documento para saber qué archivo borrar
+	doc, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("obtener documento: %w", err)
+	}
+
+	// Borrar archivo del storage si existe
+	if doc.RutaArchivo != "" {
+		if err := s.storage.Delete(doc.RutaArchivo); err != nil {
+			// Loguear pero no fallar si el archivo ya no existe
+			fmt.Printf("advertencia: no se pudo borrar archivo %s: %v\n", doc.RutaArchivo, err)
+		}
+	}
+
 	return s.repo.Delete(ctx, id)
 }
 

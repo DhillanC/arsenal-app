@@ -43,6 +43,11 @@ func (s *ActividadService) ListByReplica(ctx context.Context, replicaID int) ([]
 	return s.repo.ListByReplica(ctx, replicaID)
 }
 
+// ListByReplicaPaginated lista actividades de una réplica con paginación
+func (s *ActividadService) ListByReplicaPaginated(ctx context.Context, replicaID int, limit, offset int) ([]models.Actividad, error) {
+	return s.repo.ListByReplicaPaginated(ctx, replicaID, limit, offset)
+}
+
 // Update actualiza una actividad
 func (s *ActividadService) Update(ctx context.Context, actividad *models.Actividad) error {
 	if actividad.ID == 0 {

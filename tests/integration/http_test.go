@@ -23,15 +23,15 @@ func setupHTTPTest(t *testing.T, origins []string) (http.Handler, *sqlite.DB) {
 	require.NoError(t, err)
 	require.NoError(t, db.RunMigrations())
 
-	replicaService := services.NewReplicaService(sqlite.NewReplicaRepository(db.Conn))
-	actividadService := services.NewActividadService(sqlite.NewActividadRepository(db.Conn))
+	replicaService := services.NewReplicaService(sqlite.NewReplicaRepository(db))
+	actividadService := services.NewActividadService(sqlite.NewActividadRepository(db))
 	storage := local.NewStorage(t.TempDir())
-	documentoService := services.NewDocumentoService(sqlite.NewDocumentoRepository(db.Conn), storage)
+	documentoService := services.NewDocumentoService(sqlite.NewDocumentoRepository(db), storage)
 
 	handler := web.NewHandler(web.Config{
 		Port:           "8080",
 		AllowedOrigins: origins,
-		DB:             db.Conn,
+		DB:             db,
 	}, replicaService, actividadService, documentoService)
 	return handler, db
 }
@@ -40,14 +40,14 @@ func TestHealth_HealthyDB(t *testing.T) {
 	handler, db := setupHTTPTest(t, nil)
 	defer db.Close()
 
-	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+	req := httptest.NewRequest(http.MethodGet, "/health/ready", nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
 	require.Equal(t, http.StatusOK, w.Code)
 	var body map[string]any
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
-	assert.Equal(t, "ok", body["status"])
+	assert.Equal(t, "ready", body["status"])
 	assert.Equal(t, "ok", body["db"])
 }
 
@@ -55,14 +55,14 @@ func TestHealth_DegradedWhenDBClosed(t *testing.T) {
 	handler, db := setupHTTPTest(t, nil)
 	require.NoError(t, db.Close()) // forzar fallo del Ping
 
-	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+	req := httptest.NewRequest(http.MethodGet, "/health/ready", nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
 	require.Equal(t, http.StatusServiceUnavailable, w.Code)
 	var body map[string]any
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &body))
-	assert.Equal(t, "degraded", body["status"])
+	assert.Equal(t, "not_ready", body["status"])
 }
 
 func TestReplica_CreateAndGet_Roundtrip(t *testing.T) {
@@ -100,17 +100,18 @@ func TestReplica_CreateAndGet_Roundtrip(t *testing.T) {
 	assert.Equal(t, id, list[0]["id"])
 }
 
-func TestReplica_RejectsInvalidDate(t *testing.T) {
+func TestReplica_Create_InvalidFechaAdquisicion(t *testing.T) {
 	handler, db := setupHTTPTest(t, nil)
 	defer db.Close()
 
 	payload := map[string]any{
-		"nombre":            "Bad date",
+		"nombre":            "HK416 A5",
 		"tipo":              "AEG",
 		"estado":            "activo",
-		"fecha_adquisicion": "25-05-2026", // formato inválido
+		"fecha_adquisicion": "2026-13-45", // inválida
 	}
 	raw, _ := json.Marshal(payload)
+
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/replicas", bytes.NewReader(raw))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -121,30 +122,29 @@ func TestReplica_RejectsInvalidDate(t *testing.T) {
 }
 
 func TestCORS_AllowsListedOrigin(t *testing.T) {
-	handler, db := setupHTTPTest(t, []string{"https://app.crabi.com"})
+	handler, db := setupHTTPTest(t, []string{"https://app.example.com"})
 	defer db.Close()
 
-	req := httptest.NewRequest(http.MethodGet, "/health", nil)
-	req.Header.Set("Origin", "https://app.crabi.com")
+	req := httptest.NewRequest(http.MethodGet, "/health/live", nil)
+	req.Header.Set("Origin", "https://app.example.com")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
 	require.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, "https://app.crabi.com", w.Header().Get("Access-Control-Allow-Origin"))
+	assert.Equal(t, "https://app.example.com", w.Header().Get("Access-Control-Allow-Origin"))
 }
 
 func TestCORS_BlocksUnlistedOrigin(t *testing.T) {
-	handler, db := setupHTTPTest(t, []string{"https://app.crabi.com"})
+	handler, db := setupHTTPTest(t, []string{"https://app.example.com"})
 	defer db.Close()
 
-	req := httptest.NewRequest(http.MethodGet, "/health", nil)
-	req.Header.Set("Origin", "https://evil.example")
+	req := httptest.NewRequest(http.MethodGet, "/health/live", nil)
+	req.Header.Set("Origin", "https://evil.com")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
 	require.Equal(t, http.StatusOK, w.Code)
-	assert.Empty(t, w.Header().Get("Access-Control-Allow-Origin"),
-		"Origin no listado no debe recibir header Allow-Origin")
+	assert.Empty(t, w.Header().Get("Access-Control-Allow-Origin"))
 }
 
 func TestCORS_PreflightShortCircuits(t *testing.T) {
@@ -152,9 +152,10 @@ func TestCORS_PreflightShortCircuits(t *testing.T) {
 	defer db.Close()
 
 	req := httptest.NewRequest(http.MethodOptions, "/api/v1/replicas", nil)
-	req.Header.Set("Origin", "https://app.crabi.com")
+	req.Header.Set("Origin", "https://localhost:5173")
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 
 	require.Equal(t, http.StatusNoContent, w.Code)
+	assert.Equal(t, "https://localhost:5173", w.Header().Get("Access-Control-Allow-Origin"))
 }

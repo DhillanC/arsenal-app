@@ -24,7 +24,10 @@
   // Exposed globally because base.html uses `onclick="toggleTheme()"`.
   window.toggleTheme = function toggleTheme() {
     const isDark = root.classList.toggle('dark');
-    localStorage.setItem(STORAGE_KEY, isDark ? 'dark' : 'light');
+    const theme = isDark ? 'dark' : 'light';
+    localStorage.setItem(STORAGE_KEY, theme);
+    // Sync cookie for server-side rendering on next request
+    document.cookie = 'arsenal_theme=' + theme + ';path=/;max-age=31536000';
   };
 })();
 

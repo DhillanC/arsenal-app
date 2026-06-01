@@ -12,14 +12,6 @@ build:
 test:
 	go test ./... -v
 
-# Migraciones
-migrate:
-	go run scripts/migrate.go
-
-# Seed datos
-seed:
-	go run scripts/seed.go
-
 # Docker
 docker-build:
 	docker-compose build

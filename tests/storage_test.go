@@ -3,7 +3,6 @@ package local_test
 import (
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/DhillanC/arsenal-app/internal/infrastructure/storage/local"
@@ -20,7 +19,9 @@ func TestStorage(t *testing.T) {
 		path, err := storage.Save(content, "test.txt", 1)
 		require.NoError(t, err)
 		assert.Contains(t, path, "test.txt")
-		assert.FileExists(t, path)
+		// Ahora devuelve path relativo, verificar que existe bajo tempDir
+		absPath := filepath.Join(tempDir, path)
+		assert.FileExists(t, absPath)
 	})
 
 	t.Run("Get", func(t *testing.T) {
@@ -37,11 +38,12 @@ func TestStorage(t *testing.T) {
 		content := []byte("to delete")
 		path, err := storage.Save(content, "delete.txt", 1)
 		require.NoError(t, err)
-		assert.FileExists(t, path)
+		absPath := filepath.Join(tempDir, path)
+		assert.FileExists(t, absPath)
 
 		err = storage.Delete(path)
 		require.NoError(t, err)
-		assert.NoFileExists(t, path)
+		assert.NoFileExists(t, absPath)
 	})
 
 	t.Run("Duplicate filename", func(t *testing.T) {
@@ -54,8 +56,9 @@ func TestStorage(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotEqual(t, path1, path2)
-		assert.FileExists(t, path1)
-		assert.FileExists(t, path2)
+		// Verificar que ambos existen bajo tempDir
+		assert.FileExists(t, filepath.Join(tempDir, path1))
+		assert.FileExists(t, filepath.Join(tempDir, path2))
 	})
 }
 
@@ -118,7 +121,8 @@ func TestStorage_AcceptsValidNames(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			path, err := storage.Save([]byte("x"), name, 1)
 			require.NoError(t, err, "nombre válido rechazado: %q", name)
-			assert.True(t, strings.HasPrefix(path, tempDir),
+			// Ahora devuelve path relativo, verificar que existe bajo tempDir
+			assert.FileExists(t, filepath.Join(tempDir, path),
 				"archivo debe quedar bajo tempDir, got %q", path)
 		})
 	}
