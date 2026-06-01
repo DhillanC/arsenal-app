@@ -96,11 +96,22 @@ func TestStorage_SanitizeRejection(t *testing.T) {
 		})
 	}
 
-	// Independientemente del path lógico que el atacante intentó, /etc/passwd
-	// no debe existir bajo tempDir y nada debe haberse creado fuera.
-	outsidePath := filepath.Join(tempDir, "..", "..", "..", "etc", "passwd")
-	_, statErr := os.Stat(outsidePath)
-	assert.True(t, os.IsNotExist(statErr), "ningún archivo debe escapar de tempDir")
+	// Si todos los Save anteriores fueron rechazados, no debe haber quedado
+	// ningún archivo bajo tempDir. Una versión previa de este test asumía
+	// que /etc/passwd no existía 3 niveles arriba de tempDir, lo cual depende
+	// de la profundidad de os.TempDir() y rompe en CI (Linux: /tmp → /).
+	var found []string
+	walkErr := filepath.Walk(tempDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			found = append(found, path)
+		}
+		return nil
+	})
+	require.NoError(t, walkErr)
+	assert.Empty(t, found, "ningún archivo debe haberse creado tras rechazos: %v", found)
 }
 
 // TestStorage_AcceptsValidNames verifica que nombres legítimos pasan el filtro.

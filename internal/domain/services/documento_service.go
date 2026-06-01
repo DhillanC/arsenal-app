@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 
 	"github.com/DhillanC/arsenal-app/internal/domain/models"
@@ -43,11 +42,13 @@ func (s *DocumentoService) Create(ctx context.Context, documento *models.Documen
 		documento.RutaArchivo = ruta
 		documento.TamanoBytes = int64(len(file))
 
-		// Marcar para OCR async si aplica
+		// Marcar para OCR async si aplica. "skipped" indica que OCR no se
+		// intentó (mime no soportado o OCR_ENABLED=false). Distinto de
+		// "completed" — que implica que OCR sí corrió y dejó texto (o vacío).
 		if shouldRunOCR(documento) {
 			documento.OCRStatus = "pending"
 		} else {
-			documento.OCRStatus = "completed" // OCR desactivado o no aplica
+			documento.OCRStatus = "skipped"
 		}
 	}
 
@@ -176,14 +177,6 @@ func (s *DocumentoService) processOCRAsync(id int, filePath string) {
 	fmt.Printf("[OCR] completado para doc %d (%d chars)\n", id, len(text))
 }
 
-func cleanOCRText(text string) string {
-	// Eliminar espacios múltiples
-	text = strings.Join(strings.Fields(text), " ")
-	// Eliminar caracteres de control
-	text = strings.ReplaceAll(text, "\x00", "")
-	return strings.TrimSpace(text)
-}
-
 func shouldRunOCR(documento *models.Documento) bool {
 	if os.Getenv("OCR_ENABLED") == "false" {
 		return false
@@ -194,14 +187,4 @@ func shouldRunOCR(documento *models.Documento) bool {
 	default:
 		return false
 	}
-}
-
-func extractOCRText(filePath string) (string, error) {
-	client, err := ocr.NewOCRClient()
-	if err != nil {
-		return "", err
-	}
-	defer client.Close()
-
-	return client.ExtractText(filePath)
 }

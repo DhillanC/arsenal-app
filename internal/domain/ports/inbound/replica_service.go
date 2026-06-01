@@ -40,6 +40,9 @@ type DocumentoService interface {
 	Update(ctx context.Context, documento *models.Documento) error
 	Delete(ctx context.Context, id int) error
 	SearchByOCR(ctx context.Context, query string) ([]models.Documento, error)
+	// WaitForOCR bloquea hasta que terminen los jobs OCR async pendientes.
+	// Usado por tests para evitar leaks de goroutines tras db.Close().
+	WaitForOCR()
 }
 
 // MantenimientoService define los casos de uso para mantenimiento programado

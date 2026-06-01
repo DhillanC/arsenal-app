@@ -400,9 +400,7 @@ func TestDocumentoService_Create(t *testing.T) {
 	assert.NotEmpty(t, doc.RutaArchivo)
 
 	// Esperar OCR async en tests para evitar que la DB se cierre antes
-	if ds, ok := documentoService.(*services.DocumentoService); ok {
-		ds.WaitForOCR()
-	}
+	documentoService.WaitForOCR()
 }
 
 func TestDocumentoService_Create_Validation(t *testing.T) {
@@ -417,9 +415,7 @@ func TestDocumentoService_Create_Validation(t *testing.T) {
 	assert.Contains(t, err.Error(), "tipo")
 
 	// Esperar OCR async en tests para evitar que la DB se cierre antes
-	if ds, ok := documentoService.(*services.DocumentoService); ok {
-		ds.WaitForOCR()
-	}
+	documentoService.WaitForOCR()
 }
 
 func TestDocumentoService_ListByReplica(t *testing.T) {
@@ -445,9 +441,7 @@ func TestDocumentoService_ListByReplica(t *testing.T) {
 	assert.Len(t, list, 3)
 
 	// Esperar OCR async en tests para evitar que la DB se cierre antes
-	if ds, ok := documentoService.(*services.DocumentoService); ok {
-		ds.WaitForOCR()
-	}
+	documentoService.WaitForOCR()
 }
 
 func TestDocumentoService_Delete(t *testing.T) {
@@ -473,7 +467,5 @@ func TestDocumentoService_Delete(t *testing.T) {
 	assert.Error(t, err)
 
 	// Esperar OCR async en tests para evitar que la DB se cierre antes
-	if ds, ok := documentoService.(*services.DocumentoService); ok {
-		ds.WaitForOCR()
-	}
+	documentoService.WaitForOCR()
 }
