@@ -198,6 +198,7 @@ func TestDocumentoRepository(t *testing.T) {
 			MimeType:        "application/pdf",
 			TamanoBytes:     1024,
 			OCRTexto:        "Factura de compra HK416 A5",
+			OCRStatus:       "completed",
 			NumeroDocumento: "FAC-001",
 		}
 		
