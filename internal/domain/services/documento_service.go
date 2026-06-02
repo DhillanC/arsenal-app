@@ -157,7 +157,9 @@ func (s *DocumentoService) processOCRAsync(id int, filePath string) {
 
 	text, err := client.ExtractText(filePath)
 	if err != nil {
-		s.repo.UpdateOCRStatus(ctx, id, "failed", "")
+		if updateErr := s.repo.UpdateOCRStatus(ctx, id, "failed", ""); updateErr != nil {
+			fmt.Printf("[OCR] error marcando failed para doc %d: %v\n", id, updateErr)
+		}
 		fmt.Printf("[OCR] error extrayendo texto para doc %d: %v\n", id, err)
 		return
 	}

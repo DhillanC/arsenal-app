@@ -104,7 +104,7 @@ func NewHandler(
 				checks["uploads_error"] = err.Error()
 				status = http.StatusServiceUnavailable
 			} else {
-				os.Remove(testFile)
+				_ = os.Remove(testFile)
 				checks["uploads"] = "ok"
 			}
 		}

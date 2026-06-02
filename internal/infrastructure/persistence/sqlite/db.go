@@ -50,14 +50,14 @@ func NewDB(dbPath string) (*DB, error) {
 		readDSN := dbPath + "?mode=ro&_query_only=on&_journal_mode=WAL&_busy_timeout=5000"
 		readConn, err = sql.Open("sqlite3", readDSN)
 		if err != nil {
-			writeConn.Close()
+			_ = writeConn.Close()
 			return nil, fmt.Errorf("abrir sqlite lectura: %w", err)
 		}
 		readConn.SetMaxOpenConns(4)
 		readConn.SetMaxIdleConns(2)
 		if err := readConn.Ping(); err != nil {
-			writeConn.Close()
-			readConn.Close()
+			_ = writeConn.Close()
+			_ = readConn.Close()
 			return nil, fmt.Errorf("ping sqlite lectura: %w", err)
 		}
 	}

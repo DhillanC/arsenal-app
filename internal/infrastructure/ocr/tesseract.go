@@ -109,7 +109,7 @@ func (o *OCRClient) extractFromPDF(filePath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("crear temp dir: %w", err)
 	}
-	defer os.RemoveAll(tmpDir)
+	defer func() { _ = os.RemoveAll(tmpDir) }()
 
 	// Convertir PDF a PNG (primera página)
 	ctx, cancel := context.WithTimeout(context.Background(), defaultOCRTimeout)

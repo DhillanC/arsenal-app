@@ -316,9 +316,10 @@ func calculateDashboardStats(replicas []models.Replica) DashboardStats {
 		stats.Total++
 		stats.ValorTotal += r.CostoAdquisicion
 
-		if r.Estado == "activo" {
+		switch r.Estado {
+		case "activo":
 			stats.Activas++
-		} else if r.Estado == "reparacion" {
+		case "reparacion":
 			stats.Reparacion++
 		}
 
