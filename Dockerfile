@@ -25,7 +25,7 @@ COPY . .
 # NOTA: No especificar GOARCH para permitir build nativo en ARM64 (Apple Silicon)
 RUN CGO_ENABLED=1 GOOS=linux \
     go build -trimpath -ldflags="-w -s" \
-    -o bin/api cmd/api/main.go
+    -o bin/api ./cmd/api
 
 # Runtime stage
 FROM alpine:3.19
