@@ -40,8 +40,12 @@ WORKDIR /app
 RUN mkdir -p /data /uploads && \
     chown -R arsenal:arsenal /app /data /uploads
 
-# Copiar binario desde builder
+# Copiar binario y assets desde builder. La app hace LoadHTMLGlob y
+# router.Static contra paths relativos (`web/templates`, `./web/static`);
+# sin estos archivos el binario panic-ea al arrancar. TODO: migrar a
+# embed.FS para no depender del filesystem.
 COPY --from=builder /app/bin/api /app/api
+COPY --from=builder /app/web /app/web
 
 # Defaults alineados con los VOLUME declarados abajo. Sin estos, la app
 # usa "./data" y "./uploads" relativos a /app (que arsenal no puede crear).
