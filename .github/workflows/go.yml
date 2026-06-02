@@ -69,8 +69,28 @@ jobs:
 
     - name: Test Docker image healthcheck
       run: |
+        set -u
         docker run -d --name arsenal-test -p 8080:8080 arsenal-app:test
-        sleep 5
-        docker ps | grep arsenal-test
+        # Poll /health/ready hasta 30s. /health/ready verifica DB writable,
+        # uploads writable y proceso vivo — refleja el HEALTHCHECK del Dockerfile.
+        ok=0
+        for i in $(seq 1 30); do
+          if curl -sf http://localhost:8080/health/ready > /dev/null; then
+            ok=1
+            break
+          fi
+          sleep 1
+        done
+        if [ "$ok" -ne 1 ]; then
+          echo "::error::healthcheck no respondió 200 en 30s"
+          echo "--- docker logs arsenal-test ---"
+          docker logs arsenal-test || true
+          echo "--- docker inspect (State) ---"
+          docker inspect --format '{{json .State}}' arsenal-test || true
+          docker stop arsenal-test >/dev/null 2>&1 || true
+          docker rm arsenal-test >/dev/null 2>&1 || true
+          exit 1
+        fi
+        echo "healthcheck OK"
         docker stop arsenal-test
         docker rm arsenal-test

@@ -43,6 +43,12 @@ RUN mkdir -p /data /uploads && \
 # Copiar binario desde builder
 COPY --from=builder /app/bin/api /app/api
 
+# Defaults alineados con los VOLUME declarados abajo. Sin estos, la app
+# usa "./data" y "./uploads" relativos a /app (que arsenal no puede crear).
+ENV DB_PATH=/data/arsenal.db \
+    UPLOAD_PATH=/uploads \
+    APP_PORT=8080
+
 # Cambiar a usuario no-root
 USER arsenal
 
